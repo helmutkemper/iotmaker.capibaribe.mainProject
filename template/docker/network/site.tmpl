@@ -1,0 +1,261 @@
+{{define "site"}}
+<!DOCTYPE html>
+<html>
+<head>
+  <title></title>
+  {{ template "include.kendo-ui" . }}
+
+  <style>
+
+    #fieldlist {
+      margin: 0;
+      padding: 0;
+    }
+
+    #fieldlist li {
+      list-style: none;
+      padding-bottom: .7em;
+      text-align: left;
+    }
+
+    #fieldlist label {
+      display: block;
+      padding-bottom: .3em;
+      font-weight: bold;
+      text-transform: uppercase;
+      font-size: 12px;
+      color: #444;
+    }
+
+    #fieldlist li.status {
+      text-align: center;
+    }
+
+    #fieldlist li .k-widget:not(.k-tooltip),
+    #fieldlist li .k-textbox {
+      margin: 0 5px 5px 0;
+      width: 400px;
+    }
+
+    .confirm {
+      padding-top: 1em;
+    }
+
+    .valid {
+      color: green;
+    }
+
+    .invalid {
+      color: red;
+    }
+
+    #fieldlist li input[type="checkbox"] {
+      margin: 0 5px 0 0;
+    }
+
+    .ui-tooltip {
+      white-space: pre-line;
+    }
+
+    span.k-widget.k-tooltip-validation {
+      display; inline-block;
+      width: 160px;
+      text-align: left;
+      border: 0;
+      padding: 0;
+      margin: 0;
+      background: none;
+      box-shadow: none;
+      color: red;
+    }
+
+    .k-tooltip-validation .k-warning {
+      display: none;
+    }
+  </style>
+  <script>
+    $(document).ready(function() {
+      var driverData = [
+        "default", "bridge", "overlay", "macvlan"
+      ];
+      var booleanData = [
+        "default", "true", "false"
+      ];
+
+      $("#CheckDuplicate").kendoDropDownList({});
+      $("#Driver").kendoAutoComplete({
+        dataSource: driverData
+      });
+      $("#EnableIPv6").kendoDropDownList({});
+      $("#Internal").kendoDropDownList({});
+      $("#Attachable").kendoDropDownList({});
+      $("#Ingress").kendoDropDownList({});
+      $("#IPAM").kendoGrid({
+        //dataSource: dataSource,
+        navigatable: true,
+        pageable: true,
+        height: 550,
+        toolbar: ["create", "save", "cancel"],
+        columns: [
+          "ProductName",
+          { field: "UnitPrice", title: "Unit Price", format: "{0:c}", width: 120 },
+          { field: "UnitsInStock", title: "Units In Stock", width: 120 },
+          { field: "Discontinued", width: 120, editor: customBoolEditor },
+          { command: "destroy", title: "&nbsp;", width: 150 }],
+        editable: true
+      });
+
+
+      var tooltip = $("#agglomerations").kendoTooltip({
+        filter: "span",
+        width: 120,
+        position: "top"
+      }).data("kendoTooltip");
+
+
+
+
+
+
+
+      var validator = $("#networkDriver").kendoValidator().data("kendoValidator"),
+          status = $(".status");
+
+      $("form").submit(function(event) {
+        event.preventDefault();
+        if (validator.validate()) {
+          status.text("Hooray! Your tickets has been booked!")
+              .removeClass("invalid")
+              .addClass("valid");
+        } else {
+          status.text("Oops! There is invalid data in the form.")
+              .removeClass("valid")
+              .addClass("invalid");
+        }
+      });
+
+      var dialog = $('#dialog');
+      dialog.kendoDialog({
+        width: "400px",
+        buttonLayout: "normal",
+        title: "Network created succeful",
+        closable: true,
+        modal: true,
+        actions: [
+          { text: 'Ok', primary: true }
+        ]
+      });
+
+      $("#IPAM").kendoGrid({
+        //dataSource: dataSource,
+        navigatable: true,
+        pageable: true,
+        height: 550,
+        toolbar: ["create", "save", "cancel"],
+        columns: [
+          "ProductName",
+          { field: "UnitPrice", title: "Unit Price", format: "{0:c}", width: 120 },
+          { field: "UnitsInStock", title: "Units In Stock", width: 120 },
+          { field: "Discontinued", width: 120, editor: customBoolEditor },
+          { command: "destroy", title: "&nbsp;", width: 150 }],
+        editable: true
+      });
+
+      dialog.data("kendoDialog").open();
+    });
+  </script>
+</head>
+<body>
+<div class="demo-section k-content">
+  <form id="networkDriver">
+    <ul id="fieldlist">
+      <li>
+        <label for="name" class="required" title="The network's name.">Network name</label>
+        <input type="text" id="name" name="name" class="k-textbox" placeholder="Network name" required validationMessage="Please, enter a network name." />
+      </li>
+      <li>
+        <label for="CheckDuplicate" title="Check for networks with duplicate names.
+
+Since Network is primarily keyed based on a random ID and not on the name, and network name is strictly a user-friendly alias to the network which is uniquely identified using ID, there is no guaranteed way to check for duplicates.
+
+CheckDuplicate is there to provide a best effort checking of any networks which has the same name but it is not guaranteed to catch all name collisions.">Check Duplicate</label>
+        <select name="CheckDuplicate" id="CheckDuplicate"  >
+          <option value="">default</option>
+          <option value="true">true</option>
+          <option value="false">false</option>
+        </select>
+      </li>
+      <li>
+        <label for="Driver" title="Name of the network driver plugin to use.">Driver</label>
+        <input type="search" id="Driver" name="Driver" />
+      </li>
+      <li>
+        <label for="Scope">-- Scope --</label>
+        <input type="input" id="Scope" class="k-textbox" name="Scope" />
+      </li>
+      <li>
+        <label for="EnableIPv6" title="Enable IPv6 on the network.">Enable IPv6</label>
+        <select name="EnableIPv6" id="EnableIPv6"  >
+          <option value="">default</option>
+          <option value="true">true</option>
+          <option value="false">false</option>
+        </select>
+      </li>
+
+      <li>
+        <label title="IPAM drive data.">IPAM</label>
+
+      </li>
+
+
+      <li>
+        <label for="Internal" title="Restrict external access to the network.">Internal</label>
+        <select name="Internal" id="Internal"  >
+          <option value="">default</option>
+          <option value="true">true</option>
+          <option value="false">false</option>
+        </select>
+      </li>
+      <li>
+        <label for="Attachable" title="Globally scoped network is manually attachable by regular containers from workers in swarm mode.">Internal</label>
+        <select name="Attachable" id="Attachable"  >
+          <option value="">default</option>
+          <option value="true">true</option>
+          <option value="false">false</option>
+        </select>
+      </li>
+      <li>
+        <label for="Ingress" title="Ingress network is the network which provides the routing-mesh in swarm mode.">Ingress</label>
+        <select name="Ingress" id="Ingress"  >
+          <option value="">default</option>
+          <option value="true">true</option>
+          <option value="false">false</option>
+        </select>
+      </li>
+      <li>
+        <label for="Options" title="Network specific options to be used by the drivers.">Options</label>
+        <input type="input" id="Options" class="k-textbox" name="Options" />
+      </li>
+      <li>
+        <label for="Labels" title="User-defined key/value metadata.">Labels</label>
+        <input type="input" id="Labels" class="k-textbox" name="Labels" />
+      </li>
+
+
+
+      <li class="confirm">
+        <button class="k-button k-primary" type="submit">Submit</button>
+      </li>
+      <li class="status">
+      </li>
+    </ul>
+  </form>
+  <div id="dialog">
+    <div id="IPAM"></div>
+  </div>
+</div>
+
+
+</body>
+</html>
+{{end}}

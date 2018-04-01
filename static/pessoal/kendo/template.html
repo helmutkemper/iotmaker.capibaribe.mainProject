@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base href="https://demos.telerik.com/kendo-ui/grid/index">
+  <style>html { font-size: 14px; font-family: Arial, Helvetica, sans-serif; }</style>
+  <title></title>
+  <link rel="stylesheet" href="https://kendo.cdn.telerik.com/2018.1.221/styles/kendo.default-v2.min.css" />
+
+  <script src="https://kendo.cdn.telerik.com/2018.1.221/js/jquery.min.js"></script>
+  <script src="https://kendo.cdn.telerik.com/2018.1.221/js/kendo.all.min.js"></script>
+  <script>
+    function ExposePortCustomButtonClick(){
+      containerHostExposedPortsAddNewPortDialogWindowRef.kendoDialog({
+        title: 'Expose port from container',
+        content: kendo.template($('#containerCreateTemplateExposedPortsAddNewPort').html()),
+        visible: false,
+        modal: true,
+        close: function(){
+
+        },
+        open: function(){
+          $('#ExposedPortsNumber').kendoNumericTextBox({ format: '#' });
+          containerConfigurationExposedPortsNumberRef = $('#ExposedPortsNumber').data('kendoNumericTextBox');
+
+          $('#ExposedPortsProtocol').kendoDropDownList();
+
+          setTimeout( function(){ containerConfigurationExposedPortsNumberRef.focus(); }, 1000)
+        },
+        actions: [
+          {
+            text: 'Close'
+          },
+          {
+            text: 'Add',
+            action: function(e){
+              ExposePortCustomButtonOnActionAndClose();
+              return false;
+            }
+          },
+          {
+            text: 'Add and close',
+            action: function(e){
+              ExposePortCustomButtonOnActionAndClose();
+            },
+            primary: true
+          }
+        ]
+      });
+      containerHostExposedPortsAddNewPortDialogWindowRef.data('kendoDialog').open();
+    }
+    function ExposePortCustomButtonOnActionAndClose(){
+      let imageName = containerConfigurationImageNameRef.text();
+
+      // Procura por um nome de container
+      if( imageName == '' ) {
+        $('#dialog').kendoDialog({
+          modal: true,
+          visible: true,
+          title: 'Configuration error',
+          content: 'Please, select an image name first.',
+          width: 400,
+          actions: [
+            { text: 'OK', primary: true, action: function(){ containerConfigurationImageNameRef.open(); } }
+          ]
+        });
+        return;
+      }
+
+      // Procura por uma porta válida
+      if( containerConfigurationExposedPortsNumberRef.value() == null ){
+        $('#dialog').kendoDialog({
+          modal: true,
+          visible: true,
+          title: 'Configuration error',
+          content: 'Please, select a valid port number.',
+          width: 400,
+          actions: [
+            { text: 'OK', primary: true, action: function(){ setTimeout( function(){ containerConfigurationExposedPortsNumberRef.focus(); }, 1000); } }
+          ]
+        });
+        return;
+      }
+
+      let dataSource = containerHostExposedPortsRef.dataSource;
+      containerHostExposedPortsItemsCount += 1;
+      containerHostExposedPortsItemsIdToAdd = containerHostExposedPortsItemsCount;
+
+      let dataInDataSource = dataSource.data();
+      let pass = true;
+
+      for (var i in dataInDataSource) {
+        if( isNaN( i ) ){
+          break
+        }
+        i = parseInt(i);
+        if (dataInDataSource[i].Value === $('#ExposedPortsNumber').val() + '/' + $('#ExposedPortsProtocol').val()) {
+          containerHostExposedPortsItemsIdToAdd = dataInDataSource[i].Id;
+          pass = false;
+          break;
+        }
+      }
+
+      if( pass === true ) {
+        dataSource.add({
+          Id: containerHostExposedPortsItemsCount,
+          Value: $('#ExposedPortsNumber').val() + '/' + $('#ExposedPortsProtocol').val(),
+          ImageName: containerConfigurationImageNameRef.text()
+        });
+      }
+
+      dataSource.one('requestEnd', function(args) {
+        if (args.type !== 'create') {
+          return;
+        }
+
+        dataSource.one('sync', function() {
+          containerHostExposedPortsRef.value(containerHostExposedPortsRef.value().concat([containerHostExposedPortsItemsIdToAdd]));
+        });
+
+        $('#ExposedPortsNumber').data('kendoNumericTextBox').value('');
+      });
+
+      dataSource.sync();
+    }
+    $(document).ready(function () {
+      $("#multiSelect").kendoMultiSelect({autoClose: false,autoWidth: true,clearButton: false,dataTextField: "productName",dataValueField: "productId",delay: 100,filter: "contains",footerTemplate: kendo.template($('#ExposePortFooterTemplate').html()),noDataTemplate: kendo.template($('#ExposePortNoDataTemplate').html()),placeholder: "Select...",itemTemplate: kendo.template($('#ExposePortTemplate').html()),value: [{"productName": "Item 1","productId": "1",},{"productName": "Item 2","productId": "2",},{"productName": "Item 3","productId": "3",},],});
+    });
+  </script>
+  <script id='ExposePortTemplate' type='text/x-kendo-tmpl'><span>Port: #= Value #<br>Usually used in: #= ImageName #</span></script>
+  <script id='ExposePortFooterTemplate' type='text/x-kendo-tmpl'><button class='k-button k-primary centerText' onclick='ExposePortCustomButtonClick()'>Add</button></script>
+  <script id='ExposePortNoDataTemplate' type='text/x-kendo-tmpl'><div>No ports found to add. Please add a port and a protocol before continuing.</div></script>
+
+</head>
+<body>
+
+<div id="example">
+  <select id="multiSelect"></select>
+</div>
+
+<style type="text/css">
+  .customer-photo {
+    display: inline-block;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%!;(MISSING)
+  background-size: 32px 35px;
+    background-position: center center;
+    vertical-align: middle;
+    line-height: 32px;
+    box-shadow: inset 0 0 1px #999, inset 0 0 10px rgba(0,0,0,.2);
+    margin-left: 5px;
+  }
+
+  .customer-name {
+    display: inline-block;
+    vertical-align: middle;
+    line-height: 32px;
+    padding-left: 3px;
+  }
+</style>
+
+
+</body>
+</html>
