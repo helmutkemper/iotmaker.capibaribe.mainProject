@@ -33,7 +33,7 @@ func containerListHtml(w mktp.ProxyResponseWriter, r *mktp.ProxyRequest) {
 
   w.Write( page )
 }
-
+// fixme: quando o usuário for criar um banco de dados ou parecido, ele tem que ser avisado de exportar o diretório de dados para a máquina
 func main() {
   mktp.ProxyRootConfig = mktp.ProxyConfig{
     ListenAndServe: ":8888",
@@ -295,7 +295,7 @@ func main() {
         Path: mktp.ProxyPath{
           Path : "/add",
           Method: "POST",
-          //ExpReg: `^/(?P<controller>[a-z0-9-]+)/(?P<module>[a-z0-9-]+)/(?P<site>[a-z0-9]+.(htm|html))$`,
+          // ExpReg: `^/(?P<controller>[a-z0-9-]+)/(?P<module>[a-z0-9-]+)/(?P<site>[a-z0-9]+.(htm|html))$`,
         },
         ProxyEnable: false,
         Handle: mktp.ProxyHandle{
@@ -314,7 +314,7 @@ func main() {
         Path: mktp.ProxyPath{
           Path : "/remove",
           Method: "POST",
-          //ExpReg: `^/(?P<controller>[a-z0-9-]+)/(?P<module>[a-z0-9-]+)/(?P<site>[a-z0-9]+.(htm|html))$`,
+          // ExpReg: `^/(?P<controller>[a-z0-9-]+)/(?P<module>[a-z0-9-]+)/(?P<site>[a-z0-9]+.(htm|html))$`,
         },
         ProxyEnable: false,
         Handle: mktp.ProxyHandle{
