@@ -39,6 +39,7 @@ func main() {
     ListenAndServe: ":8888",
     Routes: []mktp.ProxyRoute{
       {
+        // docker run -d --name ghost-blog-demo -p 2368:2368 ghost
         Name: "blog",
         Domain: mktp.ProxyDomain{
           SubDomain: "blog",
