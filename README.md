@@ -1,2 +1,3 @@
 # reverseProxy
-reverseProxy kendo com demo do sap
+
+This project is not finished, so it is not in a free repository
