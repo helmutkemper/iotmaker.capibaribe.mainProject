@@ -34,7 +34,7 @@ golbalOnInit.push(function(){
 function containerHostExposedPortsAddNewPort(){
   containerHostExposedPortsAddNewPortDialogWindowRef.kendoDialog({
     title: "Expose port from container",
-    content: kendo.template($("#containerCreateTemplateExposedPortsAddNewPort").html()),
+    content: kendo.template($('#containerCreateTemplateExposedPortsAddNewPort').html()),
     visible: false,
     modal: true,
     close: function(){
