@@ -123,24 +123,22 @@ function containerHostExposedPortsAddNewPortFunction(){
     }
   }
 
-  if( pass === true ) {
     dataSource.add({
-      Id: containerHostExposedPortsItemsCount,
+      Id: dataSource.total(),
       Value: $("#ExposedPortsNumber").val() + "/" + $("#ExposedPortsProtocol").val(),
       ImageName: containerConfigurationImageNameRef.text()
     });
-  }
 
-  dataSource.one("requestEnd", function(args) {
-    if (args.type !== "create") {
+  dataSource.one('requestEnd', function(args) {
+    if (args.type !== 'create') {
       return;
     }
 
-    dataSource.one("sync", function() {
+    dataSource.one('sync', function() {
       containerHostExposedPortsRef.value(containerHostExposedPortsRef.value().concat([containerHostExposedPortsItemsIdToAdd]));
     });
 
-    $("#ExposedPortsNumber").data("kendoNumericTextBox").value("");
+    $('#ExposedPortsNumber').data('kendoNumericTextBox').value('');
   });
 
   dataSource.sync();
