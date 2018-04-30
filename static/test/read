@@ -1,0 +1,25 @@
+{
+    "Meta": {
+        "Total": 2
+    },
+    "Objects": [
+         {
+             "id": 1,
+             "ExposedPortsNumber": 80,
+             "ExposedPortsProtocol": "TCP",
+             "ExposedPortsShow": "80/TCP"
+         },
+         {
+             "id": 2,
+             "ExposedPortsNumber": 8080,
+             "ExposedPortsProtocol": "TCP",
+             "ExposedPortsShow": "8080/TCP"
+         },
+         {
+             "id": 3,
+             "ExposedPortsNumber": 90,
+             "ExposedPortsProtocol": "UDP",
+             "ExposedPortsShow": "90/UDP"
+         }
+     ]
+}
