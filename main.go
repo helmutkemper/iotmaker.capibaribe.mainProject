@@ -4,22 +4,199 @@ import (
   mktp "github.com/helmutkemper/marketPlaceProxy"
   "net/http"
   "io/ioutil"
+  "html/template"
+  "reflect"
 )
 
-func hello(w mktp.ProxyResponseWriter, r *mktp.ProxyRequest) {
+type Icon struct {
+  Rel                 string
+  HRef                string
+}
+
+type Image struct {
+  Alt                 string
+  Src                 string
+}
+
+type Link struct {
+  HRef                string
+  Text                string
+  Alt                 string
+  Active              bool
+}
+
+type Content struct {
+  Title               string
+  AuthorName          string
+  AuthorLink          string
+  Date                string
+  ImageCaption        string
+  Image               Image
+  Description         string
+  Text                string
+}
+
+type SidePanel struct {
+  Title               string
+  Text                string
+}
+
+type PageData struct {
+  BasePath            string
+  Lang                string
+  PageTitle           string
+  AuthorInformation   string
+  Favico              Icon
+  Template            Template
+  Content             []Content
+  Copyright           string
+}
+
+type Template struct {
+  NavigationMenu      []Link
+  ListGroup           []Link
+  SidePanel           []SidePanel
+}
+
+func blogNovo(w mktp.ProxyResponseWriter, r *mktp.ProxyRequest) {
   w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
-  w.Write( []byte( "controller: " ) )
-  w.Write( []byte( r.ExpRegMatches[ "controller" ] ) )
-  w.Write( []byte( "<br>" ) )
+  tmpl, err := template.New("page_right_side.tmpl").Funcs(template.FuncMap{
+    "htmlSafe": func(html string) template.HTML {
+      return template.HTML(html)
+    },
+    "last": func(a interface{}) int {
+      return reflect.ValueOf(a).Len() - 1
+    },
+  }).ParseFiles("./static/template/blog/page_right_side.tmpl")
+  if err != nil {
+    w.Write( []byte( err.Error() ) )
+  }
 
-  w.Write( []byte( "module: " ) )
-  w.Write( []byte( r.ExpRegMatches[ "module" ] ) )
-  w.Write( []byte( "<br>" ) )
+  pageData := PageData{
+    BasePath: "./static/template/blog/",
+    Lang: "en",
+    PageTitle: "Kemper.com.br",
+    AuthorInformation: "Helmut Kemper",
+    Copyright: "Helmut Kemper 2018",
+    Favico: Icon{
+      Rel: "shortcut icon",
+      HRef: "favicon.ico",
+    },
+    Template: Template{
+      NavigationMenu: []Link{
+        {
+          HRef: "#",
+          Alt: "",
+          Text: "Nav Menu 1",
+        },
+        {
+          HRef: "#",
+          Alt: "",
+          Text: "Nav Menu 2",
+        },
+        {
+          HRef: "#",
+          Alt: "",
+          Text: "Nav Menu 3",
+        },
+      },
+      ListGroup: []Link{
+        {
+          HRef: "#",
+          Alt: "",
+          Text: "Category 1",
+          Active: true,
+        },
+        {
+          HRef: "#",
+          Alt: "",
+          Text: "Category 2",
+        },
+        {
+          HRef: "#",
+          Alt: "",
+          Text: "Category 3",
+        },
+      },
+      SidePanel: []SidePanel{
+        {
+          Title: "Sidebar panel widget",
+          Text: "Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat.",
+        },
+        {
+          Title: "Sidebar panel widget",
+          Text: "Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat.",
+        },
+        {
+          Title: "Sidebar panel widget",
+          Text: "Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat.",
+        },
+      },
+    },
+    Content: []Content{
+      {
+        Title: "Primeiro post",
+        AuthorName: "Helmut Kemper",
+        AuthorLink: "#",
+        Date: "12 January 2015 10:00 am",
+        ImageCaption: "Caption here",
+        Image: Image{
+          Src: "http://placehold.it/900x400",
+          Alt: "image from post",
+        },
+        Description: "Mussum Ipsum, cacilds vidis litro abertis. Quem manda na minha terra sou euzis! Praesent malesuada urna nisi, quis volutpat erat hendrerit non. Nam vulputate dapibus. Interessantiss quisso pudia ce receita de bolis, mais bolis eu num gostis. Aenean aliquam molestie leo, vitae iaculis nisl.",
+        Text: "<p>Mussum Ipsum, cacilds vidis litro abertis. Quem manda na minha terra sou euzis! Praesent malesuada urna nisi, quis volutpat erat hendrerit non. Nam vulputate dapibus. Interessantiss quisso pudia ce receita de bolis, mais bolis eu num gostis. Aenean aliquam molestie leo, vitae iaculis nisl.</p><p>Nullam volutpat risus nec leo commodo, ut interdum diam laoreet. Sed non consequat odio. Per aumento de cachacis, eu reclamis. Em pé sem cair, deitado sem dormir, sentado sem cochilar e fazendo pose. Delegadis gente finis, bibendum egestas augue arcu ut est.</p><p>Mussum Ipsum, cacilds vidis litro abertis. Quem manda na minha terra sou euzis! Praesent malesuada urna nisi, quis volutpat erat hendrerit non. Nam vulputate dapibus. Interessantiss quisso pudia ce receita de bolis, mais bolis eu num gostis. Aenean aliquam molestie leo, vitae iaculis nisl.</p><p>Nullam volutpat risus nec leo commodo, ut interdum diam laoreet. Sed non consequat odio. Per aumento de cachacis, eu reclamis. Em pé sem cair, deitado sem dormir, sentado sem cochilar e fazendo pose. Delegadis gente finis, bibendum egestas augue arcu ut est.</p>",
+      },
+      {
+        Title: "Primeiro post",
+        AuthorName: "Helmut Kemper",
+        AuthorLink: "#",
+        Date: "12 January 2015 10:00 am",
+        ImageCaption: "Caption here",
+        Image: Image{
+          Src: "http://placehold.it/900x400",
+          Alt: "image from post",
+        },
+        Description: "Mussum Ipsum, cacilds vidis litro abertis. Quem manda na minha terra sou euzis! Praesent malesuada urna nisi, quis volutpat erat hendrerit non. Nam vulputate dapibus. Interessantiss quisso pudia ce receita de bolis, mais bolis eu num gostis. Aenean aliquam molestie leo, vitae iaculis nisl.",
+        Text: "<p>Mussum Ipsum, cacilds vidis litro abertis. Quem manda na minha terra sou euzis! Praesent malesuada urna nisi, quis volutpat erat hendrerit non. Nam vulputate dapibus. Interessantiss quisso pudia ce receita de bolis, mais bolis eu num gostis. Aenean aliquam molestie leo, vitae iaculis nisl.</p><p>Nullam volutpat risus nec leo commodo, ut interdum diam laoreet. Sed non consequat odio. Per aumento de cachacis, eu reclamis. Em pé sem cair, deitado sem dormir, sentado sem cochilar e fazendo pose. Delegadis gente finis, bibendum egestas augue arcu ut est.</p><p>Mussum Ipsum, cacilds vidis litro abertis. Quem manda na minha terra sou euzis! Praesent malesuada urna nisi, quis volutpat erat hendrerit non. Nam vulputate dapibus. Interessantiss quisso pudia ce receita de bolis, mais bolis eu num gostis. Aenean aliquam molestie leo, vitae iaculis nisl.</p><p>Nullam volutpat risus nec leo commodo, ut interdum diam laoreet. Sed non consequat odio. Per aumento de cachacis, eu reclamis. Em pé sem cair, deitado sem dormir, sentado sem cochilar e fazendo pose. Delegadis gente finis, bibendum egestas augue arcu ut est.</p>",
+      },
+      {
+        Title: "Primeiro post",
+        AuthorName: "Helmut Kemper",
+        AuthorLink: "#",
+        Date: "12 January 2015 10:00 am",
+        ImageCaption: "Caption here",
+        Image: Image{
+          Src: "http://placehold.it/900x400",
+          Alt: "image from post",
+        },
+        Description: "Mussum Ipsum, cacilds vidis litro abertis. Quem manda na minha terra sou euzis! Praesent malesuada urna nisi, quis volutpat erat hendrerit non. Nam vulputate dapibus. Interessantiss quisso pudia ce receita de bolis, mais bolis eu num gostis. Aenean aliquam molestie leo, vitae iaculis nisl.",
+        Text: "<p>Mussum Ipsum, cacilds vidis litro abertis. Quem manda na minha terra sou euzis! Praesent malesuada urna nisi, quis volutpat erat hendrerit non. Nam vulputate dapibus. Interessantiss quisso pudia ce receita de bolis, mais bolis eu num gostis. Aenean aliquam molestie leo, vitae iaculis nisl.</p><p>Nullam volutpat risus nec leo commodo, ut interdum diam laoreet. Sed non consequat odio. Per aumento de cachacis, eu reclamis. Em pé sem cair, deitado sem dormir, sentado sem cochilar e fazendo pose. Delegadis gente finis, bibendum egestas augue arcu ut est.</p><p>Mussum Ipsum, cacilds vidis litro abertis. Quem manda na minha terra sou euzis! Praesent malesuada urna nisi, quis volutpat erat hendrerit non. Nam vulputate dapibus. Interessantiss quisso pudia ce receita de bolis, mais bolis eu num gostis. Aenean aliquam molestie leo, vitae iaculis nisl.</p><p>Nullam volutpat risus nec leo commodo, ut interdum diam laoreet. Sed non consequat odio. Per aumento de cachacis, eu reclamis. Em pé sem cair, deitado sem dormir, sentado sem cochilar e fazendo pose. Delegadis gente finis, bibendum egestas augue arcu ut est.</p>",
+      },
+      {
+        Title: "Primeiro post",
+        AuthorName: "Helmut Kemper",
+        AuthorLink: "#",
+        Date: "12 January 2015 10:00 am",
+        ImageCaption: "Caption here",
+        Image: Image{
+          Src: "http://placehold.it/900x400",
+          Alt: "image from post",
+        },
+        Description: "Mussum Ipsum, cacilds vidis litro abertis. Quem manda na minha terra sou euzis! Praesent malesuada urna nisi, quis volutpat erat hendrerit non. Nam vulputate dapibus. Interessantiss quisso pudia ce receita de bolis, mais bolis eu num gostis. Aenean aliquam molestie leo, vitae iaculis nisl.",
+        Text: "<p>Mussum Ipsum, cacilds vidis litro abertis. Quem manda na minha terra sou euzis! Praesent malesuada urna nisi, quis volutpat erat hendrerit non. Nam vulputate dapibus. Interessantiss quisso pudia ce receita de bolis, mais bolis eu num gostis. Aenean aliquam molestie leo, vitae iaculis nisl.</p><p>Nullam volutpat risus nec leo commodo, ut interdum diam laoreet. Sed non consequat odio. Per aumento de cachacis, eu reclamis. Em pé sem cair, deitado sem dormir, sentado sem cochilar e fazendo pose. Delegadis gente finis, bibendum egestas augue arcu ut est.</p><p>Mussum Ipsum, cacilds vidis litro abertis. Quem manda na minha terra sou euzis! Praesent malesuada urna nisi, quis volutpat erat hendrerit non. Nam vulputate dapibus. Interessantiss quisso pudia ce receita de bolis, mais bolis eu num gostis. Aenean aliquam molestie leo, vitae iaculis nisl.</p><p>Nullam volutpat risus nec leo commodo, ut interdum diam laoreet. Sed non consequat odio. Per aumento de cachacis, eu reclamis. Em pé sem cair, deitado sem dormir, sentado sem cochilar e fazendo pose. Delegadis gente finis, bibendum egestas augue arcu ut est.</p>",
+      },
+    },
+  }
+  err = tmpl.Execute( w, pageData )
+  if err != nil {
+    w.Write( []byte( err.Error() ) )
+  }
+}
 
-  w.Write( []byte( "site: " ) )
-  w.Write( []byte( r.ExpRegMatches[ "site" ] ) )
-  w.Write( []byte( "<br>" ) )
+func hello(w mktp.ProxyResponseWriter, r *mktp.ProxyRequest) {
+
 }
 
 func containerListHtml(w mktp.ProxyResponseWriter, r *mktp.ProxyRequest) {
@@ -63,20 +240,17 @@ func main() {
         },
       },
       {
-        Name: "hello",
+        Name: "blog novo",
         Domain: mktp.ProxyDomain{
           NotFoundHandle: mktp.ProxyRootConfig.ProxyNotFound,
           ErrorHandle: mktp.ProxyRootConfig.ProxyError,
-          SubDomain: "",
+          SubDomain: "go",
           Domain: "localhost",
           Port: "8888",
         },
-        Path: mktp.ProxyPath{
-          ExpReg: `^/(?P<controller>[a-z0-9-]+)/(?P<module>[a-z0-9-]+)/(?P<site>[a-z0-9]+.(htm|html))$`,
-        },
         ProxyEnable: false,
         Handle: mktp.ProxyHandle{
-          Handle: hello,
+          Handle: blogNovo,
         },
       },
       {

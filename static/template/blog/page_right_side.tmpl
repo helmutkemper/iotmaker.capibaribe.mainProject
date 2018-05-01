@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="{{.Lang}}">
+  <head>
+    <base href="{{.BasePath}}">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>{{.PageTitle}}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="Description" lang="{{.Lang}}" content="ADD SITE DESCRIPTION">
+    <meta name="author" content="{{.AuthorInformation}}">
+    <meta name="robots" content="index, follow">
+
+    <!-- icons -->
+    <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png"><!-- o que este icone faz? -->
+    <link rel="{{.Favico.Rel}}" href="{{.Favico.HRef}}">
+
+    <!-- Bootstrap Core CSS file -->
+    <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+
+    <!-- Override CSS file - add your own CSS rules -->
+    <link rel="stylesheet" href="assets/css/styles.css">
+
+    <!-- Conditional comment containing JS files for IE6 - 8 -->
+    <!--[if lt IE 9]>
+      <script src="assets/js/html5.js"></script>
+      <script src="assets/js/respond.min.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+
+  <!-- Navigation -->
+  <nav class="navbar navbar-fixed-top navbar-inverse" role="navigation">
+    <div class="container-fluid">
+      <!-- Brand and toggle get grouped for better mobile display -->
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="#">Sitename</a>
+      </div>
+      <!-- /.navbar-header -->
+
+      <!-- Collect the nav links, forms, and other content for toggling -->
+      <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+        <ul class="nav navbar-nav">
+          {{range .Template.NavigationMenu}}
+          <li><a href="{{.HRef}}" alt="{{.Alt}}">{{.Text}}</a></li>
+          {{end}}
+        </ul>
+      </div>
+      <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container-fluid -->
+  </nav>
+  <!-- /.navbar -->
+
+  <div class="container-fluid">{{ $ContentLength := len .Content }}{{ $ContentLastKey := last .Content }}{{range $ContentKey, $ContentData := .Content}}
+    <!-- Page Content -->
+    <!-- author -->
+    <div class="row">
+      <div class="col-sm-8 col-sm-push-4">
+        <div class="page-header">
+          <h1>{{htmlSafe .Title}}</h1>
+          {{if .AuthorName}}<p>Posted by <span class="glyphicon glyphicon-user"></span> <a href="{{.AuthorLink}}" alt="link from author">{{htmlSafe .AuthorName}}</a>{{if .Date}} on <span class="glyphicon glyphicon-time"></span> {{.Date}}</p>{{end}}{{end}}
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm-8 col-sm-push-4">
+        <figure class="margin-b-2">{{if .Image.Src}}<img class="img-responsive" src="{{.Image.Src}}" alt="{{.Image.Alt}}">{{end}}{{if .ImageCaption}}<figcaption class="margin-t-h">{{.ImageCaption}}</figcaption>{{end}}</figure>
+        <p class="lead">{{htmlSafe .Description}}</p>
+        {{htmlSafe .Text}}
+        {{ if and (gt $ContentLength 1) (ne $ContentKey $ContentLength) }}
+          <!--hr-->
+        {{end}}
+
+        <!-- Pager -->
+        <!--
+        <nav>
+          <ul class="pager">
+            <li class="previous"><a href="#"><span class="glyphicon glyphicon-menu-left" aria-hidden="true"></span> Older</a></li>
+            <li class="next"><a href="#">Newer <span class="glyphicon glyphicon-menu-right" aria-hidden="true"></span></a></li>
+          </ul>
+        </nav>
+        -->
+      </div>
+        {{if eq $ContentKey 0}}
+          <div class="col-sm-4 col-sm-pull-8">
+            <!-- Search -->
+            <div class="well">
+              <h4 class="margin-t-0">Search</h4>
+              <form action="#">
+                <div class="input-group">
+                  <label class="sr-only" for="search-form">Search the site</label>
+                  <input type="text" class="form-control" id="search-form">
+                  <span class="input-group-btn">
+                    <button class="btn btn-default" type="button">
+                      <span class="glyphicon glyphicon-search"></span>
+                      <span class="sr-only">Search</span>
+                    </button>
+                  </span>
+                </div>
+              </form>
+            </div>
+
+            <!-- list group -->
+            <div class="list-group margin-b-3">
+              {{range $.Template.ListGroup}}
+              <a href="{{.HRef}}" alt="{{.Alt}}" class="{{if .Active}}active{{end}} list-group-item">{{.Text}}</a>
+              {{end}}
+            </div>
+
+            <!-- Panel -->
+            {{range $.Template.SidePanel}}
+            <div class="panel panel-default">
+              <div class="panel-heading">
+                <h4 class="panel-title">{{htmlSafe .Title}}</h4>
+              </div>
+              <div class="panel-body">
+                {{htmlSafe .Text}}
+              </div>
+            </div>
+            {{end}}
+
+          </div>
+        {{end}}
+      </div>
+    {{end}}
+
+    <hr>
+    <footer class="margin-tb-3">
+      <div class="row">
+        <div class="col-lg-12">
+          <p>Copyright &copy; {{.Copyright}}</p>
+        </div>
+      </div>
+    </footer>
+
+  </div>
+
+
+
+
+
+
+
+
+
+<!-- /.container-fluid -->
+
+<!-- JQuery scripts -->
+<script src="assets/js/jquery-1.11.2.min.js"></script>
+
+<!-- Bootstrap Core scripts -->
+<script src="assets/js/bootstrap.min.js"></script>
+</body>
+</html>
