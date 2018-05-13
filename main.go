@@ -26,6 +26,7 @@ type Link struct {
 }
 
 type Content struct {
+  Id                  string
   Title               string
   AuthorName          string
   AuthorLink          string
@@ -37,8 +38,14 @@ type Content struct {
 }
 
 type SidePanel struct {
+  Id                  string
+  Content             []SidePanelContent
+  BreakLine           string
+}
+
+type SidePanelContent struct {
   Title               string
-  Text                string
+  Content             string
 }
 
 type PageData struct {
@@ -50,12 +57,15 @@ type PageData struct {
   Template            Template
   Content             []Content
   Copyright           string
+  EditEnable          bool
+  SaveButtonText      string
 }
 
 type Template struct {
   NavigationMenu      []Link
   ListGroup           []Link
   SidePanel           []SidePanel
+  AutoCompleteEnable  bool
 }
 
 func blogNovo(w mktp.ProxyResponseWriter, r *mktp.ProxyRequest) {
@@ -83,7 +93,10 @@ func blogNovo(w mktp.ProxyResponseWriter, r *mktp.ProxyRequest) {
       Rel: "shortcut icon",
       HRef: "favicon.ico",
     },
+    EditEnable: false,
+    SaveButtonText: "Save this article",
     Template: Template{
+      AutoCompleteEnable: true,
       NavigationMenu: []Link{
         {
           HRef: "#",
@@ -121,21 +134,100 @@ func blogNovo(w mktp.ProxyResponseWriter, r *mktp.ProxyRequest) {
       },
       SidePanel: []SidePanel{
         {
-          Title: "Sidebar panel widget",
-          Text: "Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat.",
+          Id: "SideBarPanel1",
+          BreakLine: "<br><br>",
+          Content:[]SidePanelContent{
+            {
+              Title: "Sidebar panel widget",
+              Content: "Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat.",
+            },
+            {
+              Title: "Sidebar panel widget",
+              Content: "Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat.",
+            },
+            {
+              Title: "Sidebar panel widget",
+              Content: "Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat.",
+            },
+          },
         },
         {
-          Title: "Sidebar panel widget",
-          Text: "Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat.",
+          Id: "SideBarPanel2",
+          BreakLine: "<br><br>",
+          Content:[]SidePanelContent{
+            {
+              Title: "Sidebar panel widget",
+              Content: "Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat.",
+            },
+            {
+              Title: "Sidebar panel widget",
+              Content: "Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat.",
+            },
+            {
+              Title: "Sidebar panel widget",
+              Content: "Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat.",
+            },
+          },
         },
         {
-          Title: "Sidebar panel widget",
-          Text: "Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat.",
+          Id: "SideBarPanel3",
+          BreakLine: "<br><br>",
+          Content:[]SidePanelContent{
+            {
+              Title: "Sidebar panel widget",
+              Content: "Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat.",
+            },
+            {
+              Title: "Sidebar panel widget",
+              Content: "Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat.",
+            },
+            {
+              Title: "Sidebar panel widget",
+              Content: "Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat.",
+            },
+          },
+        },
+        {
+          Id: "SideBarPanel4",
+          BreakLine: "<br><br>",
+          Content:[]SidePanelContent{
+            {
+              Title: "Sidebar panel widget",
+              Content: "Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat.",
+            },
+            {
+              Title: "Sidebar panel widget",
+              Content: "Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat.",
+            },
+            {
+              Title: "Sidebar panel widget",
+              Content: "Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat.",
+            },
+          },
+        },
+        {
+          Id: "SideBarPanel5",
+          BreakLine: "<br><br>",
+          Content:[]SidePanelContent{
+            {
+              Title: "Sidebar panel widget",
+              Content: "Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat.",
+            },
+            {
+              Title: "Sidebar panel widget",
+              Content: "Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat.",
+            },
+            {
+              Title: "Sidebar panel widget",
+              Content: "Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat.",
+            },
+          },
         },
       },
     },
     Content: []Content{
       {
+        Id: "Post1",
         Title: "Primeiro post",
         AuthorName: "Helmut Kemper",
         AuthorLink: "#",
@@ -149,6 +241,7 @@ func blogNovo(w mktp.ProxyResponseWriter, r *mktp.ProxyRequest) {
         Text: "<p>Mussum Ipsum, cacilds vidis litro abertis. Quem manda na minha terra sou euzis! Praesent malesuada urna nisi, quis volutpat erat hendrerit non. Nam vulputate dapibus. Interessantiss quisso pudia ce receita de bolis, mais bolis eu num gostis. Aenean aliquam molestie leo, vitae iaculis nisl.</p><p>Nullam volutpat risus nec leo commodo, ut interdum diam laoreet. Sed non consequat odio. Per aumento de cachacis, eu reclamis. Em pé sem cair, deitado sem dormir, sentado sem cochilar e fazendo pose. Delegadis gente finis, bibendum egestas augue arcu ut est.</p><p>Mussum Ipsum, cacilds vidis litro abertis. Quem manda na minha terra sou euzis! Praesent malesuada urna nisi, quis volutpat erat hendrerit non. Nam vulputate dapibus. Interessantiss quisso pudia ce receita de bolis, mais bolis eu num gostis. Aenean aliquam molestie leo, vitae iaculis nisl.</p><p>Nullam volutpat risus nec leo commodo, ut interdum diam laoreet. Sed non consequat odio. Per aumento de cachacis, eu reclamis. Em pé sem cair, deitado sem dormir, sentado sem cochilar e fazendo pose. Delegadis gente finis, bibendum egestas augue arcu ut est.</p>",
       },
       {
+        Id: "Post2",
         Title: "Primeiro post",
         AuthorName: "Helmut Kemper",
         AuthorLink: "#",
@@ -162,6 +255,7 @@ func blogNovo(w mktp.ProxyResponseWriter, r *mktp.ProxyRequest) {
         Text: "<p>Mussum Ipsum, cacilds vidis litro abertis. Quem manda na minha terra sou euzis! Praesent malesuada urna nisi, quis volutpat erat hendrerit non. Nam vulputate dapibus. Interessantiss quisso pudia ce receita de bolis, mais bolis eu num gostis. Aenean aliquam molestie leo, vitae iaculis nisl.</p><p>Nullam volutpat risus nec leo commodo, ut interdum diam laoreet. Sed non consequat odio. Per aumento de cachacis, eu reclamis. Em pé sem cair, deitado sem dormir, sentado sem cochilar e fazendo pose. Delegadis gente finis, bibendum egestas augue arcu ut est.</p><p>Mussum Ipsum, cacilds vidis litro abertis. Quem manda na minha terra sou euzis! Praesent malesuada urna nisi, quis volutpat erat hendrerit non. Nam vulputate dapibus. Interessantiss quisso pudia ce receita de bolis, mais bolis eu num gostis. Aenean aliquam molestie leo, vitae iaculis nisl.</p><p>Nullam volutpat risus nec leo commodo, ut interdum diam laoreet. Sed non consequat odio. Per aumento de cachacis, eu reclamis. Em pé sem cair, deitado sem dormir, sentado sem cochilar e fazendo pose. Delegadis gente finis, bibendum egestas augue arcu ut est.</p>",
       },
       {
+        Id: "Post2",
         Title: "Primeiro post",
         AuthorName: "Helmut Kemper",
         AuthorLink: "#",
@@ -175,6 +269,7 @@ func blogNovo(w mktp.ProxyResponseWriter, r *mktp.ProxyRequest) {
         Text: "<p>Mussum Ipsum, cacilds vidis litro abertis. Quem manda na minha terra sou euzis! Praesent malesuada urna nisi, quis volutpat erat hendrerit non. Nam vulputate dapibus. Interessantiss quisso pudia ce receita de bolis, mais bolis eu num gostis. Aenean aliquam molestie leo, vitae iaculis nisl.</p><p>Nullam volutpat risus nec leo commodo, ut interdum diam laoreet. Sed non consequat odio. Per aumento de cachacis, eu reclamis. Em pé sem cair, deitado sem dormir, sentado sem cochilar e fazendo pose. Delegadis gente finis, bibendum egestas augue arcu ut est.</p><p>Mussum Ipsum, cacilds vidis litro abertis. Quem manda na minha terra sou euzis! Praesent malesuada urna nisi, quis volutpat erat hendrerit non. Nam vulputate dapibus. Interessantiss quisso pudia ce receita de bolis, mais bolis eu num gostis. Aenean aliquam molestie leo, vitae iaculis nisl.</p><p>Nullam volutpat risus nec leo commodo, ut interdum diam laoreet. Sed non consequat odio. Per aumento de cachacis, eu reclamis. Em pé sem cair, deitado sem dormir, sentado sem cochilar e fazendo pose. Delegadis gente finis, bibendum egestas augue arcu ut est.</p>",
       },
       {
+        Id: "Post4",
         Title: "Primeiro post",
         AuthorName: "Helmut Kemper",
         AuthorLink: "#",

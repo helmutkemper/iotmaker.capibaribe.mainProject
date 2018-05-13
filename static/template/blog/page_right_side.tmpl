@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="{{.Lang}}">
   <head>
-    <base href="{{.BasePath}}">
+    <!--base href="{{.BasePath}}"-->
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>{{.PageTitle}}</title>
@@ -10,21 +10,265 @@
     <meta name="author" content="{{.AuthorInformation}}">
     <meta name="robots" content="index, follow">
 
-    <!-- icons -->
-    <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png"><!-- o que este icone faz? -->
-    <link rel="{{.Favico.Rel}}" href="{{.Favico.HRef}}">
+    <base href="/static/">
+    <link rel="stylesheet" href="js/kendo-ui/styles/kendo.common.min.css" />
+    <link rel="stylesheet" href="js/kendo-ui/styles/kendo.common-material.min.css" />
+    <link rel="stylesheet" href="js/kendo-ui/styles/kendo.material.min.css" />
+    <link rel="stylesheet" href="js/kendo-ui/styles/kendo.material.mobile.min.css" />
 
-    <!-- Bootstrap Core CSS file -->
-    <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/styles.css">
 
-    <!-- Override CSS file - add your own CSS rules -->
-    <link rel="stylesheet" href="assets/css/styles.css">
+    <script src="js/kendo-ui/js/jquery.min.js"></script>
+    <script src="js/kendo-ui/js/kendo.all.min.js"></script>
+    <script src="js/fuse.min.js"></script>
+
+    <link rel="stylesheet" href="js/bootstrap/bootstrap.min.css">
+    <script src="js/bootstrap/bootstrap.min.js"></script>
 
     <!-- Conditional comment containing JS files for IE6 - 8 -->
     <!--[if lt IE 9]>
-      <script src="assets/js/html5.js"></script>
-      <script src="assets/js/respond.min.js"></script>
+    <script src="js/html5.js"></script>
+    <script src="js/respond.min.js"></script>
     <![endif]-->
+
+    <script>
+      var fuzzyData =   [
+        {
+          title: "Old Man's War",
+          author: {
+            firstName: "John",
+            lastName: "Scalzi"
+          }
+        },
+        {
+          title: "The Lock Artist",
+          author: {
+            firstName: "Steve",
+            lastName: "Hamilton"
+          }
+        },
+        {
+          title: "HTML5",
+          author: {
+            firstName: "Remy",
+            lastName: "Sharp"
+          }
+        },
+        {
+          title: "Right Ho Jeeves",
+          author: {
+            firstName: "P.D",
+            lastName: "Woodhouse"
+          }
+        },
+        {
+          title: "The Code of the Wooster",
+          author: {
+            firstName: "P.D",
+            lastName: "Woodhouse"
+          }
+        },
+        {
+          title: "Thank You Jeeves",
+          author: {
+            firstName: "P.D",
+            lastName: "Woodhouse"
+          }
+        },
+        {
+          title: "The DaVinci Code",
+          author: {
+            firstName: "Dan",
+            lastName: "Brown"
+          }
+        },
+        {
+          title: "Angels & Demons",
+          author: {
+            firstName: "Dan",
+            lastName: "Brown"
+          }
+        },
+        {
+          title: "The Silmarillion",
+          author: {
+            firstName: "J.R.R",
+            lastName: "Tolkien"
+          }
+        },
+        {
+          title: "Syrup",
+          author: {
+            firstName: "Max",
+            lastName: "Barry"
+          }
+        },
+        {
+          title: "The Lost Symbol",
+          author: {
+            firstName: "Dan",
+            lastName: "Brown"
+          }
+        },
+        {
+          title: "The Book of Lies",
+          author: {
+            firstName: "Brad",
+            lastName: "Meltzer"
+          }
+        },
+        {
+          title: "Lamb",
+          author: {
+            firstName: "Christopher",
+            lastName: "Moore"
+          }
+        },
+        {
+          title: "Fool",
+          author: {
+            firstName: "Christopher",
+            lastName: "Moore"
+          }
+        },
+        {
+          title: "Incompetence",
+          author: {
+            firstName: "Rob",
+            lastName: "Grant"
+          }
+        },
+        {
+          title: "Fat",
+          author: {
+            firstName: "Rob",
+            lastName: "Grant"
+          }
+        },
+        {
+          title: "Colony",
+          author: {
+            firstName: "Rob",
+            lastName: "Grant"
+          }
+        },
+        {
+          title: "Backwards, Red Dwarf",
+          author: {
+            firstName: "Rob",
+            lastName: "Grant"
+          }
+        },
+        {
+          title: "The Grand Design",
+          author: {
+            firstName: "Stephen",
+            lastName: "Hawking"
+          }
+        },
+        {
+          title: "The Book of Samson",
+          author: {
+            firstName: "David",
+            lastName: "Maine"
+          }
+        },
+        {
+          title: "The Preservationist",
+          author: {
+            firstName: "David",
+            lastName: "Maine"
+          }
+        },
+        {
+          title: "Fallen",
+          author: {
+            firstName: "David",
+            lastName: "Maine"
+          }
+        },
+        {
+          title: "Monster 1959",
+          author: {
+            firstName: "David",
+            lastName: "Maine"
+          }
+        }
+      ];
+
+      var options = {
+        shouldSort: true,
+        threshold: 0.6,
+        location: 0,
+        distance: 50,
+        maxPatternLength: 32,
+        minMatchCharLength: 2,
+        keys: [
+          "title",
+          "author.firstName"
+        ]
+      };
+      var fuse = new Fuse(fuzzyData, options); // "list" is the item array
+
+      function saveThisArticle( id ){
+        console.log( 'Title:', $('#' + id + 'Title').data("kendoEditor").value() );
+        console.log( 'Description:', $('#' + id + 'Description').data("kendoEditor").value() );
+        console.log( 'Text:', $('#' + id + 'Text').data("kendoEditor").value() );
+      }
+
+      var searchForm;
+      $(document).ready(function(){
+
+        // <!-- KendoEditorInLine - 1 of 2 - start -->
+        {{if eq $.EditEnable true}}
+          {{range .Content}}
+
+            $("#{{.Id}}Title").kendoEditor({tools:[]});
+            $("#{{.Id}}Description").kendoEditor({tools:["bold", "italic", "underline"]});
+            $("#{{.Id}}Text").kendoEditor({tools:["bold", "italic", "underline"]});
+            $("#{{.Id}}Button").kendoButton();
+
+          {{end}}
+        {{end}}
+        // <!-- KendoEditorInLine - 1 of 2 - end -->
+
+        // <!-- kendoAutoComplete - 1 of 2 - search - start -->
+        {{if eq $.Template.AutoCompleteEnable true}}
+        $("#search-form").kendoAutoComplete(
+          {
+            dataSource: [],
+            clearButton: false,
+            dataTextField: "title",
+            minLength: 1,
+            filter: "isnotempty",
+            dataBound: function(){
+              console.log('data:', searchForm.value());
+              var dataSource = new kendo.data.DataSource({
+                data: fuse.search( searchForm.value() )
+              });
+              searchForm.setDataSource( dataSource );
+              searchForm.dataSource.sync();
+            }
+          }
+        );
+        {{end}}
+        // <!-- kendoAutoComplete - 1 of 2 - search - end -->
+
+        // <!-- kendoPanelBar - side bar - 1 of 2 - start -->
+        {{range $.Template.SidePanel}}
+        $("#{{.Id}}").kendoPanelBar({
+          expandMode: "single"
+        });
+        {{end}}
+        // <!-- kendoPanelBar - side bar - 1 of 2 - end -->
+
+        searchForm = $('#search-form').data('kendoAutoComplete');
+      });
+    </script>
+
+    <!-- icons -->
+    <!--link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png"><!-- o que este icone faz? -->
+    <link rel="{{.Favico.Rel}}" href="{{.Favico.HRef}}">
   </head>
   <body>
 
@@ -57,39 +301,50 @@
   </nav>
   <!-- /.navbar -->
 
-  <div class="container-fluid">{{ $ContentLength := len .Content }}{{ $ContentLastKey := last .Content }}{{range $ContentKey, $ContentData := .Content}}
+  <div class="container-fluid">
+  {{ $ContentLength := len .Content }}
+  {{ $ContentLastKey := last .Content }}
+  {{range $ContentKey, $ContentData := .Content}}
     <!-- Page Content -->
     <!-- author -->
     <div class="row">
       <div class="col-sm-8 col-sm-push-4">
         <div class="page-header">
-          <h1>{{htmlSafe .Title}}</h1>
-          {{if .AuthorName}}<p>Posted by <span class="glyphicon glyphicon-user"></span> <a href="{{.AuthorLink}}" alt="link from author">{{htmlSafe .AuthorName}}</a>{{if .Date}} on <span class="glyphicon glyphicon-time"></span> {{.Date}}</p>{{end}}{{end}}
+          <h1 id="{{.Id}}Title">{{htmlSafe .Title}}</h1>
+          {{if .AuthorName}}
+            <p>Posted by <span class="glyphicon glyphicon-user"></span> <a href="{{.AuthorLink}}" alt="link from author">{{htmlSafe .AuthorName}}</a>{{if .Date}} on <span class="glyphicon glyphicon-time"></span> {{.Date}}</p>{{end}}
+          {{end}}
         </div>
       </div>
     </div>
     <div class="row">
       <div class="col-sm-8 col-sm-push-4">
-        <figure class="margin-b-2">{{if .Image.Src}}<img class="img-responsive" src="{{.Image.Src}}" alt="{{.Image.Alt}}">{{end}}{{if .ImageCaption}}<figcaption class="margin-t-h">{{.ImageCaption}}</figcaption>{{end}}</figure>
-        <p class="lead">{{htmlSafe .Description}}</p>
-        {{htmlSafe .Text}}
-        {{ if and (gt $ContentLength 1) (ne $ContentKey $ContentLength) }}
-          <!--hr-->
+
+        {{if ne .Image.Src ""}}
+          <figure class="margin-b-2">
+            <img class="img-responsive" src="{{.Image.Src}}" alt="{{.Image.Alt}}">
+            {{if .ImageCaption}}
+              <figcaption class="margin-t-h">{{.ImageCaption}}</figcaption>
+            {{end}}
+          </figure>
         {{end}}
 
-        <!-- Pager -->
-        <!--
-        <nav>
-          <ul class="pager">
-            <li class="previous"><a href="#"><span class="glyphicon glyphicon-menu-left" aria-hidden="true"></span> Older</a></li>
-            <li class="next"><a href="#">Newer <span class="glyphicon glyphicon-menu-right" aria-hidden="true"></span></a></li>
-          </ul>
-        </nav>
-        -->
+
+        <p id="{{.Id}}Description" class="lead">{{htmlSafe .Description}}</p>
+        <span id="{{.Id}}Text">{{htmlSafe .Text}}</span>
+        <!-- KendoEditorInLine - 2 of 2 - start -->
+        {{if eq $.EditEnable true}}
+        <button id="{{.Id}}Button" class="k-primary" onclick="saveThisArticle('{{.Id}}')">{{$.SaveButtonText}}</button>
+        {{end}}
+        <!-- KendoEditorInLine - 2 of 2 - end -->
       </div>
+
+        <!-- isso foi uma gambiarra do inferno - start -->
         {{if eq $ContentKey 0}}
           <div class="col-sm-4 col-sm-pull-8">
-            <!-- Search -->
+
+            <!-- kendoAutoComplete - 2 of 2 - search - start -->
+            {{if eq $.Template.AutoCompleteEnable true}}
             <div class="well">
               <h4 class="margin-t-0">Search</h4>
               <form action="#">
@@ -105,28 +360,45 @@
                 </div>
               </form>
             </div>
+            {{end}}
+            <!-- kendoAutoComplete - 2 of 2 - search - end -->
 
-            <!-- list group -->
+            <!-- list group - 1 of 1 - start -->
+            {{ if ne ( len $.Template.ListGroup ) 0 }}
             <div class="list-group margin-b-3">
               {{range $.Template.ListGroup}}
               <a href="{{.HRef}}" alt="{{.Alt}}" class="{{if .Active}}active{{end}} list-group-item">{{.Text}}</a>
               {{end}}
             </div>
-
-            <!-- Panel -->
-            {{range $.Template.SidePanel}}
-            <div class="panel panel-default">
-              <div class="panel-heading">
-                <h4 class="panel-title">{{htmlSafe .Title}}</h4>
-              </div>
-              <div class="panel-body">
-                {{htmlSafe .Text}}
-              </div>
-            </div>
             {{end}}
+            <!-- list group - 1 of 1 - end -->
+
+            <!-- kendoPanelBar - side bar - 2 of 2 - start -->
+            {{ if ne ( len $.Template.SidePanel ) 0 }}
+              <!-- Panel -->
+              {{range $.Template.SidePanel}}
+                <ul id="{{.Id}}">
+
+                  {{range $key, $data := .Content}}
+                  <li class="{{if eq $key 0}}k-state-active active{{end}}">
+                    <span class="k-link">{{htmlSafe  .Title}}</span>
+                    <div style="padding: 10px;">
+                      {{htmlSafe  .Content}}
+                    </div>
+                  </li>
+                  {{end}}
+
+                </ul>
+                {{htmlSafe .BreakLine}}
+              {{end}}
+            {{end}}
+            <!-- kendoPanelBar - side bar - 2 of 2 - end -->
 
           </div>
         {{end}}
+        <!-- isso foi uma gambiarra do inferno - end -->
+
+
       </div>
     {{end}}
 
@@ -140,21 +412,5 @@
     </footer>
 
   </div>
-
-
-
-
-
-
-
-
-
-<!-- /.container-fluid -->
-
-<!-- JQuery scripts -->
-<script src="assets/js/jquery-1.11.2.min.js"></script>
-
-<!-- Bootstrap Core scripts -->
-<script src="assets/js/bootstrap.min.js"></script>
 </body>
 </html>
