@@ -207,3 +207,148 @@
 </div>
 </body>
 </html>
+<script>
+  var inData = {
+    "root":[ "key_1", "key_2" ],
+    "objects": {
+      "key": "out_3",
+      "value": [ "key_3", "key_4" ]
+    },
+    "types": {
+      "key_1": {
+        "type": "String",
+        "value": "id:um",
+        "key": "out_1"
+      },
+      "key_2": {
+        "type": "Number",
+        "value": "id:dois",
+        "key": "out_2"
+      },
+      "key_3": {
+        "type": "Object",
+        "value": "id:tres",
+        "key": "out_3"
+      },
+      "key_4": {
+        "type": "Object",
+        "value": "id:quatro",
+        "key": "out_4"
+      }
+    }
+  };
+
+  var Parser = function(){
+    this.outData = {};
+    this.rule = {};
+  };
+  Parser.prototype.addRule = function( rule ){
+    this.rule = rule;
+  };
+  Parser.prototype.run = function(){
+    for(var i in this.rule["root"] ){
+      var el = this.rule["root"][i];
+      var data = this.rule["types"][el];
+      var value = getFormValue( data["value"] );
+      var key = data["key"];
+      var type = data["type"];
+      switch(type){
+        case "String":
+          this.outData[ key ] = String( value );
+          break;
+        case "Number":
+          this.outData[ key ] = Number( value );
+          break;
+        case "Object":
+          this.outData[ key ] = {};
+          break;
+      }
+    }
+  };
+
+  $('#out').text(JSON.stringify(out));
+
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
