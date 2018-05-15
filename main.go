@@ -6,6 +6,8 @@ import (
   "io/ioutil"
   "html/template"
   "reflect"
+  "fmt"
+  "os"
 )
 
 type Icon struct {
@@ -307,6 +309,24 @@ func containerListHtml(w mktp.ProxyResponseWriter, r *mktp.ProxyRequest) {
 }
 // fixme: quando o usuário for criar um banco de dados ou parecido, ele tem que ser avisado de exportar o diretório de dados para a máquina
 func main() {
+  mktp.FuncMap.Add( mktp.ProxyRootConfig.ProxyNotFound )
+  mktp.FuncMap.Add( mktp.ProxyRootConfig.ProxyError )
+  mktp.FuncMap.Add( blogNovo )
+  mktp.FuncMap.Add( mktp.ImageWebList )
+  mktp.FuncMap.Add( mktp.ContainerWebList )
+  mktp.FuncMap.Add( mktp.ContainerStopById )
+  mktp.FuncMap.Add( mktp.ContainerRemove )
+  mktp.FuncMap.Add( mktp.ContainerRemove )
+  mktp.FuncMap.Add( mktp.ContainerStatsById )
+  mktp.FuncMap.Add( mktp.ContainerWebStatsLog )
+  mktp.FuncMap.Add( mktp.ContainerStart )
+  mktp.FuncMap.Add( mktp.ContainerWebStatsLogById )
+  mktp.FuncMap.Add( containerListHtml )
+  mktp.FuncMap.Add( mktp.ContainerLogsById )
+  mktp.FuncMap.Add( mktp.ProxyRootConfig.RouteAdd )
+  mktp.FuncMap.Add( mktp.ProxyRootConfig.RouteDelete )
+  mktp.FuncMap.Add( mktp.ProxyRootConfig.ProxyStatistics )
+
   mktp.ProxyRootConfig = mktp.ProxyConfig{
     ListenAndServe: ":8888",
     Routes: []mktp.ProxyRoute{
@@ -611,6 +631,14 @@ func main() {
     },
   }
   mktp.ProxyRootConfig.Prepare()
+
+  b, e := mktp.ProxyRootConfig.MarshalJSON()
+  if e != nil {
+    fmt.Printf( "error: %v", e.Error() )
+  }
+  fmt.Printf( "%s", b )
+  os.Exit(1)
+
   go mktp.ProxyRootConfig.VerifyDisabled()
 
   http.Handle("/static/", http.StripPrefix("/static/", http.FileServer( http.Dir( "static" ) ) ) )
