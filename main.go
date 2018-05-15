@@ -6,8 +6,6 @@ import (
   "io/ioutil"
   "html/template"
   "reflect"
-  "fmt"
-  "os"
 )
 
 type Icon struct {
@@ -631,14 +629,17 @@ func main() {
     },
   }
   mktp.ProxyRootConfig.Prepare()
-
+  /*
   b, e := mktp.ProxyRootConfig.MarshalJSON()
   if e != nil {
-    fmt.Printf( "error: %v", e.Error() )
+    fmt.Printf( "MarshalJSON error: %v", e.Error() )
   }
-  fmt.Printf( "%s", b )
-  os.Exit(1)
-
+  _ = b
+  e = mktp.ProxyRootConfig.UnmarshalJSON( b )
+  if e != nil {
+    fmt.Printf( "UnmarshalJSON error: %v", e.Error() )
+  }
+  */
   go mktp.ProxyRootConfig.VerifyDisabled()
 
   http.Handle("/static/", http.StripPrefix("/static/", http.FileServer( http.Dir( "static" ) ) ) )
