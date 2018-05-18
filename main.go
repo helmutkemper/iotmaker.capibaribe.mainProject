@@ -318,7 +318,7 @@ func main() {
   mktp.ProxyRootConfig = mktp.ProxyConfig{
     ListenAndServe: ":8888",
   }
-  mktp.ProxyRootConfig.RouteAddJs(
+  mktp.ProxyRootConfig.RouteAddStt(
     mktp.ProxyRoute{
     // docker run -d --name ghost-blog-demo -p 2368:2368 ghost
       Name: "blog",
