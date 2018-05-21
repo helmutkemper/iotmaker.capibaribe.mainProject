@@ -2,6 +2,7 @@ package main
 
 import (
   mktp "github.com/helmutkemper/marketPlaceProxy"
+  mb "github.com/helmutkemper/mobyContainer"
   "net/http"
   "io/ioutil"
   "html/template"
@@ -363,7 +364,7 @@ func main() {
         },
         ProxyEnable: false,
         Handle: mktp.ProxyHandle{
-          Handle: mktp.ImageWebList,
+          Handle: mb.ImageWebList,
         },
       },
       {
@@ -381,7 +382,7 @@ func main() {
         },
         ProxyEnable: false,
         Handle: mktp.ProxyHandle{
-          Handle: mktp.ContainerWebList,
+          Handle: mb.ContainerWebList,
         },
       },
       {
@@ -399,7 +400,7 @@ func main() {
         },
         ProxyEnable: false,
         Handle: mktp.ProxyHandle{
-          Handle: mktp.ContainerStopById,
+          Handle: mb.ContainerStopById,
         },
       },
       {
@@ -417,7 +418,7 @@ func main() {
         },
         ProxyEnable: false,
         Handle: mktp.ProxyHandle{
-          Handle: mktp.ContainerRemove,
+          Handle: mb.ContainerRemove,
         },
       },
       {
@@ -435,7 +436,7 @@ func main() {
         },
         ProxyEnable: false,
         Handle: mktp.ProxyHandle{
-          Handle: mktp.ContainerRemove,
+          Handle: mb.ContainerRemove,
         },
       },
       {
@@ -453,7 +454,7 @@ func main() {
         },
         ProxyEnable: false,
         Handle: mktp.ProxyHandle{
-          Handle: mktp.ContainerStatsById,
+          Handle: mb.ContainerStatsById,
         },
       },
       {
@@ -471,7 +472,7 @@ func main() {
         },
         ProxyEnable: false,
         Handle: mktp.ProxyHandle{
-          Handle: mktp.ContainerWebStatsLog,
+          Handle: mb.ContainerWebStatsLog,
         },
       },
       {
@@ -489,7 +490,7 @@ func main() {
         },
         ProxyEnable: false,
         Handle: mktp.ProxyHandle{
-          Handle: mktp.ContainerStart,
+          Handle: mb.ContainerStart,
         },
       },
       {
@@ -507,7 +508,7 @@ func main() {
         },
         ProxyEnable: false,
         Handle: mktp.ProxyHandle{
-          Handle: mktp.ContainerWebStatsLogById,
+          Handle: mb.ContainerWebStatsLogById,
         },
       },
       {
@@ -542,7 +543,7 @@ func main() {
         },
         ProxyEnable: false,
         Handle: mktp.ProxyHandle{
-          Handle: mktp.ContainerLogsById,
+          Handle: mb.ContainerLogsById,
         },
       },
 
