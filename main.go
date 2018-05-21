@@ -1,8 +1,7 @@
 package main
 
 import (
-  mktp "github.com/helmutkemper/marketPlaceProxy"
-  mb "github.com/helmutkemper/mobyContainer"
+  mktp "github.com/helmutkemper/SimpleReverseProxy"
   "net/http"
   "io/ioutil"
   "html/template"
@@ -308,311 +307,159 @@ func containerListHtml(w mktp.ProxyResponseWriter, r *mktp.ProxyRequest) {
 }
 // fixme: quando o usuário for criar um banco de dados ou parecido, ele tem que ser avisado de exportar o diretório de dados para a máquina
 func main() {
+  mktp.FuncMap.Add( mktp.ProxyRootConfig.ProxyNotFound )
+  mktp.FuncMap.Add( mktp.ProxyRootConfig.ProxyError )
+  mktp.FuncMap.Add( blogNovo )
+  mktp.FuncMap.Add( containerListHtml )
+  mktp.FuncMap.Add( mktp.ProxyRootConfig.RouteAdd )
+  mktp.FuncMap.Add( mktp.ProxyRootConfig.RouteDelete )
+  mktp.FuncMap.Add( mktp.ProxyRootConfig.ProxyStatistics )
+
   mktp.ProxyRootConfig = mktp.ProxyConfig{
     ListenAndServe: ":8888",
-    Routes: []mktp.ProxyRoute{
-      {
-        // docker run -d --name ghost-blog-demo -p 2368:2368 ghost
-        Name: "blog",
-        Domain: mktp.ProxyDomain{
-          SubDomain: "blog",
-          Domain: "localhost",
-          Port: "8888",
-        },
+  }
+  mktp.ProxyRootConfig.RouteAddStt(
+    mktp.ProxyRoute{
+    // docker run -d --name ghost-blog-demo -p 2368:2368 ghost
+      Name: "blog",
+      Domain: mktp.ProxyDomain{
+        Host: "blog.localhost:8888",
+      },
         ProxyEnable: true,
         ProxyServers: []mktp.ProxyUrl{
-          {
-            Name: "docker 1 - ok",
-            Url: "http://localhost:2368",
-          },
-          {
-            Name: "docker 2 - error",
-            Url: "http://localhost:2367",
-          },
-          {
-            Name: "docker 3 - error",
-            Url: "http://localhost:2367",
-          },
+        {
+          Name: "docker 1 - ok",
+          Url: "http://localhost:2368",
         },
-      },
-      {
-        Name: "blog novo",
-        Domain: mktp.ProxyDomain{
-          NotFoundHandle: mktp.ProxyRootConfig.ProxyNotFound,
-          ErrorHandle: mktp.ProxyRootConfig.ProxyError,
-          SubDomain: "go",
-          Domain: "localhost",
-          Port: "8888",
+        {
+          Name: "docker 2 - error",
+          Url: "http://localhost:2367",
         },
-        ProxyEnable: false,
-        Handle: mktp.ProxyHandle{
-          Handle: blogNovo,
-        },
-      },
-      {
-        Name: "image_list",
-        Domain: mktp.ProxyDomain{
-          NotFoundHandle: mktp.ProxyRootConfig.ProxyNotFound,
-          ErrorHandle: mktp.ProxyRootConfig.ProxyError,
-          SubDomain: "panel",
-          Domain: "localhost",
-          Port: "8888",
-        },
-        Path: mktp.ProxyPath{
-          Path : "/imageList",
-          Method: "GET",
-        },
-        ProxyEnable: false,
-        Handle: mktp.ProxyHandle{
-          Handle: mb.ImageWebList,
-        },
-      },
-      {
-        Name: "container_list_rest",
-        Domain: mktp.ProxyDomain{
-          NotFoundHandle: mktp.ProxyRootConfig.ProxyNotFound,
-          ErrorHandle: mktp.ProxyRootConfig.ProxyError,
-          SubDomain: "panel",
-          Domain: "localhost",
-          Port: "8888",
-        },
-        Path: mktp.ProxyPath{
-          Path : "/restContainerList",
-          Method: "GET",
-        },
-        ProxyEnable: false,
-        Handle: mktp.ProxyHandle{
-          Handle: mb.ContainerWebList,
-        },
-      },
-      {
-        Name: "container_stop_rest",
-        Domain: mktp.ProxyDomain{
-          NotFoundHandle: mktp.ProxyRootConfig.ProxyNotFound,
-          ErrorHandle: mktp.ProxyRootConfig.ProxyError,
-          SubDomain: "panel",
-          Domain: "localhost",
-          Port: "8888",
-        },
-        Path: mktp.ProxyPath{
-          ExpReg: "^/restContainerStop/(?P<id>[a-fA-F0-9-]{64})$",
-          Method: "GET",
-        },
-        ProxyEnable: false,
-        Handle: mktp.ProxyHandle{
-          Handle: mb.ContainerStopById,
-        },
-      },
-      {
-        Name: "container_remove_rest",
-        Domain: mktp.ProxyDomain{
-          NotFoundHandle: mktp.ProxyRootConfig.ProxyNotFound,
-          ErrorHandle: mktp.ProxyRootConfig.ProxyError,
-          SubDomain: "panel",
-          Domain: "localhost",
-          Port: "8888",
-        },
-        Path: mktp.ProxyPath{
-          ExpReg: "^/restContainerRemove/(?P<id>[a-fA-F0-9-]{64})$",
-          Method: "GET",
-        },
-        ProxyEnable: false,
-        Handle: mktp.ProxyHandle{
-          Handle: mb.ContainerRemove,
-        },
-      },
-      {
-        Name: "container_kill_rest",
-        Domain: mktp.ProxyDomain{
-          NotFoundHandle: mktp.ProxyRootConfig.ProxyNotFound,
-          ErrorHandle: mktp.ProxyRootConfig.ProxyError,
-          SubDomain: "panel",
-          Domain: "localhost",
-          Port: "8888",
-        },
-        Path: mktp.ProxyPath{
-          ExpReg: "^/restContainerKill/(?P<id>[a-fA-F0-9-]{64})$",
-          Method: "GET",
-        },
-        ProxyEnable: false,
-        Handle: mktp.ProxyHandle{
-          Handle: mb.ContainerRemove,
-        },
-      },
-      {
-        Name: "container_stats_rest",
-        Domain: mktp.ProxyDomain{
-          NotFoundHandle: mktp.ProxyRootConfig.ProxyNotFound,
-          ErrorHandle: mktp.ProxyRootConfig.ProxyError,
-          SubDomain: "panel",
-          Domain: "localhost",
-          Port: "8888",
-        },
-        Path: mktp.ProxyPath{
-          ExpReg: "^/restContainerStats/(?P<id>[a-fA-F0-9-]{64})$",
-          Method: "GET",
-        },
-        ProxyEnable: false,
-        Handle: mktp.ProxyHandle{
-          Handle: mb.ContainerStatsById,
-        },
-      },
-      {
-        Name: "container_stats_all_rest",
-        Domain: mktp.ProxyDomain{
-          NotFoundHandle: mktp.ProxyRootConfig.ProxyNotFound,
-          ErrorHandle: mktp.ProxyRootConfig.ProxyError,
-          SubDomain: "panel",
-          Domain: "localhost",
-          Port: "8888",
-        },
-        Path: mktp.ProxyPath{
-          Path: "/restContainerStatsAll",
-          Method: "GET",
-        },
-        ProxyEnable: false,
-        Handle: mktp.ProxyHandle{
-          Handle: mb.ContainerWebStatsLog,
-        },
-      },
-      {
-        Name: "container_start_rest",
-        Domain: mktp.ProxyDomain{
-          NotFoundHandle: mktp.ProxyRootConfig.ProxyNotFound,
-          ErrorHandle: mktp.ProxyRootConfig.ProxyError,
-          SubDomain: "panel",
-          Domain: "localhost",
-          Port: "8888",
-        },
-        Path: mktp.ProxyPath{
-          ExpReg: "^/restContainerStart/(?P<id>[a-fA-F0-9-]{64})$",
-          Method: "GET",
-        },
-        ProxyEnable: false,
-        Handle: mktp.ProxyHandle{
-          Handle: mb.ContainerStart,
-        },
-      },
-      {
-        Name: "container_stats_logById",
-        Domain: mktp.ProxyDomain{
-          NotFoundHandle: mktp.ProxyRootConfig.ProxyNotFound,
-          ErrorHandle: mktp.ProxyRootConfig.ProxyError,
-          SubDomain: "panel",
-          Domain: "localhost",
-          Port: "8888",
-        },
-        Path: mktp.ProxyPath{
-          ExpReg: "^/restContainerStatsLog/(?P<id>[a-fA-F0-9-]{64})$",
-          Method: "GET",
-        },
-        ProxyEnable: false,
-        Handle: mktp.ProxyHandle{
-          Handle: mb.ContainerWebStatsLogById,
-        },
-      },
-      {
-        Name: "container_list_html",
-        Domain: mktp.ProxyDomain{
-          NotFoundHandle: mktp.ProxyRootConfig.ProxyNotFound,
-          ErrorHandle: mktp.ProxyRootConfig.ProxyError,
-          SubDomain: "panel",
-          Domain: "localhost",
-          Port: "8888",
-        },
-        Path: mktp.ProxyPath{
-          Path : "/htmlContainerList",
-          Method: "GET",
-        },
-        ProxyEnable: false,
-        Handle: mktp.ProxyHandle{
-          Handle: containerListHtml,
-        },
-      },
-      {
-        Name: "container_log",
-        Domain: mktp.ProxyDomain{
-          NotFoundHandle: mktp.ProxyRootConfig.ProxyNotFound,
-          ErrorHandle: mktp.ProxyRootConfig.ProxyError,
-          SubDomain: "panel",
-          Domain: "localhost",
-          Port: "8888",
-        },
-        Path: mktp.ProxyPath{
-          ExpReg: `^/containerLog/(?P<id>[a-fA-F0-9-]{64})$`,
-        },
-        ProxyEnable: false,
-        Handle: mktp.ProxyHandle{
-          Handle: mb.ContainerLogsById,
-        },
-      },
-
-
-
-
-
-
-
-      {
-        Name: "addTest",
-        Domain: mktp.ProxyDomain{
-          NotFoundHandle: mktp.ProxyRootConfig.ProxyNotFound,
-          ErrorHandle: mktp.ProxyRootConfig.ProxyError,
-          SubDomain: "",
-          Domain: "localhost",
-          Port: "8888",
-        },
-        Path: mktp.ProxyPath{
-          Path : "/add",
-          Method: "POST",
-          // ExpReg: `^/(?P<controller>[a-z0-9-]+)/(?P<module>[a-z0-9-]+)/(?P<site>[a-z0-9]+.(htm|html))$`,
-        },
-        ProxyEnable: false,
-        Handle: mktp.ProxyHandle{
-          Handle: mktp.ProxyRootConfig.RouteAdd,
-        },
-      },
-      {
-        Name: "removeTest",
-        Domain: mktp.ProxyDomain{
-          NotFoundHandle: mktp.ProxyRootConfig.ProxyNotFound,
-          ErrorHandle: mktp.ProxyRootConfig.ProxyError,
-          SubDomain: "",
-          Domain: "localhost",
-          Port: "8888",
-        },
-        Path: mktp.ProxyPath{
-          Path : "/remove",
-          Method: "POST",
-          // ExpReg: `^/(?P<controller>[a-z0-9-]+)/(?P<module>[a-z0-9-]+)/(?P<site>[a-z0-9]+.(htm|html))$`,
-        },
-        ProxyEnable: false,
-        Handle: mktp.ProxyHandle{
-          Handle: mktp.ProxyRootConfig.RouteDelete,
-        },
-      },
-      {
-        Name: "panel",
-        Domain: mktp.ProxyDomain{
-          NotFoundHandle: mktp.ProxyRootConfig.ProxyNotFound,
-          ErrorHandle: mktp.ProxyRootConfig.ProxyError,
-          SubDomain: "root",
-          Domain: "localhost",
-          Port: "8888",
-        },
-        Path: mktp.ProxyPath{
-          Path: "/statistics",
-          Method: "GET",
-        },
-        ProxyEnable: false,
-        Handle: mktp.ProxyHandle{
-          Handle: mktp.ProxyRootConfig.ProxyStatistics,
+        {
+          Name: "docker 3 - error",
+          Url: "http://localhost:2367",
         },
       },
     },
-  }
+  )
+  //mktp.ProxyRootConfig = mktp.ProxyConfig{
+  //  ListenAndServe: ":8888",
+  //  Routes: []mktp.ProxyRoute{
+  //    {
+  //      // docker run -d --name ghost-blog-demo -p 2368:2368 ghost
+  //      Name: "blog",
+  //      Domain: mktp.ProxyDomain{
+  //        Host: "blog.localhost:8888",
+  //      },
+  //      ProxyEnable: true,
+  //      ProxyServers: []mktp.ProxyUrl{
+  //        {
+  //          Name: "docker 1 - ok",
+  //          Url: "http://localhost:2368",
+  //        },
+  //        {
+  //          Name: "docker 2 - error",
+  //          Url: "http://localhost:2367",
+  //        },
+  //        {
+  //          Name: "docker 3 - error",
+  //          Url: "http://localhost:2367",
+  //        },
+  //      },
+  //    },
+  //    {
+  //      Name: "blog novo",
+  //      Domain: mktp.ProxyDomain{
+  //        NotFoundHandle: mktp.ProxyRootConfig.ProxyNotFound,
+  //        ErrorHandle: mktp.ProxyRootConfig.ProxyError,
+  //        Host: "go.localhost:8888",
+  //      },
+  //      ProxyEnable: false,
+  //      Handle: mktp.ProxyHandle{
+  //        Handle: blogNovo,
+  //      },
+  //    },
+  //    {
+  //      Name: "container_list_html",
+  //      Domain: mktp.ProxyDomain{
+  //        NotFoundHandle: mktp.ProxyRootConfig.ProxyNotFound,
+  //        ErrorHandle: mktp.ProxyRootConfig.ProxyError,
+  //        Host: "panel.localhost:8888",
+  //      },
+  //      Path: mktp.ProxyPath{
+  //        Path : "/htmlContainerList",
+  //        Method: "GET",
+  //      },
+  //      ProxyEnable: false,
+  //      Handle: mktp.ProxyHandle{
+  //        Handle: containerListHtml,
+  //      },
+  //    },
+  //    {
+  //      Name: "addTest",
+  //      Domain: mktp.ProxyDomain{
+  //        NotFoundHandle: mktp.ProxyRootConfig.ProxyNotFound,
+  //        ErrorHandle: mktp.ProxyRootConfig.ProxyError,
+  //        Host: "localhost:8888",
+  //      },
+  //      Path: mktp.ProxyPath{
+  //        Path : "/add",
+  //        Method: "POST",
+  //        // ExpReg: `^/(?P<controller>[a-z0-9-]+)/(?P<module>[a-z0-9-]+)/(?P<site>[a-z0-9]+.(htm|html))$`,
+  //      },
+  //      ProxyEnable: false,
+  //      Handle: mktp.ProxyHandle{
+  //        Handle: mktp.ProxyRootConfig.RouteAdd,
+  //      },
+  //    },
+  //    {
+  //      Name: "removeTest",
+  //      Domain: mktp.ProxyDomain{
+  //        NotFoundHandle: mktp.ProxyRootConfig.ProxyNotFound,
+  //        ErrorHandle: mktp.ProxyRootConfig.ProxyError,
+  //        Host: "localhost:8888",
+  //      },
+  //      Path: mktp.ProxyPath{
+  //        Path : "/remove",
+  //        Method: "POST",
+  //        // ExpReg: `^/(?P<controller>[a-z0-9-]+)/(?P<module>[a-z0-9-]+)/(?P<site>[a-z0-9]+.(htm|html))$`,
+  //      },
+  //      ProxyEnable: false,
+  //      Handle: mktp.ProxyHandle{
+  //        Handle: mktp.ProxyRootConfig.RouteDelete,
+  //      },
+  //    },
+  //    {
+  //      Name: "panel",
+  //      Domain: mktp.ProxyDomain{
+  //        NotFoundHandle: mktp.ProxyRootConfig.ProxyNotFound,
+  //        ErrorHandle: mktp.ProxyRootConfig.ProxyError,
+  //        Host: "root.localhost:8888",
+  //      },
+  //      Path: mktp.ProxyPath{
+  //        Path: "/statistics",
+  //        Method: "GET",
+  //      },
+  //      ProxyEnable: false,
+  //      Handle: mktp.ProxyHandle{
+  //        Handle: mktp.ProxyRootConfig.ProxyStatistics,
+  //      },
+  //    },
+  //  },
+  //}
   mktp.ProxyRootConfig.Prepare()
-  go mktp.ProxyRootConfig.VerifyDisabled()
+  /*
+  b, e := mktp.ProxyRootConfig.MarshalJSON()
+  if e != nil {
+    fmt.Printf( "MarshalJSON error: %v", e.Error() )
+  }
+  _ = b
+  e = mktp.ProxyRootConfig.UnmarshalJSON( b )
+  if e != nil {
+    fmt.Printf( "UnmarshalJSON error: %v", e.Error() )
+  }
+  */
+  //go mktp.ProxyRootConfig.VerifyDisabled()
 
   http.Handle("/static/", http.StripPrefix("/static/", http.FileServer( http.Dir( "static" ) ) ) )
   http.HandleFunc("/", mktp.ProxyFunc)
