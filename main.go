@@ -6,6 +6,8 @@ import (
   "io/ioutil"
   "html/template"
   "reflect"
+  "fmt"
+  "github.com/helmutkemper/dockerManager/image"
 )
 
 type Icon struct {
@@ -318,7 +320,7 @@ func main() {
   mktp.ProxyRootConfig = mktp.ProxyConfig{
     ListenAndServe: ":8888",
   }
-  mktp.ProxyRootConfig.RouteAddStt(
+  err := mktp.ProxyRootConfig.AddRouteToProxyStt(
     mktp.ProxyRoute{
     // docker run -d --name ghost-blog-demo -p 2368:2368 ghost
       Name: "blog",
@@ -331,17 +333,49 @@ func main() {
           Name: "docker 1 - ok",
           Url: "http://localhost:2368",
         },
-        {
-          Name: "docker 2 - error",
-          Url: "http://localhost:2367",
-        },
-        {
-          Name: "docker 3 - error",
-          Url: "http://localhost:2367",
-        },
       },
     },
   )
+  err = mktp.ProxyRootConfig.AddRouteFromFuncStt(
+    mktp.ProxyRoute{
+      Name: "image raw",
+      Domain: mktp.ProxyDomain{
+        NotFoundHandle: mktp.ProxyRootConfig.ProxyNotFound,
+        ErrorHandle: mktp.ProxyRootConfig.ProxyError,
+        Host: "image.localhost:8888",
+      },
+      Path: mktp.ProxyPath{
+        Path: "/raw",
+        Method: "GET",
+        ExpReg: "^/raw/(?P<id>[0-9a-fA-F]+)$",
+      },
+      ProxyEnable: false,
+      Handle: mktp.ProxyHandle{
+        Handle: image.WebImageInfoList,
+      },
+    },
+  )
+  err = mktp.ProxyRootConfig.AddRouteFromFuncStt(
+    mktp.ProxyRoute{
+      Name: "image list",
+      Domain: mktp.ProxyDomain{
+        NotFoundHandle: mktp.ProxyRootConfig.ProxyNotFound,
+        ErrorHandle: mktp.ProxyRootConfig.ProxyError,
+        Host: "image.localhost:8888",
+      },
+      Path: mktp.ProxyPath{
+        Path: "/list",
+        Method: "GET",
+      },
+      ProxyEnable: false,
+      Handle: mktp.ProxyHandle{
+        Handle: image.WebList,
+      },
+    },
+  )
+  if err != "" {
+    fmt.Println( err )
+  }
   //mktp.ProxyRootConfig = mktp.ProxyConfig{
   //  ListenAndServe: ":8888",
   //  Routes: []mktp.ProxyRoute{
