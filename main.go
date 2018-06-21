@@ -140,19 +140,51 @@ func main() {
             },
             Columns: []tk.KendoGridColumns{
               //{ Selectable: tk.TRUE, Width: 50 },
-              { Field: "Id" },
+              {
+                Field: "Id",
+                /*Editor: tk.JavaScript{
+                  Code: "function(a,b){console.log('a:', a);console.log('b:', b);}",
+                },*/
+              },
               { Field: "Created", Format: "{0:MM/dd/yyyy}" },
               { Field: "RepoDigests" },
               { Field: "RepoTags" },
               { Field: "Size" },
               { Field: "VirtualSize" },
+              {
+                Command: []tk.KendoGridColumnsCommand{
+                  {
+                    Name: tk.COLUMNS_COMMAND_DESTROY,
+                    Text: "remove",
+                  },
+                  {
+                    Name: tk.COLUMNS_COMMAND_EDIT,
+                    Text: tk.KendoGridMessagesCommands{
+                      Update: "#force_empity#",
+                      Cancel: "cancel",
+                    },
+                    IconClass: tk.KendoGridColumnsIconClass{
+                      Update: "none",
+                    },
+                  },
+                  {
+                    Name: tk.COLUMNS_COMMAND_CUSTOM,
+                    Text: "view",
+                  },
+                },
+              },
             },
-            //Sortable: tk.TRUE,
-            //PersistSelection: tk.TRUE,
-            /*ColumnMenu: tk.KendoGridColumnMenu{
+            Sortable: tk.TRUE,
+            PersistSelection: tk.TRUE,
+            //Editable: tk.TRUE,
+            Editable: tk.KendoGridEditable{
+              Mode: tk.KENDO_GRID_EDITOR_MODE_POPUP,
+              Confirmation: "Are you sure that you want to delete this image from server?",
+            },
+            ColumnMenu: tk.KendoGridColumnMenu{
               Columns: tk.FALSE,
-            },*/
-            /*Filterable: tk.KendoGridFilterable{
+            },
+            Filterable: tk.KendoGridFilterable{
               Messages: tk.KendoGridFilterableMessages{
                 And: "and",
                 Or: "or",
@@ -195,14 +227,14 @@ func main() {
                   Neq: "Is not equal to",
                 },
               },
-            },*/
-            /*Groupable: tk.KendoGridGroupable{
+            },
+            Groupable: tk.KendoGridGroupable{
               ShowFooter: tk.TRUE,
               Enabled: tk.TRUE,
               Messages: tk.KendoGridGroupableMessages{
                 Empty: "Drop columns here",
               },
-            },*/
+            },
             Pageable: tk.KendoGridPageable{
               ButtonCount: 5,
               Refresh: tk.TRUE,
@@ -233,7 +265,7 @@ func main() {
                 },
               },
               Page: 1,
-              PageSize: 2,
+              PageSize: 10,
               Schema: tk.KendoSchema{
                 Data:  "Objects",
                 Total: "Meta.TotalCount",
@@ -243,7 +275,7 @@ func main() {
                       data.Objects[i].Created = new Date(data.Objects[i].Created * 1000);
                       if( Array.isArray( data.Objects[i].RepoDigests ) == true ){
                         var out = "";
-                        for(var k = 0, lk = data.Objects[i].RepoDigests.length; k <= lk; k += 1){
+                        for(var k = 0, lk = data.Objects[i].RepoDigests.length; k < lk; k += 1){
                           if(k != 0){
                             out += "; ";
                           }
