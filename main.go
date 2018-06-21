@@ -131,146 +131,173 @@ func main() {
           data := config.Data{}
           data.LoadFromFile( "./blogData/grid.json" )
 
-          el := tk.KendoUiGrid{
-            Html: tk.HtmlElementDiv{
-              Global: tk.HtmlGlobalAttributes{
-                Id: "grid",
-                Style: "width: 980px;", //fixme: constante no código
+          el := tk.HtmlElementDiv{
+            Content: tk.Content{
+
+              &tk.HtmlElementScript{
+                Global: tk.HtmlGlobalAttributes{
+                  Id: "template-details-container",
+                },
+                Type: tk.SCRIPT_TYPE_KENDO_TEMPLATE,
+                Content: tk.Content{
+
+                  &tk.HtmlElementDiv{
+                    Global: tk.HtmlGlobalAttributes{
+                      Id: "details-container",
+                    },
+                    Content: tk.Content{
+                      "<h3>#= Size # </h3>",
+                    },
+                  },
+
+                },
               },
-            },
-            Columns: []tk.KendoGridColumns{
-              //{ Selectable: tk.TRUE, Width: 50 },
-              {
-                Field: "Id",
-                /*Editor: tk.JavaScript{
-                  Code: "function(a,b){console.log('a:', a);console.log('b:', b);}",
+
+              &tk.KendoUiGrid{
+                Html: tk.HtmlElementDiv{
+                  Global: tk.HtmlGlobalAttributes{
+                    Id: "grid",
+                    Style: "width: 980px;", //fixme: constante no código
+                  },
+                },
+                Columns: []tk.KendoGridColumns{
+                  //{ Selectable: tk.TRUE, Width: 50 },
+                  {
+                    Field: "Id",
+                    /*Editor: tk.JavaScript{
+                      Code: "function(a,b){console.log('a:', a);console.log('b:', b);}",
+                    },*/
+                  },
+                  { Field: "Created", Format: "{0:MM/dd/yyyy}" },
+                  { Field: "RepoDigests" },
+                  { Field: "RepoTags" },
+                  { Field: "Size" },
+                  { Field: "VirtualSize" },
+                  {
+                    Title: " ",
+                    Command: []tk.KendoGridColumnsCommand{
+                      {
+                        Name: tk.COLUMNS_COMMAND_DESTROY,
+                        Text: "remove",
+                      },
+                      {
+                        Name: tk.COLUMNS_COMMAND_CUSTOM,
+                        IconClass: tk.KendoGridColumnsIconClass{
+                          Update: "none",
+                        },
+                        Click: tk.JavaScript{
+                          Code: `function(e){
+                          var detailsTemplate = kendo.template($("#template-details-container").html());
+                          
+                          e.preventDefault();
+
+                          var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+                          //dataItem.set("FirstName", "James") //set the property of the dataItem
+                          wnd.content(detailsTemplate(dataItem));
+                          wnd.center().open();
+                        }`,
+                        },
+                      },
+                    },
+                  },
+                },
+                Sortable: tk.TRUE,
+                PersistSelection: tk.TRUE,
+                Editable: tk.TRUE,
+                /*Editable: tk.KendoGridEditable{
+                  Mode: tk.KENDO_GRID_EDITOR_MODE_POPUP,
+                  Confirmation: "Are you sure that you want to delete this image from server?",
                 },*/
-              },
-              { Field: "Created", Format: "{0:MM/dd/yyyy}" },
-              { Field: "RepoDigests" },
-              { Field: "RepoTags" },
-              { Field: "Size" },
-              { Field: "VirtualSize" },
-              {
-                Command: []tk.KendoGridColumnsCommand{
-                  {
-                    Name: tk.COLUMNS_COMMAND_DESTROY,
-                    Text: "remove",
+                ColumnMenu: tk.KendoGridColumnMenu{
+                  Columns: tk.FALSE,
+                },
+                Filterable: tk.KendoGridFilterable{
+                  Messages: tk.KendoGridFilterableMessages{
+                    And: "and",
+                    Or: "or",
                   },
-                  {
-                    Name: tk.COLUMNS_COMMAND_EDIT,
-                    Text: tk.KendoGridMessagesCommands{
-                      Update: "#force_empity#",
-                      Cancel: "cancel",
+                  Operators: tk.KendoGridFilterableOperators{
+                    String: tk.KendoGridFilterableOperatorsString{
+                      IsNotEmpty: "Is not empty",
+                      IsNull: "Is null",
+                      IsEmpty: "Is empty",
+                      DoesNotContain: "Does not contain",
+                      Contains: "Contains",
+                      EndsWith: "Ends with",
+                      StartsWith: "Starts with",
+                      Eq: "Is equal to",
+                      Neq: "Is not equal to",
                     },
-                    IconClass: tk.KendoGridColumnsIconClass{
-                      Update: "none",
+                    Date: tk.KendoGridFilterableOperatorsDate{
+                      Neq: "Is not equal to",
+                      IsNull: "Is null",
+                      Eq: "Is equal to",
+                      Gt: "Is after",
+                      Lte: "Is before or equal to",
+                      Lt: "Is before",
+                      Gte: "Is after or equal to",
+                    },
+                    Number: tk.KendoGridFilterableOperatorsNumber{
+                      Neq: "Is not equal to",
+                      Lt: "Is less than",
+                      Eq: "Is equal to",
+                      IsNull: "Is null",
+                      Lte: "Is less than or equal to",
+                      Gt: "Is greater than",
+                      Gte: "Is greater than or equal to",
+                      IsNotNull: "Is not null",
+                    },
+                    Enums: tk.KendoGridFilterableOperatorsEnums{
+                      Eq: "Is equal to",
+                      IsNull: "Is null",
+                      IsNotNull: "Is not null",
+                      Neq: "Is not equal to",
                     },
                   },
-                  {
-                    Name: tk.COLUMNS_COMMAND_CUSTOM,
-                    Text: "view",
+                },
+                Groupable: tk.KendoGridGroupable{
+                  ShowFooter: tk.TRUE,
+                  Enabled: tk.TRUE,
+                  Messages: tk.KendoGridGroupableMessages{
+                    Empty: "Drop columns here",
                   },
                 },
-              },
-            },
-            Sortable: tk.TRUE,
-            PersistSelection: tk.TRUE,
-            //Editable: tk.TRUE,
-            Editable: tk.KendoGridEditable{
-              Mode: tk.KENDO_GRID_EDITOR_MODE_POPUP,
-              Confirmation: "Are you sure that you want to delete this image from server?",
-            },
-            ColumnMenu: tk.KendoGridColumnMenu{
-              Columns: tk.FALSE,
-            },
-            Filterable: tk.KendoGridFilterable{
-              Messages: tk.KendoGridFilterableMessages{
-                And: "and",
-                Or: "or",
-              },
-              Operators: tk.KendoGridFilterableOperators{
-                String: tk.KendoGridFilterableOperatorsString{
-                  IsNotEmpty: "Is not empty",
-                  IsNull: "Is null",
-                  IsEmpty: "Is empty",
-                  DoesNotContain: "Does not contain",
-                  Contains: "Contains",
-                  EndsWith: "Ends with",
-                  StartsWith: "Starts with",
-                  Eq: "Is equal to",
-                  Neq: "Is not equal to",
+                Pageable: tk.KendoGridPageable{
+                  ButtonCount: 5,
+                  Refresh: tk.TRUE,
+                  Numeric: tk.TRUE,
+                  AlwaysVisible: tk.TRUE,
+                  Info: tk.TRUE,
+                  Messages: tk.KendoGridPageableMessages{
+                    Display: "Showing {0}-{1} from {2} data items",
+                    Empty: "No data",
+                    Page: "Enter page",
+                    Of: "from {0}",
+                    ItemsPerPage: "data items per page",
+                    First: "First page",
+                    Last: "Last page",
+                    Next: "Next page",
+                    Previous: "Previous page",
+                    Refresh: "Refresh the grid",
+                    MorePages: "More pages",
+                  },
                 },
-                Date: tk.KendoGridFilterableOperatorsDate{
-                  Neq: "Is not equal to",
-                  IsNull: "Is null",
-                  Eq: "Is equal to",
-                  Gt: "Is after",
-                  Lte: "Is before or equal to",
-                  Lt: "Is before",
-                  Gte: "Is after or equal to",
-                },
-                Number: tk.KendoGridFilterableOperatorsNumber{
-                  Neq: "Is not equal to",
-                  Lt: "Is less than",
-                  Eq: "Is equal to",
-                  IsNull: "Is null",
-                  Lte: "Is less than or equal to",
-                  Gt: "Is greater than",
-                  Gte: "Is greater than or equal to",
-                  IsNotNull: "Is not null",
-                },
-                Enums: tk.KendoGridFilterableOperatorsEnums{
-                  Eq: "Is equal to",
-                  IsNull: "Is null",
-                  IsNotNull: "Is not null",
-                  Neq: "Is not equal to",
-                },
-              },
-            },
-            Groupable: tk.KendoGridGroupable{
-              ShowFooter: tk.TRUE,
-              Enabled: tk.TRUE,
-              Messages: tk.KendoGridGroupableMessages{
-                Empty: "Drop columns here",
-              },
-            },
-            Pageable: tk.KendoGridPageable{
-              ButtonCount: 5,
-              Refresh: tk.TRUE,
-              Numeric: tk.TRUE,
-              AlwaysVisible: tk.TRUE,
-              Info: tk.TRUE,
-              Messages: tk.KendoGridPageableMessages{
-                Display: "Showing {0}-{1} from {2} data items",
-                Empty: "No data",
-                Page: "Enter page",
-                Of: "from {0}",
-                ItemsPerPage: "data items per page",
-                First: "First page",
-                Last: "Last page",
-                Next: "Next page",
-                Previous: "Previous page",
-                Refresh: "Refresh the grid",
-                MorePages: "More pages",
-              },
-            },
-            DataSource: tk.KendoDataSource{
-              //Type: KENDO_TYPE_DATA_JSON,
-              Transport: tk.KendoTransport{
-                Read: tk.KendoRead{
-                  Url: "http://localhost:8888/image.list",
-                  Type: tk.HTML_METHOD_GET,
-                  DataType: tk.KENDO_TYPE_DATA_JSON_JSON,
-                },
-              },
-              Page: 1,
-              PageSize: 10,
-              Schema: tk.KendoSchema{
-                Data:  "Objects",
-                Total: "Meta.TotalCount",
-                Parser: tk.JavaScript{
-                  Code: `function(data){
+                DataSource: tk.KendoDataSource{
+                  //Type: KENDO_TYPE_DATA_JSON,
+                  Transport: tk.KendoTransport{
+                    Read: tk.KendoRead{
+                      Url: "http://localhost:8888/image.list",
+                      Type: tk.HTML_METHOD_GET,
+                      DataType: tk.KENDO_TYPE_DATA_JSON_JSON,
+                    },
+                  },
+                  Page: 1,
+                  PageSize: 10,
+                  Schema: tk.KendoSchema{
+                    Data:  "Objects",
+                    Total: "Meta.TotalCount",
+                    Parser: tk.JavaScript{
+                      Code: `function(data){
                     for( var i = 0, l = data.Objects.length; i < l; i += 1 ){
                       data.Objects[i].Created = new Date(data.Objects[i].Created * 1000);
                       if( Array.isArray( data.Objects[i].RepoDigests ) == true ){
@@ -327,36 +354,60 @@ func main() {
                     }
                     return data;
                   }`,
-                },
-                Model: tk.KendoDataModel{
-                  Id: "Id",
-                  Fields: map[string]tk.KendoField{
-                    "Id": {
-                      Type: tk.JAVASCRIPT_STRING,
                     },
-                    "Created": {
-                      Type: tk.JAVASCRIPT_DATE,
-                    },
-                    "RepoTags": {
-                      Type: tk.JAVASCRIPT_STRING,
-                    },
-                    "RepoDigests": {
-                      Type: tk.JAVASCRIPT_STRING,
-                    },
-                    "Size": {
-                      Type: tk.JAVASCRIPT_STRING,
-                    },
-                    "VirtualSize": {
-                      Type: tk.JAVASCRIPT_STRING,
+                    Model: tk.KendoDataModel{
+                      Id: "Id",
+                      Fields: map[string]tk.KendoField{
+                        "Id": {
+                          Type: tk.JAVASCRIPT_STRING,
+                        },
+                        "Created": {
+                          Type: tk.JAVASCRIPT_DATE,
+                        },
+                        "RepoTags": {
+                          Type: tk.JAVASCRIPT_STRING,
+                        },
+                        "RepoDigests": {
+                          Type: tk.JAVASCRIPT_STRING,
+                        },
+                        "Size": {
+                          Type: tk.JAVASCRIPT_STRING,
+                        },
+                        "VirtualSize": {
+                          Type: tk.JAVASCRIPT_STRING,
+                        },
+                      },
                     },
                   },
                 },
               },
+
+              &tk.KendoUiWindow{
+                Html: tk.HtmlElementDiv{
+                  Global: tk.HtmlGlobalAttributes{
+                    Id: "imageDetailsWindow",
+                  },
+                },
+                Title: "Image Data",
+                Modal: tk.FALSE,
+                Visible: tk.FALSE,
+                Resizable: tk.TRUE,
+                Width: 900,
+
+              },
+
             },
+
           }
 
-          data.TelerikOnLoadCode = string( el.ToJavaScript() )
-          data.Post[0].Text = string( el.ToHtml() )
+          data.TelerikVarGlobal = string( el.Content.MakeJsObject() )
+          data.TelerikOnLoadCode = string( el.Content.ToJavaScript() )
+
+          data.TelerikScriptTemplate = string( el.Content.MakeJsScript() )
+          data.TelerikHtmlSupport = string( el.ToHtmlSupport() )
+
+          data.Post[0].Title = "Image List"
+          data.Post[0].Text += string( el.ToHtml() )
 
           data.TemplateToServer("./static/template", w)
 
