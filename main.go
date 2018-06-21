@@ -1,302 +1,17 @@
 package main
 
 import (
-  mktp "github.com/helmutkemper/SimpleReverseProxy"
+  sProxy "github.com/helmutkemper/SimpleReverseProxy"
   "net/http"
   "io/ioutil"
-  "html/template"
-  "reflect"
-  "fmt"
+      "fmt"
   "github.com/helmutkemper/dockerManager/image"
+  "github.com/helmutkemper/blog/config"
+  tk "github.com/helmutkemper/telerik"
+  "github.com/helmutkemper/dockerManager/container"
 )
 
-type Icon struct {
-  Rel                 string
-  HRef                string
-}
-
-type Image struct {
-  Alt                 string
-  Src                 string
-}
-
-type Link struct {
-  HRef                string
-  Text                string
-  Alt                 string
-  Active              bool
-}
-
-type Content struct {
-  Id                  string
-  Title               string
-  AuthorName          string
-  AuthorLink          string
-  Date                string
-  ImageCaption        string
-  Image               Image
-  Description         string
-  Text                string
-}
-
-type SidePanel struct {
-  Id                  string
-  Content             []SidePanelContent
-  BreakLine           string
-}
-
-type SidePanelContent struct {
-  Title               string
-  Content             string
-}
-
-type PageData struct {
-  BasePath            string
-  Lang                string
-  PageTitle           string
-  AuthorInformation   string
-  Favico              Icon
-  Template            Template
-  Content             []Content
-  Copyright           string
-  EditEnable          bool
-  SaveButtonText      string
-}
-
-type Template struct {
-  NavigationMenu      []Link
-  ListGroup           []Link
-  SidePanel           []SidePanel
-  AutoCompleteEnable  bool
-}
-
-func blogNovo(w mktp.ProxyResponseWriter, r *mktp.ProxyRequest) {
-  w.Header().Set("Content-Type", "text/html; charset=utf-8")
-
-  tmpl, err := template.New("page_right_side.tmpl").Funcs(template.FuncMap{
-    "htmlSafe": func(html string) template.HTML {
-      return template.HTML(html)
-    },
-    "last": func(a interface{}) int {
-      return reflect.ValueOf(a).Len() - 1
-    },
-  }).ParseFiles("./static/template/blog/page_right_side.tmpl")
-  if err != nil {
-    w.Write( []byte( err.Error() ) )
-  }
-
-  pageData := PageData{
-    BasePath: "./static/template/blog/",
-    Lang: "en",
-    PageTitle: "Kemper.com.br",
-    AuthorInformation: "Helmut Kemper",
-    Copyright: "Helmut Kemper 2018",
-    Favico: Icon{
-      Rel: "shortcut icon",
-      HRef: "favicon.ico",
-    },
-    EditEnable: false,
-    SaveButtonText: "Save this article",
-    Template: Template{
-      AutoCompleteEnable: true,
-      NavigationMenu: []Link{
-        {
-          HRef: "#",
-          Alt: "",
-          Text: "Nav Menu 1",
-        },
-        {
-          HRef: "#",
-          Alt: "",
-          Text: "Nav Menu 2",
-        },
-        {
-          HRef: "#",
-          Alt: "",
-          Text: "Nav Menu 3",
-        },
-      },
-      ListGroup: []Link{
-        {
-          HRef: "#",
-          Alt: "",
-          Text: "Category 1",
-          Active: true,
-        },
-        {
-          HRef: "#",
-          Alt: "",
-          Text: "Category 2",
-        },
-        {
-          HRef: "#",
-          Alt: "",
-          Text: "Category 3",
-        },
-      },
-      SidePanel: []SidePanel{
-        {
-          Id: "SideBarPanel1",
-          BreakLine: "<br><br>",
-          Content:[]SidePanelContent{
-            {
-              Title: "Sidebar panel widget",
-              Content: "Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat.",
-            },
-            {
-              Title: "Sidebar panel widget",
-              Content: "Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat.",
-            },
-            {
-              Title: "Sidebar panel widget",
-              Content: "Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat.",
-            },
-          },
-        },
-        {
-          Id: "SideBarPanel2",
-          BreakLine: "<br><br>",
-          Content:[]SidePanelContent{
-            {
-              Title: "Sidebar panel widget",
-              Content: "Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat.",
-            },
-            {
-              Title: "Sidebar panel widget",
-              Content: "Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat.",
-            },
-            {
-              Title: "Sidebar panel widget",
-              Content: "Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat.",
-            },
-          },
-        },
-        {
-          Id: "SideBarPanel3",
-          BreakLine: "<br><br>",
-          Content:[]SidePanelContent{
-            {
-              Title: "Sidebar panel widget",
-              Content: "Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat.",
-            },
-            {
-              Title: "Sidebar panel widget",
-              Content: "Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat.",
-            },
-            {
-              Title: "Sidebar panel widget",
-              Content: "Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat.",
-            },
-          },
-        },
-        {
-          Id: "SideBarPanel4",
-          BreakLine: "<br><br>",
-          Content:[]SidePanelContent{
-            {
-              Title: "Sidebar panel widget",
-              Content: "Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat.",
-            },
-            {
-              Title: "Sidebar panel widget",
-              Content: "Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat.",
-            },
-            {
-              Title: "Sidebar panel widget",
-              Content: "Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat.",
-            },
-          },
-        },
-        {
-          Id: "SideBarPanel5",
-          BreakLine: "<br><br>",
-          Content:[]SidePanelContent{
-            {
-              Title: "Sidebar panel widget",
-              Content: "Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat.",
-            },
-            {
-              Title: "Sidebar panel widget",
-              Content: "Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat.",
-            },
-            {
-              Title: "Sidebar panel widget",
-              Content: "Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat.",
-            },
-          },
-        },
-      },
-    },
-    Content: []Content{
-      {
-        Id: "Post1",
-        Title: "Primeiro post",
-        AuthorName: "Helmut Kemper",
-        AuthorLink: "#",
-        Date: "12 January 2015 10:00 am",
-        ImageCaption: "Caption here",
-        Image: Image{
-          Src: "http://placehold.it/900x400",
-          Alt: "image from post",
-        },
-        Description: "Mussum Ipsum, cacilds vidis litro abertis. Quem manda na minha terra sou euzis! Praesent malesuada urna nisi, quis volutpat erat hendrerit non. Nam vulputate dapibus. Interessantiss quisso pudia ce receita de bolis, mais bolis eu num gostis. Aenean aliquam molestie leo, vitae iaculis nisl.",
-        Text: "<p>Mussum Ipsum, cacilds vidis litro abertis. Quem manda na minha terra sou euzis! Praesent malesuada urna nisi, quis volutpat erat hendrerit non. Nam vulputate dapibus. Interessantiss quisso pudia ce receita de bolis, mais bolis eu num gostis. Aenean aliquam molestie leo, vitae iaculis nisl.</p><p>Nullam volutpat risus nec leo commodo, ut interdum diam laoreet. Sed non consequat odio. Per aumento de cachacis, eu reclamis. Em pé sem cair, deitado sem dormir, sentado sem cochilar e fazendo pose. Delegadis gente finis, bibendum egestas augue arcu ut est.</p><p>Mussum Ipsum, cacilds vidis litro abertis. Quem manda na minha terra sou euzis! Praesent malesuada urna nisi, quis volutpat erat hendrerit non. Nam vulputate dapibus. Interessantiss quisso pudia ce receita de bolis, mais bolis eu num gostis. Aenean aliquam molestie leo, vitae iaculis nisl.</p><p>Nullam volutpat risus nec leo commodo, ut interdum diam laoreet. Sed non consequat odio. Per aumento de cachacis, eu reclamis. Em pé sem cair, deitado sem dormir, sentado sem cochilar e fazendo pose. Delegadis gente finis, bibendum egestas augue arcu ut est.</p>",
-      },
-      {
-        Id: "Post2",
-        Title: "Primeiro post",
-        AuthorName: "Helmut Kemper",
-        AuthorLink: "#",
-        Date: "12 January 2015 10:00 am",
-        ImageCaption: "Caption here",
-        Image: Image{
-          Src: "http://placehold.it/900x400",
-          Alt: "image from post",
-        },
-        Description: "Mussum Ipsum, cacilds vidis litro abertis. Quem manda na minha terra sou euzis! Praesent malesuada urna nisi, quis volutpat erat hendrerit non. Nam vulputate dapibus. Interessantiss quisso pudia ce receita de bolis, mais bolis eu num gostis. Aenean aliquam molestie leo, vitae iaculis nisl.",
-        Text: "<p>Mussum Ipsum, cacilds vidis litro abertis. Quem manda na minha terra sou euzis! Praesent malesuada urna nisi, quis volutpat erat hendrerit non. Nam vulputate dapibus. Interessantiss quisso pudia ce receita de bolis, mais bolis eu num gostis. Aenean aliquam molestie leo, vitae iaculis nisl.</p><p>Nullam volutpat risus nec leo commodo, ut interdum diam laoreet. Sed non consequat odio. Per aumento de cachacis, eu reclamis. Em pé sem cair, deitado sem dormir, sentado sem cochilar e fazendo pose. Delegadis gente finis, bibendum egestas augue arcu ut est.</p><p>Mussum Ipsum, cacilds vidis litro abertis. Quem manda na minha terra sou euzis! Praesent malesuada urna nisi, quis volutpat erat hendrerit non. Nam vulputate dapibus. Interessantiss quisso pudia ce receita de bolis, mais bolis eu num gostis. Aenean aliquam molestie leo, vitae iaculis nisl.</p><p>Nullam volutpat risus nec leo commodo, ut interdum diam laoreet. Sed non consequat odio. Per aumento de cachacis, eu reclamis. Em pé sem cair, deitado sem dormir, sentado sem cochilar e fazendo pose. Delegadis gente finis, bibendum egestas augue arcu ut est.</p>",
-      },
-      {
-        Id: "Post2",
-        Title: "Primeiro post",
-        AuthorName: "Helmut Kemper",
-        AuthorLink: "#",
-        Date: "12 January 2015 10:00 am",
-        ImageCaption: "Caption here",
-        Image: Image{
-          Src: "http://placehold.it/900x400",
-          Alt: "image from post",
-        },
-        Description: "Mussum Ipsum, cacilds vidis litro abertis. Quem manda na minha terra sou euzis! Praesent malesuada urna nisi, quis volutpat erat hendrerit non. Nam vulputate dapibus. Interessantiss quisso pudia ce receita de bolis, mais bolis eu num gostis. Aenean aliquam molestie leo, vitae iaculis nisl.",
-        Text: "<p>Mussum Ipsum, cacilds vidis litro abertis. Quem manda na minha terra sou euzis! Praesent malesuada urna nisi, quis volutpat erat hendrerit non. Nam vulputate dapibus. Interessantiss quisso pudia ce receita de bolis, mais bolis eu num gostis. Aenean aliquam molestie leo, vitae iaculis nisl.</p><p>Nullam volutpat risus nec leo commodo, ut interdum diam laoreet. Sed non consequat odio. Per aumento de cachacis, eu reclamis. Em pé sem cair, deitado sem dormir, sentado sem cochilar e fazendo pose. Delegadis gente finis, bibendum egestas augue arcu ut est.</p><p>Mussum Ipsum, cacilds vidis litro abertis. Quem manda na minha terra sou euzis! Praesent malesuada urna nisi, quis volutpat erat hendrerit non. Nam vulputate dapibus. Interessantiss quisso pudia ce receita de bolis, mais bolis eu num gostis. Aenean aliquam molestie leo, vitae iaculis nisl.</p><p>Nullam volutpat risus nec leo commodo, ut interdum diam laoreet. Sed non consequat odio. Per aumento de cachacis, eu reclamis. Em pé sem cair, deitado sem dormir, sentado sem cochilar e fazendo pose. Delegadis gente finis, bibendum egestas augue arcu ut est.</p>",
-      },
-      {
-        Id: "Post4",
-        Title: "Primeiro post",
-        AuthorName: "Helmut Kemper",
-        AuthorLink: "#",
-        Date: "12 January 2015 10:00 am",
-        ImageCaption: "Caption here",
-        Image: Image{
-          Src: "http://placehold.it/900x400",
-          Alt: "image from post",
-        },
-        Description: "Mussum Ipsum, cacilds vidis litro abertis. Quem manda na minha terra sou euzis! Praesent malesuada urna nisi, quis volutpat erat hendrerit non. Nam vulputate dapibus. Interessantiss quisso pudia ce receita de bolis, mais bolis eu num gostis. Aenean aliquam molestie leo, vitae iaculis nisl.",
-        Text: "<p>Mussum Ipsum, cacilds vidis litro abertis. Quem manda na minha terra sou euzis! Praesent malesuada urna nisi, quis volutpat erat hendrerit non. Nam vulputate dapibus. Interessantiss quisso pudia ce receita de bolis, mais bolis eu num gostis. Aenean aliquam molestie leo, vitae iaculis nisl.</p><p>Nullam volutpat risus nec leo commodo, ut interdum diam laoreet. Sed non consequat odio. Per aumento de cachacis, eu reclamis. Em pé sem cair, deitado sem dormir, sentado sem cochilar e fazendo pose. Delegadis gente finis, bibendum egestas augue arcu ut est.</p><p>Mussum Ipsum, cacilds vidis litro abertis. Quem manda na minha terra sou euzis! Praesent malesuada urna nisi, quis volutpat erat hendrerit non. Nam vulputate dapibus. Interessantiss quisso pudia ce receita de bolis, mais bolis eu num gostis. Aenean aliquam molestie leo, vitae iaculis nisl.</p><p>Nullam volutpat risus nec leo commodo, ut interdum diam laoreet. Sed non consequat odio. Per aumento de cachacis, eu reclamis. Em pé sem cair, deitado sem dormir, sentado sem cochilar e fazendo pose. Delegadis gente finis, bibendum egestas augue arcu ut est.</p>",
-      },
-    },
-  }
-  err = tmpl.Execute( w, pageData )
-  if err != nil {
-    w.Write( []byte( err.Error() ) )
-  }
-}
-
-func hello(w mktp.ProxyResponseWriter, r *mktp.ProxyRequest) {
-
-}
-
-func containerListHtml(w mktp.ProxyResponseWriter, r *mktp.ProxyRequest) {
+func containerListHtml(w sProxy.ProxyResponseWriter, r *sProxy.ProxyRequest) {
   w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
   page, err := ioutil.ReadFile("containerStatus.html")
@@ -309,26 +24,26 @@ func containerListHtml(w mktp.ProxyResponseWriter, r *mktp.ProxyRequest) {
 }
 // fixme: quando o usuário for criar um banco de dados ou parecido, ele tem que ser avisado de exportar o diretório de dados para a máquina
 func main() {
-  mktp.FuncMap.Add( mktp.ProxyRootConfig.ProxyNotFound )
-  mktp.FuncMap.Add( mktp.ProxyRootConfig.ProxyError )
-  mktp.FuncMap.Add( blogNovo )
-  mktp.FuncMap.Add( containerListHtml )
-  mktp.FuncMap.Add( mktp.ProxyRootConfig.RouteAdd )
-  mktp.FuncMap.Add( mktp.ProxyRootConfig.RouteDelete )
-  mktp.FuncMap.Add( mktp.ProxyRootConfig.ProxyStatistics )
+  sProxy.FuncMap.Add( sProxy.ProxyRootConfig.ProxyNotFound )
+  sProxy.FuncMap.Add( sProxy.ProxyRootConfig.ProxyError )
+  sProxy.FuncMap.Add( containerListHtml )
+  sProxy.FuncMap.Add( sProxy.ProxyRootConfig.RouteAdd )
+  sProxy.FuncMap.Add( sProxy.ProxyRootConfig.RouteDelete )
+  sProxy.FuncMap.Add( sProxy.ProxyRootConfig.ProxyStatistics )
+  sProxy.FuncMap.Add( image.WebList )
 
-  mktp.ProxyRootConfig = mktp.ProxyConfig{
+  sProxy.ProxyRootConfig = sProxy.ProxyConfig{
     ListenAndServe: ":8888",
   }
-  err := mktp.ProxyRootConfig.AddRouteToProxyStt(
-    mktp.ProxyRoute{
+  err := sProxy.ProxyRootConfig.AddRouteToProxyStt(
+    sProxy.ProxyRoute{
     // docker run -d --name ghost-blog-demo -p 2368:2368 ghost
       Name: "blog",
-      Domain: mktp.ProxyDomain{
+      Domain: sProxy.ProxyDomain{
         Host: "blog.localhost:8888",
       },
         ProxyEnable: true,
-        ProxyServers: []mktp.ProxyUrl{
+        ProxyServers: []sProxy.ProxyUrl{
         {
           Name: "docker 1 - ok",
           Url: "http://localhost:2368",
@@ -336,39 +51,39 @@ func main() {
       },
     },
   )
-  err = mktp.ProxyRootConfig.AddRouteFromFuncStt(
-    mktp.ProxyRoute{
+  err = sProxy.ProxyRootConfig.AddRouteFromFuncStt(
+    sProxy.ProxyRoute{
       Name: "image raw",
-      Domain: mktp.ProxyDomain{
-        NotFoundHandle: mktp.ProxyRootConfig.ProxyNotFound,
-        ErrorHandle: mktp.ProxyRootConfig.ProxyError,
+      Domain: sProxy.ProxyDomain{
+        NotFoundHandle: sProxy.ProxyRootConfig.ProxyNotFound,
+        ErrorHandle: sProxy.ProxyRootConfig.ProxyError,
         Host: "image.localhost:8888",
       },
-      Path: mktp.ProxyPath{
+      Path: sProxy.ProxyPath{
         Path: "/raw",
         Method: "GET",
         ExpReg: "^/raw/(?P<id>[0-9a-fA-F]+)$",
       },
       ProxyEnable: false,
-      Handle: mktp.ProxyHandle{
+      Handle: sProxy.ProxyHandle{
         Handle: image.WebImageInfoList,
       },
     },
   )
-  err = mktp.ProxyRootConfig.AddRouteFromFuncStt(
-    mktp.ProxyRoute{
+  err = sProxy.ProxyRootConfig.AddRouteFromFuncStt(
+    sProxy.ProxyRoute{
       Name: "image list",
-      Domain: mktp.ProxyDomain{
-        NotFoundHandle: mktp.ProxyRootConfig.ProxyNotFound,
-        ErrorHandle: mktp.ProxyRootConfig.ProxyError,
-        Host: "image.localhost:8888",
+      Domain: sProxy.ProxyDomain{
+        NotFoundHandle: sProxy.ProxyRootConfig.ProxyNotFound,
+        ErrorHandle: sProxy.ProxyRootConfig.ProxyError,
+        Host: "",
       },
-      Path: mktp.ProxyPath{
-        Path: "/list",
+      Path: sProxy.ProxyPath{
+        Path: "/image.list",
         Method: "GET",
       },
       ProxyEnable: false,
-      Handle: mktp.ProxyHandle{
+      Handle: sProxy.ProxyHandle{
         Handle: image.WebList,
       },
     },
@@ -376,126 +91,254 @@ func main() {
   if err != "" {
     fmt.Println( err )
   }
-  //mktp.ProxyRootConfig = mktp.ProxyConfig{
-  //  ListenAndServe: ":8888",
-  //  Routes: []mktp.ProxyRoute{
-  //    {
-  //      // docker run -d --name ghost-blog-demo -p 2368:2368 ghost
-  //      Name: "blog",
-  //      Domain: mktp.ProxyDomain{
-  //        Host: "blog.localhost:8888",
-  //      },
-  //      ProxyEnable: true,
-  //      ProxyServers: []mktp.ProxyUrl{
-  //        {
-  //          Name: "docker 1 - ok",
-  //          Url: "http://localhost:2368",
-  //        },
-  //        {
-  //          Name: "docker 2 - error",
-  //          Url: "http://localhost:2367",
-  //        },
-  //        {
-  //          Name: "docker 3 - error",
-  //          Url: "http://localhost:2367",
-  //        },
-  //      },
-  //    },
-  //    {
-  //      Name: "blog novo",
-  //      Domain: mktp.ProxyDomain{
-  //        NotFoundHandle: mktp.ProxyRootConfig.ProxyNotFound,
-  //        ErrorHandle: mktp.ProxyRootConfig.ProxyError,
-  //        Host: "go.localhost:8888",
-  //      },
-  //      ProxyEnable: false,
-  //      Handle: mktp.ProxyHandle{
-  //        Handle: blogNovo,
-  //      },
-  //    },
-  //    {
-  //      Name: "container_list_html",
-  //      Domain: mktp.ProxyDomain{
-  //        NotFoundHandle: mktp.ProxyRootConfig.ProxyNotFound,
-  //        ErrorHandle: mktp.ProxyRootConfig.ProxyError,
-  //        Host: "panel.localhost:8888",
-  //      },
-  //      Path: mktp.ProxyPath{
-  //        Path : "/htmlContainerList",
-  //        Method: "GET",
-  //      },
-  //      ProxyEnable: false,
-  //      Handle: mktp.ProxyHandle{
-  //        Handle: containerListHtml,
-  //      },
-  //    },
-  //    {
-  //      Name: "addTest",
-  //      Domain: mktp.ProxyDomain{
-  //        NotFoundHandle: mktp.ProxyRootConfig.ProxyNotFound,
-  //        ErrorHandle: mktp.ProxyRootConfig.ProxyError,
-  //        Host: "localhost:8888",
-  //      },
-  //      Path: mktp.ProxyPath{
-  //        Path : "/add",
-  //        Method: "POST",
-  //        // ExpReg: `^/(?P<controller>[a-z0-9-]+)/(?P<module>[a-z0-9-]+)/(?P<site>[a-z0-9]+.(htm|html))$`,
-  //      },
-  //      ProxyEnable: false,
-  //      Handle: mktp.ProxyHandle{
-  //        Handle: mktp.ProxyRootConfig.RouteAdd,
-  //      },
-  //    },
-  //    {
-  //      Name: "removeTest",
-  //      Domain: mktp.ProxyDomain{
-  //        NotFoundHandle: mktp.ProxyRootConfig.ProxyNotFound,
-  //        ErrorHandle: mktp.ProxyRootConfig.ProxyError,
-  //        Host: "localhost:8888",
-  //      },
-  //      Path: mktp.ProxyPath{
-  //        Path : "/remove",
-  //        Method: "POST",
-  //        // ExpReg: `^/(?P<controller>[a-z0-9-]+)/(?P<module>[a-z0-9-]+)/(?P<site>[a-z0-9]+.(htm|html))$`,
-  //      },
-  //      ProxyEnable: false,
-  //      Handle: mktp.ProxyHandle{
-  //        Handle: mktp.ProxyRootConfig.RouteDelete,
-  //      },
-  //    },
-  //    {
-  //      Name: "panel",
-  //      Domain: mktp.ProxyDomain{
-  //        NotFoundHandle: mktp.ProxyRootConfig.ProxyNotFound,
-  //        ErrorHandle: mktp.ProxyRootConfig.ProxyError,
-  //        Host: "root.localhost:8888",
-  //      },
-  //      Path: mktp.ProxyPath{
-  //        Path: "/statistics",
-  //        Method: "GET",
-  //      },
-  //      ProxyEnable: false,
-  //      Handle: mktp.ProxyHandle{
-  //        Handle: mktp.ProxyRootConfig.ProxyStatistics,
-  //      },
-  //    },
-  //  },
-  //}
-  mktp.ProxyRootConfig.Prepare()
-  /*
-  b, e := mktp.ProxyRootConfig.MarshalJSON()
-  if e != nil {
-    fmt.Printf( "MarshalJSON error: %v", e.Error() )
+  err = sProxy.ProxyRootConfig.AddRouteFromFuncStt(
+    sProxy.ProxyRoute{
+      Name: "container list",
+      Domain: sProxy.ProxyDomain{
+        NotFoundHandle: sProxy.ProxyRootConfig.ProxyNotFound,
+        ErrorHandle: sProxy.ProxyRootConfig.ProxyError,
+        Host: "",
+      },
+      Path: sProxy.ProxyPath{
+        Path: "/container.list",
+        Method: "GET",
+      },
+      ProxyEnable: false,
+      Handle: sProxy.ProxyHandle{
+        Handle: container.WebList,
+      },
+    },
+  )
+  if err != "" {
+    fmt.Println( err )
   }
-  _ = b
-  e = mktp.ProxyRootConfig.UnmarshalJSON( b )
-  if e != nil {
-    fmt.Printf( "UnmarshalJSON error: %v", e.Error() )
+  err = sProxy.ProxyRootConfig.AddRouteFromFuncStt(
+    sProxy.ProxyRoute{
+      Name: "image grid",
+      Domain: sProxy.ProxyDomain{
+        NotFoundHandle: sProxy.ProxyRootConfig.ProxyNotFound,
+        ErrorHandle: sProxy.ProxyRootConfig.ProxyError,
+        Host: "",
+      },
+      Path: sProxy.ProxyPath{
+        Path: "/image.view",
+        Method: "GET",
+      },
+      ProxyEnable: false,
+      Handle: sProxy.ProxyHandle{
+        Handle: func(w sProxy.ProxyResponseWriter, r *sProxy.ProxyRequest){
+
+          data := config.Data{}
+          data.LoadFromFile( "./blogData/grid.json" )
+
+          el := tk.KendoUiGrid{
+            Html: tk.HtmlElementDiv{
+              Global: tk.HtmlGlobalAttributes{
+                Id: "grid",
+                Style: "width: 980px;", //fixme: constante no código
+              },
+            },
+            Columns: []tk.KendoGridColumns{
+              //{ Selectable: tk.TRUE, Width: 50 },
+              { Field: "Id" },
+              { Field: "Created", Format: "{0:MM/dd/yyyy}" },
+              { Field: "RepoDigests" },
+              { Field: "RepoTags" },
+              { Field: "Size" },
+              { Field: "VirtualSize" },
+            },
+            //Sortable: tk.TRUE,
+            //PersistSelection: tk.TRUE,
+            /*ColumnMenu: tk.KendoGridColumnMenu{
+              Columns: tk.FALSE,
+            },*/
+            /*Filterable: tk.KendoGridFilterable{
+              Messages: tk.KendoGridFilterableMessages{
+                And: "and",
+                Or: "or",
+              },
+              Operators: tk.KendoGridFilterableOperators{
+                String: tk.KendoGridFilterableOperatorsString{
+                  IsNotEmpty: "Is not empty",
+                  IsNull: "Is null",
+                  IsEmpty: "Is empty",
+                  DoesNotContain: "Does not contain",
+                  Contains: "Contains",
+                  EndsWith: "Ends with",
+                  StartsWith: "Starts with",
+                  Eq: "Is equal to",
+                  Neq: "Is not equal to",
+                },
+                Date: tk.KendoGridFilterableOperatorsDate{
+                  Neq: "Is not equal to",
+                  IsNull: "Is null",
+                  Eq: "Is equal to",
+                  Gt: "Is after",
+                  Lte: "Is before or equal to",
+                  Lt: "Is before",
+                  Gte: "Is after or equal to",
+                },
+                Number: tk.KendoGridFilterableOperatorsNumber{
+                  Neq: "Is not equal to",
+                  Lt: "Is less than",
+                  Eq: "Is equal to",
+                  IsNull: "Is null",
+                  Lte: "Is less than or equal to",
+                  Gt: "Is greater than",
+                  Gte: "Is greater than or equal to",
+                  IsNotNull: "Is not null",
+                },
+                Enums: tk.KendoGridFilterableOperatorsEnums{
+                  Eq: "Is equal to",
+                  IsNull: "Is null",
+                  IsNotNull: "Is not null",
+                  Neq: "Is not equal to",
+                },
+              },
+            },*/
+            /*Groupable: tk.KendoGridGroupable{
+              ShowFooter: tk.TRUE,
+              Enabled: tk.TRUE,
+              Messages: tk.KendoGridGroupableMessages{
+                Empty: "Drop columns here",
+              },
+            },*/
+            Pageable: tk.KendoGridPageable{
+              ButtonCount: 5,
+              Refresh: tk.TRUE,
+              Numeric: tk.TRUE,
+              AlwaysVisible: tk.TRUE,
+              Info: tk.TRUE,
+              Messages: tk.KendoGridPageableMessages{
+                Display: "Showing {0}-{1} from {2} data items",
+                Empty: "No data",
+                Page: "Enter page",
+                Of: "from {0}",
+                ItemsPerPage: "data items per page",
+                First: "First page",
+                Last: "Last page",
+                Next: "Next page",
+                Previous: "Previous page",
+                Refresh: "Refresh the grid",
+                MorePages: "More pages",
+              },
+            },
+            DataSource: tk.KendoDataSource{
+              //Type: KENDO_TYPE_DATA_JSON,
+              Transport: tk.KendoTransport{
+                Read: tk.KendoRead{
+                  Url: "http://localhost:8888/image.list",
+                  Type: tk.HTML_METHOD_GET,
+                  DataType: tk.KENDO_TYPE_DATA_JSON_JSON,
+                },
+              },
+              Page: 1,
+              PageSize: 2,
+              Schema: tk.KendoSchema{
+                Data:  "Objects",
+                Total: "Meta.TotalCount",
+                Parser: tk.JavaScript{
+                  Code: `function(data){
+                    for( var i = 0, l = data.Objects.length; i < l; i += 1 ){
+                      data.Objects[i].Created = new Date(data.Objects[i].Created * 1000);
+                      if( Array.isArray( data.Objects[i].RepoDigests ) == true ){
+                        var out = "";
+                        for(var k = 0, lk = data.Objects[i].RepoDigests.length; k <= lk; k += 1){
+                          if(k != 0){
+                            out += "; ";
+                          }
+                          out += data.Objects[i].RepoDigests[k]
+                        }
+                        data.Objects[i].RepoDigests = out;
+                      }
+                      if( Array.isArray( data.Objects[i].RepoTags ) == true ){
+                        var out = "";
+                        for(var k = 0, lk = data.Objects[i].RepoTags.length; k < lk; k += 1){
+                          if(k != 0){
+                            out += "; ";
+                          }
+                          out += data.Objects[i].RepoTags[k]
+                        }
+                        data.Objects[i].RepoTags = out;
+                      }
+                      if( data.Objects[i].Size >= 1024 * 1024 * 1024 ){
+                        data.Objects[i].Size /= 1024 * 1024 * 1024;
+                        data.Objects[i].Size = Number.parseFloat( data.Objects[i].Size ).toPrecision(4);
+                        data.Objects[i].Size = '' + data.Objects[i].Size + 'GB';
+                      } else if( data.Objects[i].Size >= 1024 * 1024 ){
+                        data.Objects[i].Size /= 1024 * 1024;
+                        data.Objects[i].Size = Number.parseFloat( data.Objects[i].Size ).toPrecision(4);
+                        data.Objects[i].Size = '' + data.Objects[i].Size + 'MB';
+                      } else if( data.Objects[i].Size >= 1024 ){
+                        data.Objects[i].Size /= 1024;
+                        data.Objects[i].Size = Number.parseFloat( data.Objects[i].Size ).toPrecision(4);
+                        data.Objects[i].Size = '' + data.Objects[i].Size + 'KB';
+                      } else {
+                        data.Objects[i].Size = '' + data.Objects[i].Size + 'B';
+                      }
+                      
+                      if( data.Objects[i].VirtualSize >= 1024 * 1024 * 1024 ){
+                        data.Objects[i].VirtualSize /= 1024 * 1024 * 1024;
+                        data.Objects[i].VirtualSize = Number.parseFloat( data.Objects[i].VirtualSize ).toPrecision(4);
+                        data.Objects[i].VirtualSize += 'GB';
+                      } else if( data.Objects[i].VirtualSize >= 1024 * 1024 ){
+                        data.Objects[i].VirtualSize /= 1024 * 1024;
+                        data.Objects[i].VirtualSize = Number.parseFloat( data.Objects[i].VirtualSize ).toPrecision(4);
+                        data.Objects[i].VirtualSize += 'MB';
+                      } else if( data.Objects[i].VirtualSize >= 1024 ){
+                        data.Objects[i].VirtualSize /= 1024;
+                        data.Objects[i].VirtualSize = Number.parseFloat( data.Objects[i].VirtualSize ).toPrecision(4);
+                        data.Objects[i].VirtualSize += 'KB';
+                      } else {
+                        data.Objects[i].VirtualSize += 'B';
+                      }
+                    }
+                    return data;
+                  }`,
+                },
+                Model: tk.KendoDataModel{
+                  Id: "Id",
+                  Fields: map[string]tk.KendoField{
+                    "Id": {
+                      Type: tk.JAVASCRIPT_STRING,
+                    },
+                    "Created": {
+                      Type: tk.JAVASCRIPT_DATE,
+                    },
+                    "RepoTags": {
+                      Type: tk.JAVASCRIPT_STRING,
+                    },
+                    "RepoDigests": {
+                      Type: tk.JAVASCRIPT_STRING,
+                    },
+                    "Size": {
+                      Type: tk.JAVASCRIPT_STRING,
+                    },
+                    "VirtualSize": {
+                      Type: tk.JAVASCRIPT_STRING,
+                    },
+                  },
+                },
+              },
+            },
+          }
+
+          data.TelerikOnLoadCode = string( el.ToJavaScript() )
+          data.Post[0].Text = string( el.ToHtml() )
+
+          data.TemplateToServer("./static/template", w)
+
+        },
+      },
+    },
+  )
+  if err != "" {
+    fmt.Println( err )
   }
-  */
-  //go mktp.ProxyRootConfig.VerifyDisabled()
+
+  sProxy.ProxyRootConfig.Prepare()
 
   http.Handle("/static/", http.StripPrefix("/static/", http.FileServer( http.Dir( "static" ) ) ) )
-  http.HandleFunc("/", mktp.ProxyFunc)
-  http.ListenAndServe(mktp.ProxyRootConfig.ListenAndServe, nil)
+  http.HandleFunc("/", sProxy.ProxyFunc)
+  http.ListenAndServe(sProxy.ProxyRootConfig.ListenAndServe, nil)
 }
