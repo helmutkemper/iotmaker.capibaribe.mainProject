@@ -132,6 +132,10 @@ func main() {
           data.LoadFromFile( "./blogData/grid.json" )
 
           el := tk.HtmlElementDiv{
+            Global: tk.HtmlGlobalAttributes{
+              Id: "main",
+              Class: "k-content",
+            },
             Content: tk.Content{
 
               &tk.HtmlElementScript{
@@ -146,7 +150,15 @@ func main() {
                       Id: "details-container",
                     },
                     Content: tk.Content{
-                      "<h3>#= Size # </h3>",
+
+                      `<h3>#= Id #</h3>
+                      <dl>
+                        <dt>Created:</dt><dt>#= kendo.toString(Created, "MM/dd/yyyy") #</dt>
+                        <dt>Tags:</dt><dt>#= RepoTags #</dt>
+                        <dt>Digests:</dt><dt>#= RepoDigests #</dt>
+                        <dt>Size:</dt><dt>#= Size #</dt>
+                        <dt>Virtual Size:</dt><dt>#= VirtualSize #</dt>
+                      </dl>`,
                     },
                   },
 
@@ -157,7 +169,6 @@ func main() {
                 Html: tk.HtmlElementDiv{
                   Global: tk.HtmlGlobalAttributes{
                     Id: "grid",
-                    Style: "width: 980px;", //fixme: constante no código
                   },
                 },
                 Columns: []tk.KendoGridColumns{
@@ -181,20 +192,18 @@ func main() {
                         Text: "remove",
                       },
                       {
-                        Name: tk.COLUMNS_COMMAND_CUSTOM,
-                        IconClass: tk.KendoGridColumnsIconClass{
-                          Update: "none",
-                        },
+                        Name: "view",
+                        IconClass: "k-icon k-i-preview",
                         Click: tk.JavaScript{
                           Code: `function(e){
-                          var detailsTemplate = kendo.template($("#template-details-container").html());
+                          var detailsTemplate = getValueById("id:template-details-container");
                           
                           e.preventDefault();
 
                           var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
                           //dataItem.set("FirstName", "James") //set the property of the dataItem
-                          wnd.content(detailsTemplate(dataItem));
-                          wnd.center().open();
+                          imageDetailsWindowWidget.content(detailsTemplate(dataItem));
+                          imageDetailsWindowWidget.center().open();
                         }`,
                         },
                       },
@@ -203,11 +212,11 @@ func main() {
                 },
                 Sortable: tk.TRUE,
                 PersistSelection: tk.TRUE,
-                Editable: tk.TRUE,
-                /*Editable: tk.KendoGridEditable{
+                //Editable: tk.TRUE,
+                Editable: tk.KendoGridEditable{
                   Mode: tk.KENDO_GRID_EDITOR_MODE_POPUP,
                   Confirmation: "Are you sure that you want to delete this image from server?",
-                },*/
+                },
                 ColumnMenu: tk.KendoGridColumnMenu{
                   Columns: tk.FALSE,
                 },
