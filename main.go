@@ -138,33 +138,6 @@ func main() {
             },
             Content: tk.Content{
 
-              &tk.HtmlElementScript{
-                Global: tk.HtmlGlobalAttributes{
-                  Id: "template-details-container",
-                },
-                Type: tk.SCRIPT_TYPE_KENDO_TEMPLATE,
-                Content: tk.Content{
-
-                  &tk.HtmlElementDiv{
-                    Global: tk.HtmlGlobalAttributes{
-                      Id: "details-container",
-                    },
-                    Content: tk.Content{
-
-                      `<h3>#= Id #</h3>
-                      <dl>
-                        <dt>Created:</dt><dt>#= kendo.toString(Created, "MM/dd/yyyy") #</dt>
-                        <dt>Tags:</dt><dt>#= RepoTags #</dt>
-                        <dt>Digests:</dt><dt>#= RepoDigests #</dt>
-                        <dt>Size:</dt><dt>#= Size #</dt>
-                        <dt>Virtual Size:</dt><dt>#= VirtualSize #</dt>
-                      </dl>`,
-                    },
-                  },
-
-                },
-              },
-
               &tk.KendoUiGrid{
                 Html: tk.HtmlElementDiv{
                   Global: tk.HtmlGlobalAttributes{
@@ -175,9 +148,6 @@ func main() {
                   //{ Selectable: tk.TRUE, Width: 50 },
                   {
                     Field: "Id",
-                    /*Editor: tk.JavaScript{
-                      Code: "function(a,b){console.log('a:', a);console.log('b:', b);}",
-                    },*/
                   },
                   { Field: "Created", Format: "{0:MM/dd/yyyy}" },
                   { Field: "RepoDigests" },
@@ -185,27 +155,57 @@ func main() {
                   { Field: "Size" },
                   { Field: "VirtualSize" },
                   {
-                    Title: " ",
                     Command: []tk.KendoGridColumnsCommand{
                       {
                         Name: tk.COLUMNS_COMMAND_DESTROY,
                         Text: "remove",
                       },
                       {
-                        Name: "view",
-                        IconClass: "k-icon k-i-preview",
-                        Click: tk.JavaScript{
-                          Code: `function(e){
-                          var detailsTemplate = getValueById("id:template-details-container");
-                          
-                          e.preventDefault();
+                        Name: tk.COLUMNS_COMMAND_VIEW,
+                        Text: "view",
+                        IconClass: tk.ICON_PREVIEW,
 
-                          var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
-                          //dataItem.set("FirstName", "James") //set the property of the dataItem
-                          imageDetailsWindowWidget.content(detailsTemplate(dataItem));
-                          imageDetailsWindowWidget.center().open();
-                        }`,
+                        ViewWindow: &tk.KendoUiWindow{
+                          Html: tk.HtmlElementDiv{
+                            Global: tk.HtmlGlobalAttributes{
+                              Id: "imageDetailsWindow",
+                            },
+                          },
+                          Title: "Image Data",
+                          Modal: tk.TRUE,
+                          Visible: tk.FALSE,
+                          Resizable: tk.TRUE,
+                          Width: 900,
+
                         },
+
+                        ViewTemplate: &tk.HtmlElementScript{
+                          Global: tk.HtmlGlobalAttributes{
+                            Id: "template-details-container",
+                          },
+                          Type: tk.SCRIPT_TYPE_KENDO_TEMPLATE,
+                          Content: tk.Content{
+
+                            &tk.HtmlElementDiv{
+                              Global: tk.HtmlGlobalAttributes{
+                                Id: "details-container",
+                              },
+                              Content: tk.Content{
+
+                                `<h3>#= Id #</h3>
+                                <dl>
+                                  <dt>Created:</dt><dt>#= kendo.toString(Created, "MM/dd/yyyy") #</dt>
+                                  <dt>Tags:</dt><dt>#= RepoTags #</dt>
+                                  <dt>Digests:</dt><dt>#= RepoDigests #</dt>
+                                  <dt>Size:</dt><dt>#= Size #</dt>
+                                  <dt>Virtual Size:</dt><dt>#= VirtualSize #</dt>
+                                </dl>`,
+                              },
+                            },
+
+                          },
+                        },
+
                       },
                     },
                   },
@@ -391,7 +391,7 @@ func main() {
                 },
               },
 
-              &tk.KendoUiWindow{
+              /*&tk.KendoUiWindow{
                 Html: tk.HtmlElementDiv{
                   Global: tk.HtmlGlobalAttributes{
                     Id: "imageDetailsWindow",
@@ -403,7 +403,7 @@ func main() {
                 Resizable: tk.TRUE,
                 Width: 900,
 
-              },
+              },*/
 
             },
 
