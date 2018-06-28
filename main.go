@@ -112,6 +112,7 @@ func main() {
   if err != "" {
     fmt.Println( err )
   }
+
   err = sProxy.ProxyRootConfig.AddRouteFromFuncStt(
     sProxy.ProxyRoute{
       Name: "image grid",
@@ -391,20 +392,6 @@ func main() {
                 },
               },
 
-              /*&tk.KendoUiWindow{
-                Html: tk.HtmlElementDiv{
-                  Global: tk.HtmlGlobalAttributes{
-                    Id: "imageDetailsWindow",
-                  },
-                },
-                Title: "Image Data",
-                Modal: tk.FALSE,
-                Visible: tk.FALSE,
-                Resizable: tk.TRUE,
-                Width: 900,
-
-              },*/
-
             },
 
           }
@@ -421,6 +408,1050 @@ func main() {
           data.TemplateToServer("./static/template", w)
 
         },
+      },
+    },
+  )
+  if err != "" {
+    fmt.Println( err )
+  }
+
+
+
+
+
+
+
+
+
+  err = sProxy.ProxyRootConfig.AddRouteFromFuncStt(
+    sProxy.ProxyRoute{
+      Name: "image grid",
+      Domain: sProxy.ProxyDomain{
+        NotFoundHandle: sProxy.ProxyRootConfig.ProxyNotFound,
+        ErrorHandle: sProxy.ProxyRootConfig.ProxyError,
+        Host: "",
+      },
+      Path: sProxy.ProxyPath{
+        Path: "/image.edit",
+        Method: "GET",
+        ExpReg: "^/image.edit/(?P<id>[0-9a-fA-F]+)$",
+      },
+      ProxyEnable: false,
+      Handle: sProxy.ProxyHandle{
+        Handle: func(w sProxy.ProxyResponseWriter, r *sProxy.ProxyRequest){
+
+          data := config.Data{}
+          data.LoadFromFile( "./blogData/grid.json" )
+
+          el := tk.HtmlElementDiv{
+            Global: tk.HtmlGlobalAttributes{
+              Id: "spanCreateTemplateExposedPortsAddNewPort",
+              Class: "k-content",
+              Style: "width: 300px !important;",
+            },
+            Content: tk.Content{
+
+              &tk.HtmlElementDiv{
+                Content: tk.Content{
+
+                  &tk.HtmlElementFormLabel{
+                    For: "ConfigHostName",
+                    Content: tk.Content{
+                      "Host Name",
+                    },
+                    Global: tk.HtmlGlobalAttributes{
+                      Style: "width: 200px important!;",
+                    },
+                  },
+
+                  &tk.HtmlInputText{
+                    Global: tk.HtmlGlobalAttributes{
+                      Id: "ConfigHostName",
+                      Class: "k-textbox",
+                    },
+                    Name: "HostName",
+                  },
+
+                },
+              },
+
+              &tk.HtmlElementDiv{
+                Content: tk.Content{
+
+                  &tk.HtmlElementFormLabel{
+                    For: "ConfigDomainName",
+                    Content: tk.Content{
+                      "Domain Name",
+                    },
+                  },
+
+                  &tk.HtmlInputText{
+                    Global: tk.HtmlGlobalAttributes{
+                      Id: "ConfigDomainName",
+                      Class: "k-textbox",
+                    },
+                    Name: "DomainName",
+                  },
+
+                },
+              },
+
+              &tk.HtmlElementDiv{
+                Content: tk.Content{
+
+                  &tk.HtmlElementFormLabel{
+                    For: "ConfigUser",
+                    Content: tk.Content{
+                      "User",
+                    },
+                  },
+
+                  &tk.HtmlInputText{
+                    Global: tk.HtmlGlobalAttributes{
+                      Id: "ConfigUser",
+                      Class: "k-textbox",
+                    },
+                    Name: "User",
+                  },
+
+                },
+              },
+
+              &tk.HtmlElementDiv{
+                Content: tk.Content{
+
+                  &tk.HtmlElementFormLabel{
+                    For: "ConfigAttachStdIn",
+                    Content: tk.Content{
+                      "Attach Std In",
+                    },
+                  },
+
+                  &tk.KendoUiDropDownList{
+                    Html: tk.HtmlInputText{
+                      Global: tk.HtmlGlobalAttributes{
+                        Id: "ConfigAttachStdIn",
+                      },
+                      Name: "AttachStdIn",
+                    },
+                    DataValueField: "key",
+                    DataTextField: "value",
+
+                    DataSource: []map[string]interface{}{
+                      {
+                        "key": -1,
+                        "value": "Default",
+                      },
+                      {
+                        "key": 0,
+                        "value": "No",
+                      },
+                      {
+                        "key": 1,
+                        "value": "Yes",
+                      },
+                    },
+                  },
+
+                },
+              },
+
+              &tk.HtmlElementDiv{
+                Content: tk.Content{
+
+                  &tk.HtmlElementFormLabel{
+                    For: "ConfigAttachStdOut",
+                    Content: tk.Content{
+                      "Attach Std Out",
+                    },
+                  },
+
+                  &tk.KendoUiDropDownList{
+                    Html: tk.HtmlInputText{
+                      Global: tk.HtmlGlobalAttributes{
+                        Id: "ConfigAttachStdOut",
+                      },
+                      Name: "AttachStdOut",
+                    },
+                    DataValueField: "key",
+                    DataTextField: "value",
+
+                    DataSource: []map[string]interface{}{
+                      {
+                        "key": -1,
+                        "value": "Default",
+                      },
+                      {
+                        "key": 0,
+                        "value": "No",
+                      },
+                      {
+                        "key": 1,
+                        "value": "Yes",
+                      },
+                    },
+                  },
+
+                },
+              },
+
+              &tk.HtmlElementDiv{
+                Content: tk.Content{
+
+                  &tk.HtmlElementFormLabel{
+                    For: "ConfigAttachStdErr",
+                    Content: tk.Content{
+                      "Host Attach Std Err",
+                    },
+                  },
+
+                  &tk.KendoUiDropDownList{
+                    Html: tk.HtmlInputText{
+                      Global: tk.HtmlGlobalAttributes{
+                        Id: "ConfigAttachStdErr",
+                      },
+                      Name: "AttachStdErr",
+                    },
+                    DataValueField: "key",
+                    DataTextField: "value",
+
+                    DataSource: []map[string]interface{}{
+                      {
+                        "key": -1,
+                        "value": "Default",
+                      },
+                      {
+                        "key": 0,
+                        "value": "No",
+                      },
+                      {
+                        "key": 1,
+                        "value": "Yes",
+                      },
+                    },
+                  },
+
+                },
+              },
+
+              &tk.HtmlElementDiv{
+                Content: tk.Content{
+
+                  &tk.HtmlElementFormLabel{
+                    For: "ConfigExposedPorts",
+                    Content: tk.Content{
+                      "Exposed Ports",
+                    },
+                  },
+
+                  &tk.KendoUiMultiSelect{
+                    Html: tk.HtmlElementFormSelect{
+                      Global: tk.HtmlGlobalAttributes{
+                        Id: "ConfigExposedPorts",
+                      },
+                      Name: "ExposedPorts",
+                    },
+                    ClearButton: tk.FALSE,
+                    DataValueField: "id",
+                    DataTextField: "ExposedPortsShow",
+                    DataSource: tk.KendoDataSource{
+                      //Type: KENDO_TYPE_DATA_JSON,
+                      Transport: tk.KendoTransport{
+                        Read: tk.KendoRead{
+                          Url: "/static/test/read",
+                          Type: tk.HTML_METHOD_GET,
+                          DataType: tk.KENDO_TYPE_DATA_JSON_JSON,
+                        },
+                        Create: tk.KendoCreate{
+                          Url: "/static/test/create",
+                          Type: tk.HTML_METHOD_POST,
+                          DataType: tk.KENDO_TYPE_DATA_JSON_JSON,
+                        },
+                      },
+                      Schema: tk.KendoSchema{
+                        Data:  "Objects",
+                        Total: "Total",
+                        Model: tk.KendoDataModel{
+                          Id: "id",
+                          Fields: map[string]tk.KendoField{
+                            "id": {
+                              Type: tk.JAVASCRIPT_NUMBER,
+                            },
+                            "ExposedPortsNumber": {
+                              Type: tk.JAVASCRIPT_NUMBER,
+                            },
+                            "ExposedPortsProtocol": {
+                              Type: tk.JAVASCRIPT_STRING,
+                            },
+                            "ExposedPortsShow": {
+                              Type: tk.JAVASCRIPT_STRING,
+                            },
+                          },
+                        },
+                      },
+                      //PageSize: 10,
+                      ServerPaging: tk.TRUE,
+                    },
+                    Dialog: tk.KendoUiDialog{
+                      Html: tk.HtmlElementDiv{
+                        Global: tk.HtmlGlobalAttributes{
+                          Id: tk.GetAutoId(),
+                        },
+                      },
+                      Title: "Add new exposed port.",
+                      Content: tk.Content{
+
+                        // regra, o form valida automaticamente
+                        &tk.HtmlElementDiv{
+                          Global: tk.HtmlGlobalAttributes{
+                            Id: "ConfigExposedPortsDialogContent",
+                            Class: "k-content",
+                          },
+                          Content: tk.Content{
+
+                            &tk.HtmlElementDiv{
+                              Content: tk.Content{
+
+                                &tk.HtmlElementFormLabel{
+                                  For: "ExposedPortsNumber",
+                                  Content: tk.Content{
+                                    "Port number",
+                                  },
+                                },
+
+                                &tk.KendoUiNumericTextBox{
+                                  Html: tk.HtmlInputNumber{
+                                    Name:         "ExposedPortsNumber",
+                                    PlaceHolder:  "",
+                                    AutoComplete: tk.FALSE,
+                                    Required:     tk.TRUE,
+                                    // Pattern: "[^=]*",
+                                    Global: tk.HtmlGlobalAttributes{
+                                      Id:    "ExposedPortsNumber",
+                                      Class: "oneThirdSize",
+                                      Extra: map[string]interface{}{
+                                        "validationMessage": "Enter a {0}",
+                                      },
+                                    },
+                                  },
+                                  Format: "#",
+                                },
+                              },
+                            },
+
+                            &tk.HtmlElementDiv{
+                              Content: tk.Content{
+
+                                &tk.HtmlElementFormLabel{
+                                  For: "ExposedPortsProtocol",
+                                  Content: tk.Content{
+                                    "Port protocol",
+                                  },
+                                },
+
+                                &tk.KendoUiComboBox{
+                                  Html: tk.HtmlElementFormSelect{
+                                    Global: tk.HtmlGlobalAttributes{
+                                      Id:    "ExposedPortsProtocol",
+                                      Class: "oneThirdSize",
+                                      Data:  map[string]string{"required-msg": "Select start time"},
+                                    },
+                                    Name:     "ExposedPortsProtocol",
+                                    Required: tk.TRUE,
+                                    Options: []tk.HtmlOptions{
+                                      {
+                                        Label: "Please, select one",
+                                        Key:   "",
+                                      },
+                                      {
+                                        Label: "TCP",
+                                        Key:   "TCP",
+                                      },
+                                      {
+                                        Label: "UDP",
+                                        Key:   "UDP",
+                                      },
+                                    },
+                                  },
+                                },
+                              },
+                            },
+
+                            &tk.HtmlInputHidden{
+                              Global: tk.HtmlGlobalAttributes{
+                                Id: "ExposedPortsShow",
+                              },
+                              Name: "ExposedPortsShow",
+                            },
+
+                          },
+                        },
+                      },
+                      Visible: tk.FALSE,
+                      Width: 400,
+                      Actions: []tk.KendoActions{
+                        {
+                          Primary: tk.FALSE,
+                          Text:    "Close",
+                        },
+                        {
+                          Primary: tk.FALSE,
+                          Text:    "Add",
+                          ButtonType: tk.BUTTON_TYPE_ADD,
+                        },
+                        {
+                          Primary: tk.TRUE,
+                          Text:    "Add and close",
+                          ButtonType: tk.BUTTON_TYPE_ADD_AND_CLOSE,
+                        },
+                      },
+                    },
+                    NoDataTemplate: tk.HtmlElementScript{
+                      Global: tk.HtmlGlobalAttributes{
+                        Id: tk.GetAutoId(),
+                      },
+                      Type: tk.SCRIPT_TYPE_KENDO_TEMPLATE,
+                      Content: tk.Content{
+
+                        &tk.HtmlElementDiv{
+                          Content: tk.Content{
+                            "No data found. Do you want to add new item?",
+                          },
+                        },
+
+                        "<br>",
+                        "<br>",
+
+                        &tk.HtmlElementFormButton{
+                          ButtonType: tk.BUTTON_TYPE_ADD_IN_TEMPLATE,
+                          Global: tk.HtmlGlobalAttributes{
+                            Id: tk.GetAutoId(),
+                            Class: "k-button",
+                          },
+                          Content: tk.Content{
+                            "Add new item",
+                          },
+                        },
+
+                      },
+                    },
+                  },
+
+                },
+              },
+
+              &tk.HtmlElementDiv{
+                Content: tk.Content{
+
+                  &tk.HtmlElementFormLabel{
+                    For: "ConfigTry",
+                    Content: tk.Content{
+                      "Try",
+                    },
+                  },
+
+                  &tk.KendoUiDropDownList{
+                    Html: tk.HtmlInputText{
+                      Global: tk.HtmlGlobalAttributes{
+                        Id: "ConfigTry",
+                      },
+                      Name: "Try",
+                    },
+                    DataValueField: "key",
+                    DataTextField: "value",
+
+                    DataSource: []map[string]interface{}{
+                      {
+                        "key": -1,
+                        "value": "Default",
+                      },
+                      {
+                        "key": 0,
+                        "value": "No",
+                      },
+                      {
+                        "key": 1,
+                        "value": "Yes",
+                      },
+                    },
+                  },
+
+                },
+              },
+
+              &tk.HtmlElementDiv{
+                Content: tk.Content{
+
+                  &tk.HtmlElementFormLabel{
+                    For: "ConfigOpenStdIn",
+                    Content: tk.Content{
+                      "Open Std In",
+                    },
+                  },
+
+                  &tk.KendoUiDropDownList{
+                    Html: tk.HtmlInputText{
+                      Global: tk.HtmlGlobalAttributes{
+                        Id: "ConfigOpenStdIn",
+                      },
+                      Name: "OpenStdIn",
+                    },
+                    DataValueField: "key",
+                    DataTextField: "value",
+
+                    DataSource: []map[string]interface{}{
+                      {
+                        "key": -1,
+                        "value": "Default",
+                      },
+                      {
+                        "key": 0,
+                        "value": "No",
+                      },
+                      {
+                        "key": 1,
+                        "value": "Yes",
+                      },
+                    },
+                  },
+
+                },
+              },
+
+              &tk.HtmlElementDiv{
+                Content: tk.Content{
+
+                  &tk.HtmlElementFormLabel{
+                    For: "ConfigStdInOnce",
+                    Content: tk.Content{
+                      "Std In Once",
+                    },
+                  },
+
+                  &tk.KendoUiDropDownList{
+                    Html: tk.HtmlInputText{
+                      Global: tk.HtmlGlobalAttributes{
+                        Id: "ConfigStdInOnce",
+                      },
+                      Name: "StdInOnce",
+                    },
+                    DataValueField: "key",
+                    DataTextField: "value",
+
+                    DataSource: []map[string]interface{}{
+                      {
+                        "key": -1,
+                        "value": "Default",
+                      },
+                      {
+                        "key": 0,
+                        "value": "No",
+                      },
+                      {
+                        "key": 1,
+                        "value": "Yes",
+                      },
+                    },
+                  },
+
+                },
+              },
+
+              &tk.HtmlElementDiv{
+                Content: tk.Content{
+
+                  &tk.HtmlElementFormLabel{
+                    For: "ConfigEnv",
+                    Content: tk.Content{
+                      "Env",
+                    },
+                  },
+
+                  &tk.KendoUiMultiSelect{
+                    Html: tk.HtmlElementFormSelect{
+                      Global: tk.HtmlGlobalAttributes{
+                        Id: "ConfigEnv",
+                      },
+                      Name: "Env",
+                    },
+                  },
+
+                },
+              },
+
+              &tk.HtmlElementDiv{
+                Content: tk.Content{
+
+                  &tk.HtmlElementFormLabel{
+                    For: "ConfigCmd",
+                    Content: tk.Content{
+                      "Cmd",
+                    },
+                  },
+
+                  &tk.KendoUiMultiSelect{
+                    Html: tk.HtmlElementFormSelect{
+                      Global: tk.HtmlGlobalAttributes{
+                        Id: "ConfigCmd",
+                      },
+                      Name: "Cmd",
+                    },
+                  },
+
+                },
+              },
+
+              &tk.HtmlElementDiv{
+                Content: tk.Content{
+
+                  &tk.HtmlElementFormLabel{
+                    For: "ConfigHealthCheck",
+                    Content: tk.Content{
+                      "Health Check",
+                    },
+                  },
+
+                },
+              },
+
+              &tk.HtmlElementDiv{
+                Content: tk.Content{
+
+                  &tk.HtmlElementFormLabel{
+                    For: "ConfigArgsEscaped",
+                    Content: tk.Content{
+                      "Args Escaped",
+                    },
+                  },
+
+                  &tk.KendoUiDropDownList{
+                    Html: tk.HtmlInputText{
+                      Global: tk.HtmlGlobalAttributes{
+                        Id: "ConfigArgsEscaped",
+                      },
+                      Name: "ArgsEscaped",
+                    },
+                    DataValueField: "key",
+                    DataTextField: "value",
+
+                    DataSource: []map[string]interface{}{
+                      {
+                        "key": -1,
+                        "value": "Default",
+                      },
+                      {
+                        "key": 0,
+                        "value": "No",
+                      },
+                      {
+                        "key": 1,
+                        "value": "Yes",
+                      },
+                    },
+                  },
+
+                },
+              },
+
+              &tk.HtmlElementDiv{
+                Content: tk.Content{
+
+                  &tk.HtmlElementFormLabel{
+                    For: "ConfigImage",
+                    Content: tk.Content{
+                      "Image",
+                    },
+                  },
+
+                  &tk.KendoUiAutoComplete{
+                    Html: tk.HtmlInputText{
+                      Global: tk.HtmlGlobalAttributes{
+                        Id: "ConfigHostImage",
+                        Class: "k-textbox",
+                      },
+                      Name: "Image",
+                    },
+                    DataTextField: "ExposedPortsShow",
+                    ClearButton: tk.FALSE,
+                    DataSource: tk.KendoDataSource{
+                      //VarName: "testDataSource",
+                      //Type: KENDO_TYPE_DATA_JSON,
+                      Transport: tk.KendoTransport{
+                        Read: tk.KendoRead{
+                          Url: "/static/test/read",
+                          Type: tk.HTML_METHOD_GET,
+                          DataType: tk.KENDO_TYPE_DATA_JSON_JSON,
+                        },
+                        Create: tk.KendoCreate{
+                          Url: "/static/test/create",
+                          Type: tk.HTML_METHOD_POST,
+                          DataType: tk.KENDO_TYPE_DATA_JSON_JSON,
+                        },
+                      },
+                      Schema: tk.KendoSchema{
+                        Data:  "Objects",
+                        Total: "Total",
+                        Model: tk.KendoDataModel{
+                          Id: "id",
+                          Fields: map[string]tk.KendoField{
+                            "id": {
+                              Type: tk.JAVASCRIPT_NUMBER,
+                            },
+                            "ExposedPortsNumber": {
+                              Type: tk.JAVASCRIPT_NUMBER,
+                            },
+                            "ExposedPortsProtocol": {
+                              Type: tk.JAVASCRIPT_STRING,
+                            },
+                            "ExposedPortsShow": {
+                              Type: tk.JAVASCRIPT_STRING,
+                            },
+                          },
+                        },
+                      },
+                      //PageSize: 10,
+                      ServerPaging: tk.TRUE,
+                    },
+                  },
+
+                },
+              },
+
+              &tk.HtmlElementDiv{
+                Content: tk.Content{
+
+                  &tk.HtmlElementFormLabel{
+                    For: "ConfigVolumes",
+                    Content: tk.Content{
+                      "Volumes",
+                    },
+                  },
+
+                  &tk.KendoUiMultiSelect{
+                    Html: tk.HtmlElementFormSelect{
+                      Global: tk.HtmlGlobalAttributes{
+                        Id: "ConfigVolumes",
+                      },
+                      Name: "Volumes",
+                    },
+                  },
+
+                },
+              },
+
+              &tk.HtmlElementDiv{
+                Content: tk.Content{
+
+                  &tk.HtmlElementFormLabel{
+                    For: "ConfigWorkingDir",
+                    Content: tk.Content{
+                      "Working Dir",
+                    },
+                  },
+
+                  &tk.HtmlInputText{
+                    Global: tk.HtmlGlobalAttributes{
+                      Id: "ConfigWorkingDir",
+                      Class: "k-textbox",
+                    },
+                    Name: "WorkingDir",
+                  },
+
+                },
+              },
+
+              &tk.HtmlElementDiv{
+                Content: tk.Content{
+
+                  &tk.HtmlElementFormLabel{
+                    For: "ConfigEntryPoint",
+                    Content: tk.Content{
+                      "EntryPoint",
+                    },
+                  },
+
+                  &tk.KendoUiMultiSelect{
+                    Html: tk.HtmlElementFormSelect{
+                      Global: tk.HtmlGlobalAttributes{
+                        Id: "ConfigEntryPoint",
+                      },
+                      Name: "EntryPoint",
+                    },
+                  },
+
+                },
+              },
+
+              &tk.HtmlElementDiv{
+                Content: tk.Content{
+
+                  &tk.HtmlElementFormLabel{
+                    For: "ConfigNetworkDisabled",
+                    Content: tk.Content{
+                      "Network Disabled",
+                    },
+                  },
+
+                  &tk.KendoUiDropDownList{
+                    Html: tk.HtmlInputText{
+                      Global: tk.HtmlGlobalAttributes{
+                        Id: "ConfigNetworkDisabled",
+                      },
+                      Name: "NetworkDisabled",
+                    },
+                    DataValueField: "key",
+                    DataTextField: "value",
+
+                    DataSource: []map[string]interface{}{
+                      {
+                        "key": -1,
+                        "value": "Default",
+                      },
+                      {
+                        "key": 0,
+                        "value": "No",
+                      },
+                      {
+                        "key": 1,
+                        "value": "Yes",
+                      },
+                    },
+                  },
+
+                },
+              },
+
+              &tk.HtmlElementDiv{
+                Content: tk.Content{
+
+                  &tk.HtmlElementFormLabel{
+                    For: "ConfigMacAddress",
+                    Content: tk.Content{
+                      "Mac Address",
+                    },
+                  },
+
+                  &tk.HtmlInputText{
+                    Global: tk.HtmlGlobalAttributes{
+                      Id: "ConfigMacAddress",
+                      Class: "k-textbox",
+                    },
+                    Name: "MacAddress",
+                  },
+
+                },
+              },
+
+              &tk.HtmlElementDiv{
+                Content: tk.Content{
+
+                  &tk.HtmlElementFormLabel{
+                    For: "ConfigOnBuild",
+                    Content: tk.Content{
+                      "On Build",
+                    },
+                  },
+
+                  &tk.KendoUiMultiSelect{
+                    Html: tk.HtmlElementFormSelect{
+                      Global: tk.HtmlGlobalAttributes{
+                        Id: "ConfigOnBuild",
+                      },
+                      Name: "OnBuild",
+                    },
+                  },
+
+                },
+              },
+
+              &tk.HtmlElementDiv{
+                Content: tk.Content{
+
+                  &tk.HtmlElementFormLabel{
+                    For: "ConfigLabels",
+                    Content: tk.Content{
+                      "Labels",
+                    },
+                  },
+
+                  &tk.KendoUiMultiSelect{
+                    Html: tk.HtmlElementFormSelect{
+                      Global: tk.HtmlGlobalAttributes{
+                        Id: "ConfigLabels",
+                      },
+                      Name: "Labels",
+                    },
+                  },
+
+                },
+              },
+
+              &tk.HtmlElementDiv{
+                Content: tk.Content{
+
+                  &tk.HtmlElementFormLabel{
+                    For: "ConfigStopSignal",
+                    Content: tk.Content{
+                      "Stop Signal",
+                    },
+                  },
+
+                  &tk.HtmlInputText{
+                    Global: tk.HtmlGlobalAttributes{
+                      Id: "ConfigStopSignal",
+                      Class: "k-textbox",
+                    },
+                    Name: "StopSignal",
+                  },
+
+                },
+              },
+
+              &tk.HtmlElementDiv{
+                Content: tk.Content{
+
+                  &tk.HtmlElementFormLabel{
+                    For: "ConfigStopTimeout",
+                    Content: tk.Content{
+                      "Stop Timeout",
+                    },
+                  },
+
+                  &tk.KendoUiNumericTextBox{
+                    Html: tk.HtmlInputNumber{
+                      Global: tk.HtmlGlobalAttributes{
+                        Id: "ConfigStopTimeout",
+                      },
+                      Name: "StopTimeout",
+                    },
+                    Format: "#s",
+                  },
+
+                },
+              },
+
+              &tk.HtmlElementDiv{
+                Content: tk.Content{
+
+                  &tk.HtmlElementFormLabel{
+                    For: "ConfigShell",
+                    Content: tk.Content{
+                      "Shell",
+                    },
+                  },
+
+                  &tk.KendoUiMultiSelect{
+                    Html: tk.HtmlElementFormSelect{
+                      Global: tk.HtmlGlobalAttributes{
+                        Id: "ConfigShell",
+                      },
+                      Name: "Shell",
+                    },
+                  },
+
+                },
+              },
+
+            },
+          }
+
+          data.TelerikVarGlobal = string( el.Content.MakeJsObject() )
+          data.TelerikOnLoadCode = string( el.Content.ToJavaScript() )
+
+          data.TelerikScriptTemplate = string( el.Content.MakeJsScript() )
+          data.TelerikHtmlSupport = string( el.ToHtmlSupport() )
+
+          data.Post[0].Title = "Image List"
+          data.Post[0].Text += string( el.ToHtml() )
+
+          data.TemplateToServer("./static/template", w)
+
+        },
+      },
+    },
+  )
+  if err != "" {
+    fmt.Println( err )
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  err = sProxy.ProxyRootConfig.AddRouteFromFuncStt(
+    sProxy.ProxyRoute{
+      Name: "image list",
+      Domain: sProxy.ProxyDomain{
+        NotFoundHandle: sProxy.ProxyRootConfig.ProxyNotFound,
+        ErrorHandle: sProxy.ProxyRootConfig.ProxyError,
+        Host: "",
+      },
+      Path: sProxy.ProxyPath{
+        Path: "/image.info",
+        Method: "GET",
+        ExpReg: "^/image.info/(?P<id>[0-9a-fA-F]+)$",
+      },
+      ProxyEnable: false,
+      Handle: sProxy.ProxyHandle{
+        Handle: image.WebImageInfoList,
       },
     },
   )
