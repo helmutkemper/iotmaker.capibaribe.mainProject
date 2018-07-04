@@ -113,6 +113,82 @@ func main() {
     fmt.Println( err )
   }
 
+
+
+  err = sProxy.ProxyRootConfig.AddRouteFromFuncStt(
+    sProxy.ProxyRoute{
+      Name: "tpl maker",
+      Domain: sProxy.ProxyDomain{
+        NotFoundHandle: sProxy.ProxyRootConfig.ProxyNotFound,
+        ErrorHandle: sProxy.ProxyRootConfig.ProxyError,
+        Host: "",
+      },
+      Path: sProxy.ProxyPath{
+        Path: "/tpl.maker",
+        Method: "GET",
+      },
+      ProxyEnable: false,
+      Handle: sProxy.ProxyHandle{
+        Handle: func(w sProxy.ProxyResponseWriter, r *sProxy.ProxyRequest){
+
+          data := config.Data{}
+          data.LoadFromFile( "./blogData/grid.json" )
+
+          el := tk.HtmlElementDiv{
+            Global: tk.HtmlGlobalAttributes{
+              Id: "main",
+              Class: "k-content",
+            },
+            Content: tk.Content{},
+
+          }
+
+          data.TelerikVarGlobal = string( el.Content.MakeJsObject() )
+          data.TelerikOnLoadCode = string( el.Content.ToJavaScript() )
+
+          data.TelerikScriptTemplate = string( el.Content.MakeJsScript() )
+          data.TelerikHtmlSupport = string( el.ToHtmlSupport() )
+
+          data.Post[0].Title = "Add new Route"
+          data.Post[0].Text += string( el.ToHtml() )
+
+          err := data.TemplateToFile("./static/template", "./tplOutputFiles/addNewRoute.html", "kendo")
+
+          output := sProxy.JSonOutStt{}
+          output.ToOutput(1, err, []int{}, w)
+        },
+      },
+    },
+  )
+  if err != "" {
+    fmt.Println( err )
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   err = sProxy.ProxyRootConfig.AddRouteFromFuncStt(
     sProxy.ProxyRoute{
       Name: "image grid",
