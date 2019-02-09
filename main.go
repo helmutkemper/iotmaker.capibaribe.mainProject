@@ -1,15 +1,23 @@
 package main
 
 import (
+  "encoding/json"
+  "flag"
+  "fmt"
   sProxy "github.com/helmutkemper/SimpleReverseProxy"
-  "net/http"
-  "io/ioutil"
-      "fmt"
-  "github.com/helmutkemper/dockerManager/image"
   "github.com/helmutkemper/blog/config"
-  tk "github.com/helmutkemper/telerik"
   "github.com/helmutkemper/dockerManager/container"
+  "github.com/helmutkemper/dockerManager/image"
+  tk "github.com/helmutkemper/telerik"
+  "github.com/helmutkemper/yaml"
+  "github.com/pkg/errors"
+  "io/ioutil"
+  "log"
+  "net/http"
+  "strconv"
 )
+
+
 
 func containerListHtml(w sProxy.ProxyResponseWriter, r *sProxy.ProxyRequest) {
   w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -22,8 +30,124 @@ func containerListHtml(w sProxy.ProxyResponseWriter, r *sProxy.ProxyRequest) {
 
   w.Write( page )
 }
+
+const kVersionMinimum = 1.0
+const kVersionMaximum   = 1.0
+const kVersionMinimumString = "1.0"
+const kVersionMaximumString = "1.0"
+const kSiteErrorInformation = " Please, se manual at kemper.com.br for more information."
+
+
+type ConfigProxyServerNameAndHost struct {
+  Name string `yaml:"-"`
+  Server string `yaml:"-"`
+}
+
+type ConfigProxy struct {
+  Host string `yaml:"host"`
+  ServerFromFile []string `yaml:"server"`
+  Server ConfigProxyServerNameAndHost `yaml:"-"`
+}
+
+type ConfigServer struct {
+  ListenAndServer string `yaml:"listenAndServer"`
+  OutputConfig bool `yaml:"outputConfig"`
+  StaticServer bool `yaml:"staticServer"`
+  StaticFolder string `yaml:"staticFolder"`
+}
+
+type ConfigReverseProxy struct {
+  Config ConfigServer `yaml:"config"`
+  Proxy map[string]ConfigProxy `yaml:"proxy"`
+}
+
+type ConfigMainServer struct {
+  Version string `yaml:"version"`
+  ReverseProxy ConfigReverseProxy `yaml:"reverseProxy"`
+}
+
+func (el *ConfigMainServer) Unmarshal(filePath string) (error, bool) {
+  var fileContent []byte
+  var err error
+  var version float64
+  var data interface{}
+  
+  fileContent, err = ioutil.ReadFile(filePath)
+  if err != nil {
+    return err, true
+  }
+  
+  err = yaml.Unmarshal(fileContent, &data)
+  if err != nil {
+    return err, true
+  }
+  
+  if data.(map[interface{}]interface{})["version"] == nil {
+    return errors.New("you must inform the version of config file as numeric value. Example: version: '1.0'" + kSiteErrorInformation), true
+  }
+  
+  version, err = strconv.ParseFloat(data.(map[interface{}]interface{})["version"].(string), 64)
+  if version < kVersionMinimum || version > kVersionMaximum {
+    return errors.New("this project version accept only configs between versions " + kVersionMaximumString + " and " + kVersionMinimumString + "." + kSiteErrorInformation), true
+  }
+  
+  if data.(map[interface{}]interface{})["reverseProxy"] == nil {
+    return errors.New("reverse proxy config not found. " + kSiteErrorInformation), true
+  }
+  
+  if len( data.(map[interface{}]interface{})["reverseProxy"].(map[interface{}]interface{}) ) == 0 {
+    // fixme: fazer
+    return errors.New(""), true
+  }
+  
+  if data.(map[interface{}]interface{})["reverseProxy"].(map[interface{}]interface{})["listenAndServer"] == nil {
+    return errors.New("reverseProxy > config > listenAndServer config not found. " + kSiteErrorInformation), false
+  }
+  
+  if data.(map[interface{}]interface{})["reverseProxy"].(map[interface{}]interface{})["outputConfig"] == nil {
+    return errors.New("reverseProxy > config > outputConfig config not found. " + kSiteErrorInformation), false
+  }
+  
+  if data.(map[interface{}]interface{})["reverseProxy"].(map[interface{}]interface{})["staticServer"] == nil {
+    return errors.New("reverseProxy > config > staticServer config not found. " + kSiteErrorInformation), false
+  }
+  
+  if data.(map[interface{}]interface{})["reverseProxy"].(map[interface{}]interface{})["staticServer"] == nil {
+    return errors.New("reverseProxy > config > staticFolder config not found. " + kSiteErrorInformation), false
+  }
+  
+  if data.(map[interface{}]interface{})["reverseProxy"].(map[interface{}]interface{})["proxy"] == nil {
+    return errors.New("reverseProxy > config > staticFolder config not found. " + kSiteErrorInformation), false
+  }
+  
+  return nil, false
+}
+
+
 // fixme: quando o usuário for criar um banco de dados ou parecido, ele tem que ser avisado de exportar o diretório de dados para a máquina
 func main() {
+  var err error
+  var critical bool
+  
+  filePath := flag.String("f", "./reverseProxy-config.yml", "./reverseProxy-config.yml")
+  flag.Parse()
+  
+  configServer := ConfigMainServer{}
+  if err, critical = configServer.Unmarshal( *filePath ); err != nil {
+    if critical {
+      log.Fatalf("file %v parser error: %v\n", *filePath, err.Error())
+    } else {
+      log.Printf("file %v parser error: %v\n", *filePath, err.Error())
+    }
+  }
+  
+  j, err := json.Marshal(&configServer)
+  if err != nil {
+    log.Fatalf("file %v parser do json error: %v\n", *filePath, err.Error())
+  }
+  fmt.Printf("%s", j)
+  
+  return
   sProxy.FuncMap.Add( sProxy.ProxyRootConfig.ProxyNotFound )
   sProxy.FuncMap.Add( sProxy.ProxyRootConfig.ProxyError )
   sProxy.FuncMap.Add( containerListHtml )
@@ -31,11 +155,14 @@ func main() {
   sProxy.FuncMap.Add( sProxy.ProxyRootConfig.RouteDelete )
   sProxy.FuncMap.Add( sProxy.ProxyRootConfig.ProxyStatistics )
   sProxy.FuncMap.Add( image.WebList )
-
+  
+  
+  
+  
   sProxy.ProxyRootConfig = sProxy.ProxyConfig{
     ListenAndServe: ":8888",
   }
-  err := sProxy.ProxyRootConfig.AddRouteToProxyStt(
+  errStr := sProxy.ProxyRootConfig.AddRouteToProxyStt(
     sProxy.ProxyRoute{
     // docker run -d --name ghost-blog-demo -p 2368:2368 ghost
       Name: "blog",
@@ -51,7 +178,7 @@ func main() {
       },
     },
   )
-  err = sProxy.ProxyRootConfig.AddRouteFromFuncStt(
+  errStr = sProxy.ProxyRootConfig.AddRouteFromFuncStt(
     sProxy.ProxyRoute{
       Name: "image raw",
       Domain: sProxy.ProxyDomain{
@@ -70,7 +197,7 @@ func main() {
       },
     },
   )
-  err = sProxy.ProxyRootConfig.AddRouteFromFuncStt(
+  errStr = sProxy.ProxyRootConfig.AddRouteFromFuncStt(
     sProxy.ProxyRoute{
       Name: "image list",
       Domain: sProxy.ProxyDomain{
@@ -88,10 +215,10 @@ func main() {
       },
     },
   )
-  if err != "" {
+  if errStr != "" {
     fmt.Println( err )
   }
-  err = sProxy.ProxyRootConfig.AddRouteFromFuncStt(
+  errStr = sProxy.ProxyRootConfig.AddRouteFromFuncStt(
     sProxy.ProxyRoute{
       Name: "container list",
       Domain: sProxy.ProxyDomain{
@@ -109,13 +236,13 @@ func main() {
       },
     },
   )
-  if err != "" {
+  if errStr != "" {
     fmt.Println( err )
   }
 
 
 
-  err = sProxy.ProxyRootConfig.AddRouteFromFuncStt(
+  errStr = sProxy.ProxyRootConfig.AddRouteFromFuncStt(
     sProxy.ProxyRoute{
       Name: "tpl maker",
       Domain: sProxy.ProxyDomain{
@@ -160,7 +287,7 @@ func main() {
       },
     },
   )
-  if err != "" {
+  if errStr != "" {
     fmt.Println( err )
   }
 
@@ -189,7 +316,7 @@ func main() {
 
 
 
-  err = sProxy.ProxyRootConfig.AddRouteFromFuncStt(
+  errStr = sProxy.ProxyRootConfig.AddRouteFromFuncStt(
     sProxy.ProxyRoute{
       Name: "image grid",
       Domain: sProxy.ProxyDomain{
@@ -487,7 +614,7 @@ func main() {
       },
     },
   )
-  if err != "" {
+  if errStr != "" {
     fmt.Println( err )
   }
 
@@ -499,7 +626,7 @@ func main() {
 
 
 
-  err = sProxy.ProxyRootConfig.AddRouteFromFuncStt(
+  errStr = sProxy.ProxyRootConfig.AddRouteFromFuncStt(
     sProxy.ProxyRoute{
       Name: "image grid",
       Domain: sProxy.ProxyDomain{
@@ -1446,7 +1573,7 @@ func main() {
       },
     },
   )
-  if err != "" {
+  if errStr != "" {
     fmt.Println( err )
   }
 
@@ -1512,7 +1639,7 @@ func main() {
 
 
 
-  err = sProxy.ProxyRootConfig.AddRouteFromFuncStt(
+  errStr = sProxy.ProxyRootConfig.AddRouteFromFuncStt(
     sProxy.ProxyRoute{
       Name: "image list",
       Domain: sProxy.ProxyDomain{
@@ -1531,7 +1658,7 @@ func main() {
       },
     },
   )
-  if err != "" {
+  if errStr != "" {
     fmt.Println( err )
   }
 
