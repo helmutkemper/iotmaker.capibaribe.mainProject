@@ -46,11 +46,16 @@ type ConfigProxy struct {
   Server []ConfigProxyServerNameAndHost `yaml:"server"`
 }
 
+type ConfigStaticFolder struct {
+  Folder string `yaml:"folder"`
+  ServerPath string `yaml:"serverPath"`
+}
+
 type ConfigServer struct {
   ListenAndServer string `yaml:"listenAndServer"`
   OutputConfig bool `yaml:"outputConfig"`
   StaticServer bool `yaml:"staticServer"`
-  StaticFolder []string `yaml:"staticFolder"`
+  StaticFolder []ConfigStaticFolder `yaml:"staticFolder"`
 }
 
 type ConfigReverseProxy struct {
@@ -101,7 +106,7 @@ func (el *ConfigMainServer) Unmarshal(filePath string) error {
   }
   
   for _, folder := range el.ReverseProxy.Config.StaticFolder {
-    _, err = ioutil.ReadDir( folder )
+    _, err = ioutil.ReadDir( folder.Folder )
     if err != nil {
       return errors.New("reverseProxy > config > staticFolder error: " + err.Error())
     }
@@ -170,6 +175,8 @@ func main() {
     }
   }
   
+  fmt.Print("stating server...\n\n")
+  
   sProxy.FuncMap.Add( sProxy.ProxyRootConfig.ProxyNotFound )
   sProxy.FuncMap.Add( sProxy.ProxyRootConfig.ProxyError )
   sProxy.FuncMap.Add( containerListHtml )
@@ -212,5 +219,8 @@ func main() {
 
   http.Handle("/static/", http.StripPrefix("/static/", http.FileServer( http.Dir( "static" ) ) ) )
   http.HandleFunc("/", sProxy.ProxyFunc)
-  http.ListenAndServe(sProxy.ProxyRootConfig.ListenAndServe, nil)
+  if err = http.ListenAndServe(sProxy.ProxyRootConfig.ListenAndServe, nil); err != nil {
+    log.Fatalf( err.Error() )
+  }
+  
 }

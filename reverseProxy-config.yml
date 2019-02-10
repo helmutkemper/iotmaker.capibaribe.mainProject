@@ -7,10 +7,10 @@ reverseProxy:
     outputConfig: true                            # Imprime a configuração inicial na saída padrão. Formato: true/false
     staticServer: true                            # Habilita um servidor de arquivos no servidor principal. Formato: true/false
     staticFolder:                                 # Configuração do servidor de arquivos
-    - folder: /docker/static/                     # Caminho da pasta do servidor de arquivos
-      serverPath: static                          # Path do servidor
-    - folder: /docker/static/                     # Caminho da pasta do servidor de arquivos
-      serverPath: static                          # Path do servidor
+      - folder: /docker/static/                   # Caminho da pasta do servidor de arquivos
+        serverPath: static                        # Path do servidor
+      - folder: /docker/static/                   # Caminho da pasta do servidor de arquivos
+        serverPath: static                        # Path do servidor
 
   proxy:                                          # Servidor proxy. Redireciona o endereço para um novo servidor
     blog:                                         # Nome a ser gravado no log para o serviço 1
