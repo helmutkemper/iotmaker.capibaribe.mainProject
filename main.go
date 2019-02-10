@@ -154,7 +154,7 @@ func main() {
     if configServer.ReverseProxy.Config.StaticServer == true {
       fmt.Print("static server enabled at folders:\n" )
       for _, folder := range configServer.ReverseProxy.Config.StaticFolder {
-        fmt.Printf("  %v\n", folder)
+        fmt.Printf("  [%v]: %v \n", folder.ServerPath, folder.Folder)
       }
     }
     
