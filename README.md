@@ -5,7 +5,7 @@ The initial idea is to allow a single machine to receive multiple small sites, a
 
 To run this project:
 
-```bash
+```zsh
 
   # I assume you have a file named 'reverseProxy-config.yml' in the same directory.
   ./builds/Linux_Ubuntu_V_1_0
@@ -14,7 +14,7 @@ To run this project:
 
 or
 
-```bash
+```zsh
 
   ./builds/Linux_Ubuntu_V_1_0 -f path/you_yaml_config.yml
 
