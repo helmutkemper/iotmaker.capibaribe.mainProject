@@ -5,13 +5,9 @@ import (
   "fmt"
   sProxy "github.com/helmutkemper/SimpleReverseProxy"
   "github.com/helmutkemper/dockerManager/image"
-  "github.com/helmutkemper/yaml"
-  "github.com/pkg/errors"
   "io/ioutil"
   "log"
   "net/http"
-  "reflect"
-  "strconv"
 )
 
 
@@ -28,120 +24,17 @@ func containerListHtml(w sProxy.ProxyResponseWriter, r *sProxy.ProxyRequest) {
   w.Write( page )
 }
 
-const vCodeVersion = "0.1 alpha"
-const kVersionMinimum = 1.0
-const kVersionMaximum   = 1.0
-const kVersionMinimumString = "1.0"
-const kVersionMaximumString = "1.0"
-const kSiteErrorInformation = " Please, se manual at kemper.com.br for more information."
 
 
-type ConfigProxyServerNameAndHost struct {
-  Name string `yaml:"name"`
-  Host string `yaml:"host"`
-}
-
-type ConfigProxy struct {
-  Host string `yaml:"host"`
-  Server []ConfigProxyServerNameAndHost `yaml:"server"`
-}
-
-type ConfigStaticFolder struct {
-  Folder string `yaml:"folder"`
-  ServerPath string `yaml:"serverPath"`
-}
-
-type ConfigServer struct {
-  ListenAndServer string `yaml:"listenAndServer"`
-  OutputConfig bool `yaml:"outputConfig"`
-  StaticServer bool `yaml:"staticServer"`
-  StaticFolder []ConfigStaticFolder `yaml:"staticFolder"`
-}
-
-type ConfigReverseProxy struct {
-  Config ConfigServer `yaml:"config"`
-  Proxy map[string]ConfigProxy `yaml:"proxy"`
-}
-
-type ConfigMainServer struct {
-  Version string `yaml:"version"`
-  ReverseProxy ConfigReverseProxy `yaml:"reverseProxy"`
-}
-
-func (el *ConfigMainServer) Unmarshal(filePath string) error {
-  var fileContent []byte
-  var err error
-  var version float64
-  
-  fileContent, err = ioutil.ReadFile(filePath)
-  if err != nil {
-    return err
-  }
-  
-  err = yaml.Unmarshal(fileContent, el)
-  if err != nil {
-    return err
-  }
-  
-  version, err = strconv.ParseFloat( el.Version, 64 )
-  
-  if version == 0.0 {
-    return errors.New("you must inform the version of config file as numeric value. Example: version: '1.0'" + kSiteErrorInformation)
-  }
-  
-  if version < kVersionMinimum || version > kVersionMaximum {
-    return errors.New("this project version accept only configs between versions " + kVersionMaximumString + " and " + kVersionMinimumString + "." + kSiteErrorInformation)
-  }
-  
-  if reflect.DeepEqual( el.ReverseProxy, ConfigReverseProxy{} ) {
-    return errors.New("reverse proxy config not found. " + kSiteErrorInformation)
-  }
-  
-  if el.ReverseProxy.Config.ListenAndServer == "" {
-    return errors.New("reverseProxy > config > listenAndServer config not found. " + kSiteErrorInformation)
-  }
-  
-  if el.ReverseProxy.Config.StaticServer == true && len( el.ReverseProxy.Config.StaticFolder ) == 0 {
-    return errors.New("reverseProxy > config > staticFolder config not found. " + kSiteErrorInformation)
-  }
-  
-  for _, folder := range el.ReverseProxy.Config.StaticFolder {
-    _, err = ioutil.ReadDir( folder.Folder )
-    if err != nil {
-      return errors.New("reverseProxy > config > staticFolder error: " + err.Error())
-    }
-  }
-  
-  for proxyName, proxyConfig := range el.ReverseProxy.Proxy {
-    if proxyConfig.Host == "" {
-      return errors.New("reverseProxy > proxy > " + proxyName + " > host not found. " + kSiteErrorInformation)
-    }
-    
-    for _, proxyServerConfig := range proxyConfig.Server {
-      if proxyServerConfig.Host == "" {
-        return errors.New("reverseProxy > proxy > " + proxyName + " > server > host not found. " + kSiteErrorInformation)
-      }
-      
-      if proxyServerConfig.Name == "" {
-        return errors.New("reverseProxy > proxy > " + proxyName + " > server > name not found. " + kSiteErrorInformation)
-      }
-    }
-  }
-  
-  return nil
-}
-
-
-// fixme: quando o usuário for criar um banco de dados ou parecido, ele tem que ser avisado de exportar o diretório de dados para a máquina
 func main() {
   var err error
   
   filePath := flag.String("f", "./reverseProxy-config.yml", "./reverseProxy-config.yml")
   flag.Parse()
   
-  fmt.Printf("reverseProxy version: %v\n", vCodeVersion)
+  fmt.Printf("reverseProxy version: %v\n", sProxy.KCodeVersion)
   
-  configServer := ConfigMainServer{}
+  configServer := sProxy.NewConfig()
   if err = configServer.Unmarshal( *filePath ); err != nil {
     log.Fatalf("file %v parser error: %v\n", *filePath, err.Error())
   }
@@ -182,7 +75,7 @@ func main() {
   sProxy.FuncMap.Add( containerListHtml )
   sProxy.FuncMap.Add( sProxy.ProxyRootConfig.RouteAdd )
   sProxy.FuncMap.Add( sProxy.ProxyRootConfig.RouteDelete )
-  sProxy.FuncMap.Add( sProxy.ProxyRootConfig.ProxyStatistics )
+  //sProxy.FuncMap.Add( sProxy.ProxyRootConfig.ProxyStatistics )
   sProxy.FuncMap.Add( image.WebList )
   
   
@@ -204,7 +97,6 @@ func main() {
     
     err = sProxy.ProxyRootConfig.AddRouteToProxyStt(
       sProxy.ProxyRoute{
-        // docker run -d --name ghost-blog-demo -p 2368:2368 ghost
         Name: proxyConfigName,
         Domain: sProxy.ProxyDomain{
           Host: proxyConfig.Host,
