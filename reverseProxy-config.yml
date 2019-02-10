@@ -3,22 +3,32 @@ version: '1.0'
 reverseProxy:
 
   config:                                         # Configuração principal
-    listenAndServer: :9090                        # Servidor local. Formato: server:port
+    listenAndServer: :8080                        # Servidor local. Formato: server:port
     outputConfig: true                            # Imprime a configuração inicial na saída padrão. Formato: true/false
     staticServer: true                            # Habilita um servidor de arquivos no servidor principal. Formato: true/false
-    staticFolder: /docker/static                  # Caminho da pasta do servidor de arquivos
+    staticFolder:                                 # Configuração do servidor de arquivos
+    - folder: /docker/static/                     # Caminho da pasta do servidor de arquivos
+      serverPath: static                          # Path do servidor
+    - folder: /docker/static/                     # Caminho da pasta do servidor de arquivos
+      serverPath: static                          # Path do servidor
 
   proxy:                                          # Servidor proxy. Redireciona o endereço para um novo servidor
-    blog:                                         # Nome a ser gravado no log
-      host: blog.localhost:8888                   # Endereço de entrada
+    blog:                                         # Nome a ser gravado no log para o serviço 1
+      host: blog.localhost:8080                   # Endereço de entrada
       server:                                     # Lista de servidores
-        - docker 1 - ok=http://locahost:2368      # nome a ser gravado no log:endereço
-        - docker 2 - error=http://locahost:2369   # nome a ser gravado no log:endereço
-        - docker 3 - error=http://locahost:2370   # nome a ser gravado no log:endereço
+        - name: docker 1 - ok                     # nome a ser gravado no log:endereço
+          host: http://localhost:2368             # host alternativo número 1
+        - name: docker 2 - error                  # nome a ser gravado no log:endereço
+          host: http://localhost:2369             # host alternativo número 2
+        - name: docker 3 - error                  # nome a ser gravado no log:endereço
+          host: http://localhost:2370             # host alternativo número 3
 
-    blog_2:                                       # Nome a ser gravado no log
-      host: blog2.localhost:8888                  # Endereço de entrada
+    blog_2:                                       # Nome a ser gravado no log para o serviço 2
+      host: blog2.localhost:9090                  # Endereço de entrada
       server:                                     # Lista de servidores
-        - docker 1 - ok:http://locahost:2368      # nome a ser gravado no log:endereço
-        - docker 2 - error:http://locahost:2369   # nome a ser gravado no log:endereço
-        - docker 3 - error:http://locahost:2370   # nome a ser gravado no log:endereço
+        - name: docker 1 - ok                     # nome a ser gravado no log:endereço
+          host: http://localhost:2368             # host alternativo número 1
+        - name: docker 2 - error                  # nome a ser gravado no log:endereço
+          host: http://localhost:2369             # host alternativo número 2
+        - name: docker 3 - error                  # nome a ser gravado no log:endereço
+          host: http://localhost:2370             # host alternativo número 3
