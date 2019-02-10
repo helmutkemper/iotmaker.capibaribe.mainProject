@@ -1,30 +1,67 @@
-# reverseProxy
+# Capibaribe
 
-This project is not finished, so it is not in a free repository
+This is the preliminary version of my version of the reverse proxy, designed to be simple and fast. 
+The initial idea is to allow a single machine to receive multiple small sites, and can host then at a low cost.
+
+To run this project:
+
+```
+
+  # I assume you have a file named 'reverseProxy-config.yml' in the same directory.
+  ./builds/Linux_Ubuntu_V_1_0
+
+```
+
+or
+
+```
+
+  ./builds/Linux_Ubuntu_V_1_0 -f path/you_yaml_config.yml
+
+```
+
+How to configure:
 
 ```yaml
 
-ReverseProxy:
-  Config:                                       # Configuração principal
-    listenAndServer: :9090                      # Servidor local. Formato: server:port 
-    outputConfig: true                          # Imprime a configuração inicial na saída padrão. Formato: true/false 
-    staticServer: true                          # Habilita um servidor de arquivos no servidor principal. Formato: true/false
-    staticFolder: /docker/static                # Caminho da pasta do servidor de arquivos
+version: '1.0'
 
-  Proxy:                                        # Servidor proxy. Redireciona o endereço para um novo servidor
-   
-    blog:                                       # Nome a ser gravado no log
-      Host: blog.localhost:8888                 # Endereço de entrada
-      Server:                                   # Lista de servidores
-      - docker 1 - ok:http://locahost:2368      # nome a ser gravado no log:endereço
-      - docker 2 - error:http://locahost:2369   # nome a ser gravado no log:endereço
-      - docker 3 - error:http://locahost:2370   # nome a ser gravado no log:endereço
+reverseProxy:
 
-    blog_2:                                     # Nome a ser gravado no log
-      Host: blog2.localhost:8888                # Endereço de entrada
-      Server:                                   # Lista de servidores
-      - docker 1 - ok:http://locahost:2368      # nome a ser gravado no log:endereço
-      - docker 2 - error:http://locahost:2369   # nome a ser gravado no log:endereço
-      - docker 3 - error:http://locahost:2370   # nome a ser gravado no log:endereço
+  config:                                         # Server configuration
+    listenAndServer: :8080                        # Local server address and port. Format: server:port
+    outputConfig: true                            # Print the configuration before server start. Format: true/false
+    staticServer: true                            # Enable a static files server with files contained into same server machine. Format: true/false
+    staticFolder:                                 # Static file server config
+      - folder: /docker/static/                   # Files folders to server
+        serverPath: static                        # Main server path. Example: 'yourdomain.com/static'
+      - folder: /docker/static/                   # Files folders to server
+        serverPath: static                        # Main server path. Example: 'yourdomain.com/static'
+
+  proxy:                                          # Servidor proxy. Redireciona o endereço para um novo servidor
+
+    # To the example below, run the docker command to enable ghost blog at port 2368
+    # docker run -d --name ghost-blog-1 -p 2368:2368 ghost
+    blog:                                         # Name from server 1 log file
+      host: blog.localhost:8080                   # Income host address
+      server:                                     # Alternatives servers list
+        - name: docker 1 - ok                     # Name from alternative content server 1
+          host: http://localhost:2368             # Host from alternative content server 1
+        - name: docker 2 - error                  # Name from alternative content server 2
+          host: http://localhost:2369             # Host from alternative content server 2
+        - name: docker 3 - error                  # Name from alternative content server 3
+          host: http://localhost:2370             # Host from alternative content server 3
+
+    # To the example below, run the docker command to enable ghost blog at port 2378
+    # docker run -d --name ghost-blog-2 -p 2378:2368 ghost
+    blog_2:                                       # Name from server 2 log file
+      host: blog2.localhost:8080                  # Income host address
+      server:                                     # Alternatives servers list
+        - name: docker 4 - ok                     # Name from alternative content server 4
+          host: http://localhost:2378             # Host from alternative content server 4
+        - name: docker 5 - error                  # Name from alternative content server 5
+          host: http://localhost:2379             # Host from alternative content server 5
+        - name: docker 6 - error                  # Name from alternative content server 6
+          host: http://localhost:2380             # Host from alternative content server 6
 
 ```
