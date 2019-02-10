@@ -21,9 +21,9 @@ func main() {
     log.Fatalf("file %v parser error: %v\n", *filePath, err.Error())
   }
   
-  fmt.Print("\nServer configs:\n\n")
-  
   if configServer.ReverseProxy.Config.OutputConfig == true {
+    fmt.Print("\nServer configs:\n\n")
+    
     fmt.Printf("listen and server: %v\n", configServer.ReverseProxy.Config.ListenAndServer)
     
     if configServer.ReverseProxy.Config.StaticServer == true {
@@ -75,7 +75,7 @@ func main() {
   }
 
   sProxy.ProxyRootConfig.Prepare()
-
+  
   if configServer.ReverseProxy.Config.StaticServer {
     for _, staticPath := range configServer.ReverseProxy.Config.StaticFolder {
       http.Handle("/" + staticPath.ServerPath + "/", http.StripPrefix("/" + staticPath.ServerPath + "/", http.FileServer( http.Dir( staticPath.Folder ) ) ) )
@@ -83,8 +83,23 @@ func main() {
   }
   
   http.HandleFunc("/", sProxy.ProxyFunc)
+  
   if err = http.ListenAndServe(configServer.ReverseProxy.Config.ListenAndServer, nil); err != nil {
     log.Fatalf( err.Error() )
   }
+  
+  /*
+  mux := http.NewServeMux()
+  if configServer.ReverseProxy.Config.StaticServer {
+    for _, staticPath := range configServer.ReverseProxy.Config.StaticFolder {
+      mux.Handle("/" + staticPath.ServerPath + "/", http.StripPrefix("/" + staticPath.ServerPath + "/", http.FileServer( http.Dir( staticPath.Folder ) ) ) )
+    }
+  }
+  mux.HandleFunc("/", sProxy.ProxyFunc)
+  
+  if err = certmagic.HTTPS([]string{configServer.ReverseProxy.Config.ListenAndServer}, mux); err != nil {
+    log.Fatalf( err.Error() )
+  }
+  */
   
 }
