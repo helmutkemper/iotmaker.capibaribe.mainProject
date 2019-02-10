@@ -17,7 +17,7 @@ reverseProxy:
     # Para rodar os exemplos abaixo, suba o container ghost, que instala um blog simples
     # docker run -d --name ghost-blog-1 -p 2368:2368 ghost
     blog:                                         # Nome a ser gravado no log para o serviço 1
-      host: blog.localhost:8080                   # Endereço de entrada
+      host: blog.127.0.0.1:8080                   # Endereço de entrada
       server:                                     # Lista de servidores
         - name: docker 1 - ok                     # nome a ser gravado no log:endereço
           host: http://127.0.0.1:3000             # host alternativo número 1
