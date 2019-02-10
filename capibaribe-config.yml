@@ -10,7 +10,7 @@ reverseProxy:
       - folder: /docker/static/                   # Caminho da pasta do servidor de arquivos
         serverPath: static                        # Path do servidor
       - folder: /docker/static/                   # Caminho da pasta do servidor de arquivos
-        serverPath: static                        # Path do servidor
+        serverPath: static2                       # Path do servidor
 
   proxy:                                          # Servidor proxy. Redireciona o endereço para um novo servidor
 

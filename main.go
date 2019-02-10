@@ -4,32 +4,14 @@ import (
   "flag"
   "fmt"
   sProxy "github.com/helmutkemper/SimpleReverseProxy"
-  "github.com/helmutkemper/dockerManager/image"
-  "io/ioutil"
   "log"
   "net/http"
 )
 
-
-
-func containerListHtml(w sProxy.ProxyResponseWriter, r *sProxy.ProxyRequest) {
-  w.Header().Set("Content-Type", "text/html; charset=utf-8")
-
-  page, err := ioutil.ReadFile("containerStatus.html")
-  if err != nil {
-    w.Write( []byte( err.Error() ) )
-    return
-  }
-
-  w.Write( page )
-}
-
-
-
 func main() {
   var err error
   
-  filePath := flag.String("f", "./reverseProxy-config.yml", "./reverseProxy-config.yml")
+  filePath := flag.String("f", "./capibaribe-config.yml", "./your-capibaribe-config-file.yml")
   flag.Parse()
   
   fmt.Printf("reverseProxy version: %v\n", sProxy.KCodeVersion)
@@ -70,21 +52,6 @@ func main() {
   
   fmt.Print("stating server...\n\n")
   
-  sProxy.FuncMap.Add( sProxy.ProxyRootConfig.ProxyNotFound )
-  sProxy.FuncMap.Add( sProxy.ProxyRootConfig.ProxyError )
-  sProxy.FuncMap.Add( containerListHtml )
-  sProxy.FuncMap.Add( sProxy.ProxyRootConfig.RouteAdd )
-  sProxy.FuncMap.Add( sProxy.ProxyRootConfig.RouteDelete )
-  //sProxy.FuncMap.Add( sProxy.ProxyRootConfig.ProxyStatistics )
-  sProxy.FuncMap.Add( image.WebList )
-  
-  
-  
-  
-  sProxy.ProxyRootConfig = sProxy.ProxyConfig{
-    ListenAndServe: configServer.ReverseProxy.Config.ListenAndServer,
-  }
-  
   for proxyConfigName, proxyConfig := range configServer.ReverseProxy.Proxy {
     
     servers := make( []sProxy.ProxyUrl, len( proxyConfig.Server ) )
@@ -109,9 +76,14 @@ func main() {
 
   sProxy.ProxyRootConfig.Prepare()
 
-  http.Handle("/static/", http.StripPrefix("/static/", http.FileServer( http.Dir( "static" ) ) ) )
+  if configServer.ReverseProxy.Config.StaticServer {
+    for _, staticPath := range configServer.ReverseProxy.Config.StaticFolder {
+      http.Handle("/" + staticPath.ServerPath + "/", http.StripPrefix("/" + staticPath.ServerPath + "/", http.FileServer( http.Dir( staticPath.Folder ) ) ) )
+    }
+  }
+  
   http.HandleFunc("/", sProxy.ProxyFunc)
-  if err = http.ListenAndServe(sProxy.ProxyRootConfig.ListenAndServe, nil); err != nil {
+  if err = http.ListenAndServe(configServer.ReverseProxy.Config.ListenAndServer, nil); err != nil {
     log.Fatalf( err.Error() )
   }
   

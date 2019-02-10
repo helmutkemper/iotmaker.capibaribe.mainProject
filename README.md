@@ -7,7 +7,7 @@ To run this project:
 
 ```zsh
 
-  # I assume you have a file named 'reverseProxy-config.yml' in the same directory.
+  # I assume you have a file named 'capibaribe-config.yml' in the same directory.
   ./builds/Linux_Ubuntu_V_1_0
 
 ```
@@ -35,8 +35,8 @@ reverseProxy:
     staticFolder:                                 # Static file server config
       - folder: /docker/static/                   # Files folders to server
         serverPath: static                        # Main server path. Example: 'yourdomain.com/static'
-      - folder: /docker/static/                   # Files folders to server
-        serverPath: static                        # Main server path. Example: 'yourdomain.com/static'
+      - folder: /docker/another_static/           # Files folders to server
+        serverPath: another_static                # Main server path. Example: 'yourdomain.com/static'
 
   proxy:                                          # Servidor proxy. Redireciona o endereço para um novo servidor
 
