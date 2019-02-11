@@ -48,24 +48,32 @@ reverseProxy:
     # docker run -d --name ghost-blog-1 -p 2368:2368 ghost
     blog:                                # Name from server 1 log file
       host: blog.localhost:8080          # Income host address
+      loadBalance: round robin           # Round Robin, Least Connections and IP Hash
       server:                            # Alternatives servers list
-        - name: docker 1 - ok            # Name from alternative content server 1
-          host: http://localhost:2368    # Host from alternative content server 1
-        - name: docker 2 - error         # Name from alternative content server 2
-          host: http://localhost:2369    # Host from alternative content server 2
-        - name: docker 3 - error         # Name from alternative content server 3
-          host: http://localhost:2370    # Host from alternative content server 3
+        - name:   docker 1 - ok          # Name from alternative content server 1
+          host:   http://localhost:2368  # Host from alternative content server 1
+          weight: 10                     # 
+        - name:   docker 2 - error       # Name from alternative content server 2
+          host:   http://localhost:2369  # Host from alternative content server 2
+          weight: 10                     # 
+        - name:   docker 3 - error       # Name from alternative content server 3
+          host:   http://localhost:2370  # Host from alternative content server 3
+          weight: 10                     # 
 
     # To the example below, run the docker command to enable ghost blog at port 2378
     # docker run -d --name ghost-blog-2 -p 2378:2368 ghost
     blog_2:                              # Name from server 2 log file
       host: blog2.localhost:8080         # Income host address
+      loadBalance: round robin           # Round Robin, Least Connections and IP Hash
       server:                            # Alternatives servers list
-        - name: docker 4 - ok            # Name from alternative content server 4
-          host: http://localhost:2378    # Host from alternative content server 4
-        - name: docker 5 - error         # Name from alternative content server 5
-          host: http://localhost:2379    # Host from alternative content server 5
-        - name: docker 6 - error         # Name from alternative content server 6
-          host: http://localhost:2380    # Host from alternative content server 6
+        - name:   docker 4 - ok          # Name from alternative content server 4
+          host:   http://localhost:2378  # Host from alternative content server 4
+          weight: 10                     # 
+        - name:   docker 5 - error       # Name from alternative content server 5
+          host:   http://localhost:2379  # Host from alternative content server 5
+          weight: 10                     # 
+        - name:   docker 6 - error       # Name from alternative content server 6
+          host:   http://localhost:2380  # Host from alternative content server 6
+          weight: 10                     # 
 
 ```
