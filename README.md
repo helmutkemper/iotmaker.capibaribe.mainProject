@@ -1,5 +1,7 @@
 # Capibaribe
 
+> This project is in test.
+
 This is the preliminary version of my version of the reverse proxy, designed to be simple and fast. 
 The initial idea is to allow a single machine to receive multiple small sites, and can host then at a low cost.
 
