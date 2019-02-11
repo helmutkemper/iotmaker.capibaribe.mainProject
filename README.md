@@ -33,8 +33,8 @@ reverseProxy:
   config:                                # Server configuration
     listenAndServer: :8080               # Local server address and port. Format: server:port
     outputConfig: true                   # Print the configuration before server start. Format: true/false
-    staticServer: true                   # Enable a static files server with files contained into same server machine. 
-                                         # Format: true/false
+    staticServer: true                   # Enable a static files server with files contained into same 
+                                         # server machine. Format: true/false
     staticFolder:                        # Static file server config
       - folder: /docker/static/          # Files folders to server
         serverPath: static               # Main server path. Example: 'yourdomain.com/static'
