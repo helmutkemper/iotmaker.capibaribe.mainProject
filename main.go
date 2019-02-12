@@ -62,18 +62,19 @@ func main() {
 			}
 		}
 
-		err = sProxy.ProxyRootConfig.AddRouteToProxyStt(
-			sProxy.ProxyRoute{
-				Name: proxyConfigName,
-				Domain: sProxy.ProxyDomain{
-					Host:              proxyConfig.Host,
-					Path:              proxyConfig.Path,
-					PathExpReg:        proxyConfig.PathExpReg,
-					QueryStringEnable: proxyConfig.QueryStringEnable,
-				},
-				ProxyEnable:  true,
-				ProxyServers: servers,
+		route := sProxy.ProxyRoute{
+			Name: proxyConfigName,
+			Domain: sProxy.ProxyDomain{
+				Host:              proxyConfig.Host,
+				Path:              proxyConfig.Path,
+				PathExpReg:        proxyConfig.PathExpReg,
+				QueryStringEnable: proxyConfig.QueryStringEnable,
 			},
+			ProxyEnable: true,
+		}
+		route.ProxyServers.Set(servers)
+		err = sProxy.ProxyRootConfig.AddRouteToProxyStt(
+			route,
 		)
 	}
 
