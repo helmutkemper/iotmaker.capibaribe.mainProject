@@ -49,10 +49,12 @@ reverseProxy:
     blog:                                # Name from server 1 log file
       host: blog.localhost:8080          # Income host address
       loadBalance: round robin           # Round Robin, Least Connections and IP Hash
+      maxErrorLoops: 20
       server:                            # Alternatives servers list
         - name:   docker 1 - ok          # Name from alternative content server 1
           host:   http://localhost:2368  # Host from alternative content server 1
-          weight: 10                     # 
+          weight: 10                     # Faz o calculo percentual para distribuir as conexões
+          
         - name:   docker 2 - error       # Name from alternative content server 2
           host:   http://localhost:2369  # Host from alternative content server 2
           weight: 10                     # 

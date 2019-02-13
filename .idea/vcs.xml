@@ -8,6 +8,7 @@
     <mapping directory="$PROJECT_DIR$/Libraries/src/github.com/helmutkemper/ntp" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/Libraries/src/github.com/helmutkemper/safeType" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/Libraries/src/github.com/helmutkemper/seelog" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/Libraries/src/github.com/helmutkemper/util" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/Libraries/src/github.com/helmutkemper/yaml" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/Libraries/src/golang.org/x/net" vcs="Git" />
   </component>

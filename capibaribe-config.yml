@@ -21,10 +21,10 @@ reverseProxy:
       server:                                     # Lista de servidores
         - name: docker 1 - ok                     # nome a ser gravado no log:endereço
           host: http://localhost:3000             # host alternativo número 1
-#        - name: docker 2 - error                  # nome a ser gravado no log:endereço
-#          host: http://localhost:3000             # host alternativo número 2
-#        - name: docker 3 - error                  # nome a ser gravado no log:endereço
-#          host: http://localhost:3000             # host alternativo número 3
+        - name: docker 2 - error                  # nome a ser gravado no log:endereço
+          host: http://localhost:3000             # host alternativo número 2
+        - name: docker 3 - error                  # nome a ser gravado no log:endereço
+          host: http://localhost:3000             # host alternativo número 3
 
     # Para rodar os exemplos abaixo, suba o container ghost, que instala um blog simples
     # docker run -d --name ghost-blog-2 -p 2378:2368 ghost

@@ -78,7 +78,8 @@ func main() {
 		)
 	}
 
-	sProxy.ProxyRootConfig.Prepare()
+	startConfig := sProxy.NewStartConfig()
+	sProxy.ProxyRootConfig.Prepare(startConfig)
 
 	if configServer.ReverseProxy.Config.StaticServer {
 		for _, staticPath := range configServer.ReverseProxy.Config.StaticFolder {
