@@ -1,0 +1,66 @@
+# https://docs.nginx.com/nginx/admin-guide/load-balancer/http-load-balancer/
+# https://golang.org/pkg/net/http/httputil/#example_ReverseProxy
+version: '1.0'
+
+capibaribe:
+
+  server:
+    listen: 443
+
+    ssl:
+      enabled: true
+      certificate: /etc/nginx/company.com.crt
+      certificateKey: /etc/nginx/company.com.key
+      sslProtocols: TLSv1 TLSv1.1 TLSv1.2
+
+    proxy:
+      - host: localhost
+        # roundRobin -              joga a carga para o próximo servidor
+        # lowTimeResponseHeader -   procura o servidor com menor tempo de resposta inicial
+        # lowTimeResponseLastByte - procura o servidor com menor tempo de resposta do último byte
+        # random -                  joga a carga de forma aleatória
+        # overLoad -                joga todas a carga para o primeiro servidor até o número máximo de conexões ser atingido
+        # ipv4Hash -                000.000.*: de onde tiver o asterisco vai para um servidor
+        # ipv6Hash -                lista de ips
+        # hash -                    request_uri
+        bind: host:port
+        loadBalancing: roundRobin # roundRobin | lowTimeResponseHeader | lowTimeResponseLastByte | random | overLoad | ipv4Hash | ipv6Hash | hash
+        path: /
+        health_check:
+          enabled: true
+          # padrão: 5 segundos
+          interval: 5000
+          # numeros de falhas consecutivas para erro
+          fails: 3
+          # numeros de ok consecutivos para zerar falhas
+          passes: 2
+          # caminho de teste
+          uri: /some/path
+          # se 0 suspende para sempre
+          # se !0 suspende por milesegundos
+          suspendInterval: 30000
+          math:
+            status:
+              - expreg: expreg
+                value: 300
+                in:
+                  - min: 200
+                    max: 299
+                notIn:
+                  - min: 200
+                    max: 299
+            header:
+              - key: Content-Type
+                value: text/html
+            body:
+              - expreg
+        servers:
+          - host: localhost:2637
+            weight: 1
+            overLoad: 1000000
+          - host: localhost:2638
+            weight: 1
+            overLoad: 1000000
+          - host: localhost:2639
+            weight: 1
+            overLoad: 1000000
