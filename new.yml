@@ -1,20 +1,50 @@
 # https://docs.nginx.com/nginx/admin-guide/load-balancer/http-load-balancer/
 # https://golang.org/pkg/net/http/httputil/#example_ReverseProxy
-version: '1.0'
+version: 1.0
 
 capibaribe:
 
-  server:
-    listen: 443
+  serverName2:
+
+    listen: :8082
+
+    static:
+      - filePath: /docker/static
+        serverPath: static
+
+  serverName1:
+
+    listen: :8081
 
     ssl:
       enabled: true
       certificate: /etc/nginx/company.com.crt
       certificateKey: /etc/nginx/company.com.key
-      sslProtocols: TLSv1 TLSv1.1 TLSv1.2
+      sslProtocols:
+        - TLSv1
+        - TLSv1.1
+        - TLSv1.2
+
+    static:
+      - filePath: /docker/static
+        serverPath: static
+
+    crazyMonkeys:
+      enabled: true
+      dontRespond: 0.1
+      changeLength: 0.1
+      changeContent: 0.1
+      deleteContent: 0.1
+      changeHeaders:
+        - number: 500
+          header:
+            - key: Content-Type
+              value: application/json
+          rate: 0.1
 
     proxy:
-      - host: localhost
+      - ignorePort: true
+        host: localhost
         # roundRobin -              joga a carga para o próximo servidor
         # lowTimeResponseHeader -   procura o servidor com menor tempo de resposta inicial
         # lowTimeResponseLastByte - procura o servidor com menor tempo de resposta do último byte
@@ -23,10 +53,12 @@ capibaribe:
         # ipv4Hash -                000.000.*: de onde tiver o asterisco vai para um servidor
         # ipv6Hash -                lista de ips
         # hash -                    request_uri
-        bind: host:port
+#        bind:
+#          - host: 127.0.0.1
+#            ignorePort: true
         loadBalancing: roundRobin # roundRobin | lowTimeResponseHeader | lowTimeResponseLastByte | random | overLoad | ipv4Hash | ipv6Hash | hash
         path: /
-        health_check:
+        healthCheck:
           enabled: true
           # padrão: 5 segundos
           interval: 5000
@@ -39,9 +71,9 @@ capibaribe:
           # se 0 suspende para sempre
           # se !0 suspende por milesegundos
           suspendInterval: 30000
-          math:
+          match:
             status:
-              - expreg: expreg
+              - expReg: expreg
                 value: 300
                 in:
                   - min: 200
@@ -55,12 +87,12 @@ capibaribe:
             body:
               - expreg
         servers:
-          - host: localhost:2637
+          - host: http://localhost:2368
             weight: 1
             overLoad: 1000000
-          - host: localhost:2638
+          - host: http://localhost:2368
             weight: 1
             overLoad: 1000000
-          - host: localhost:2639
+          - host: http://localhost:2368
             weight: 1
             overLoad: 1000000
