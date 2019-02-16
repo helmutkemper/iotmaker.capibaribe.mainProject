@@ -11,8 +11,11 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"os"
 	"regexp"
+	"runtime/debug"
 	"strconv"
+	"strings"
 )
 
 const (
@@ -96,11 +99,11 @@ func (el *MainConfig) prepare() error {
 }
 
 type Project struct {
-	Listen       string       `yaml:"listen"`
-	Sll          ssl          `yaml:"ssl"`
-	CrazyMonkeys crazyMonkeys `yaml:"crazyMonkeys"`
-	Proxy        []proxy      `yaml:"proxy"`
-	Static       []static     `yaml:"static"`
+	Listen      string      `yaml:"listen"`
+	Sll         ssl         `yaml:"ssl"`
+	Pygocentrus pygocentrus `yaml:"pygocentrus"`
+	Proxy       []proxy     `yaml:"proxy"`
+	Static      []static    `yaml:"static"`
 }
 
 func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
@@ -109,18 +112,18 @@ func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
 	var remoteAddr string
 	var re *regexp.Regexp
 	var hostServer string
+	var serverKey int
+	var loopCounter = 0
 
 	if el.Proxy != nil {
 
-		for _, proxyData := range el.Proxy {
+		for proxyKey, proxyData := range el.Proxy {
 
 			pass := len(proxyData.Bind) == 0
 			for _, bind := range proxyData.Bind {
 				if bind.IgnorePort == true {
 					if re, err = regexp.Compile(kIgnorePortRegExp); err != nil {
-						if err = seelog.Errorf("reg exp error: %v\n", err.Error()); err != nil {
-							log.Fatalf("seelog is miss configured. Error: %v\n", err.Error())
-						}
+						HandleCriticalError(err)
 					}
 
 					remoteAddr = re.ReplaceAllString(r.RemoteAddr, "$1")
@@ -138,9 +141,7 @@ func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
 
 			if proxyData.IgnorePort == true {
 				if re, err = regexp.Compile(kIgnorePortRegExp); err != nil {
-					if err = seelog.Errorf("reg exp error: %v\n", err.Error()); err != nil {
-						log.Fatalf("seelog is miss configured. Error: %v\n", err.Error())
-					}
+					HandleCriticalError(err)
 				}
 
 				host = re.ReplaceAllString(host, "$1")
@@ -148,36 +149,76 @@ func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
 
 			if proxyData.Host == host {
 
-				if proxyData.LoadBalancing == kLoadBalanceRoundRobin || proxyData.LoadBalancing == "" {
+				for {
 
-					hostServer = proxyData.roundRobin()
-
-				} else if proxyData.LoadBalancing == kLoadBalanceRandom {
-
-					hostServer = proxyData.random()
-
-				}
-
-				if hostServer != "" {
-
-					rpURL, err := url.Parse(hostServer)
-					if err != nil {
-						log.Fatal(err)
-						// fixme: seelog aqui
+					loopCounter += 1
+					if loopCounter > 10 {
+						// fixme: colocar o que fazer no erro de todas as rotas
+						// fixme: o valor 10 deve ser configurado no sistema
+						return
 					}
 
-					proxy := httputil.NewSingleHostReverseProxy(rpURL)
-					proxy.Transport = &transport{http.DefaultTransport}
-					proxy.ErrorHandler = func(w http.ResponseWriter, r *http.Request, err error) {
-						// fixme: o que fazer quando tem erro?
+					if proxyData.LoadBalancing == kLoadBalanceRoundRobin || proxyData.LoadBalancing == "" {
+
+						hostServer, serverKey = proxyData.roundRobin()
+
+					} else if proxyData.LoadBalancing == kLoadBalanceRandom {
+
+						hostServer, serverKey = proxyData.random()
+
 					}
 
-					proxy.ServeHTTP(w, r)
-					return
+					if hostServer != "" {
 
-				} else {
+						rpURL, err := url.Parse(hostServer)
+						if err != nil {
+							HandleCriticalError(err)
+						}
 
-					//fixme: colocar um log aqui
+						proxy := httputil.NewSingleHostReverseProxy(rpURL)
+
+						proxy.ErrorLog = log.New(DebugLogger{}, "", 0)
+
+						//if el.Pygocentrus.Enabled == true {
+						proxy.Transport = &transport{RoundTripper: http.DefaultTransport, Project: el}
+						//}
+						proxy.ModifyResponse = proxyData.ModifyResponse
+
+						proxy.ErrorHandler = func(w http.ResponseWriter, r *http.Request, err error) {
+
+							//w.WriteHeader(500)
+							el.Proxy[proxyKey].consecutiveErrors += 1
+							el.Proxy[proxyKey].consecutiveSuccess = 0
+							el.Proxy[proxyKey].Servers[serverKey].consecutiveErrors += 1
+							el.Proxy[proxyKey].Servers[serverKey].consecutiveSuccess = 0
+							el.Proxy[proxyKey].Servers[serverKey].errors += 1
+							el.Proxy[proxyKey].Servers[serverKey].lastRoundError = true
+
+							seelog.Criticalf("1 server host %v error - %v", hostServer, err.Error())
+						}
+
+						el.Proxy[proxyKey].Servers[serverKey].lastRoundError = false
+
+						proxy.ServeHTTP(w, r)
+
+						if el.Proxy[proxyKey].Servers[serverKey].lastRoundError == true {
+
+							el.Proxy[proxyKey].consecutiveErrors = 0
+							el.Proxy[proxyKey].consecutiveSuccess += 1
+							el.Proxy[proxyKey].Servers[serverKey].consecutiveErrors = 0
+							el.Proxy[proxyKey].Servers[serverKey].consecutiveSuccess += 1
+							seelog.Critical("continue")
+							continue
+						}
+
+						seelog.Critical("return")
+						return
+
+					} else {
+
+						//fixme: colocar um log aqui
+
+					}
 
 				}
 
@@ -201,13 +242,14 @@ type ssl struct {
 	SllProtocols   []string `yaml:"sslProtocols"`
 }
 
-type crazyMonkeys struct {
-	Enabled       bool            `yaml:"enabled"`
-	DontRespond   float64         `yaml:"dontRespond"`
-	ChangeLength  float64         `yaml:"changeLength"`
-	ChangeContent float64         `yaml:"changeContent"`
-	DeleteContent float64         `yaml:"deleteContent"`
-	ChangeHeaders []changeHeaders `yaml:"changeHeaders"`
+type pygocentrus struct {
+	Enabled        bool            `yaml:"enabled"`
+	DontRespond    float64         `yaml:"dontRespond"`
+	ChangeLength   float64         `yaml:"changeLength"`
+	ChangeContent  float64         `yaml:"changeContent"`
+	DeleteContent  float64         `yaml:"deleteContent"`
+	TransportError float64         `yaml:"transportError"`
+	ChangeHeaders  []changeHeaders `yaml:"changeHeaders"`
 }
 
 type changeHeaders struct {
@@ -222,6 +264,13 @@ type header struct {
 }
 
 type proxy struct {
+	consecutiveErrors  int
+	consecutiveSuccess int
+	errors             int
+	success            int
+
+	lastRoundError bool
+
 	IgnorePort    bool        `yaml:"ignorePort"`
 	Host          string      `yaml:"host"`
 	Bind          []bind      `yaml:"bind"`
@@ -231,23 +280,28 @@ type proxy struct {
 	Servers       []servers   `yaml:"servers"`
 }
 
-func (el *proxy) roundRobin() string {
+func (el *proxy) ModifyResponse(resp *http.Response) error {
+	//seelog.Criticalf("header code %v", resp.StatusCode)
+	return nil
+}
+
+func (el *proxy) roundRobin() (string, int) {
 	randNumber := rand.Float64()
 
-	for _, serverData := range el.Servers {
+	for serverKey, serverData := range el.Servers {
 
 		if randNumber <= serverData.Weight {
-			return serverData.Host
+			return serverData.Host, serverKey
 		}
 
 	}
 
-	return ""
+	return "", -1
 }
 
-func (el *proxy) random() string {
+func (el *proxy) random() (string, int) {
 	randNumber := rand.Intn(len(el.Servers))
-	return el.Servers[randNumber].Host
+	return el.Servers[randNumber].Host, randNumber
 }
 
 type bind struct {
@@ -256,6 +310,13 @@ type bind struct {
 }
 
 type servers struct {
+	consecutiveErrors  int
+	consecutiveSuccess int
+	errors             int
+	success            int
+
+	lastRoundError bool
+
 	Host     string  `yaml:"host"`
 	Weight   float64 `yaml:"weight"`
 	OverLoad int     `yaml:"overLoad"`
@@ -290,12 +351,33 @@ type maxMin struct {
 }
 
 type transport struct {
-	http.RoundTripper
+	RoundTripper http.RoundTripper
+	Project      *Project
 }
 
-func (t *transport) RoundTrip(req *http.Request) (resp *http.Response, err error) {
-	resp, err = t.RoundTripper.RoundTrip(req)
+func (el *transport) RoundTrip(req *http.Request) (resp *http.Response, err error) {
+	if el.Project.Pygocentrus.Enabled == false {
+		resp, err = el.RoundTripper.RoundTrip(req)
+		return resp, err
+	}
+
+	var randomNumber = rand.Float64()
+
+	if el.Project.Pygocentrus.TransportError != 0 {
+
+		if el.Project.Pygocentrus.TransportError >= randomNumber {
+			//resp, err = el.RoundTripper.RoundTrip(req)
+			return nil, errors.New("this data were eaten by a pygocentrus attack")
+		}
+
+	}
+
+	resp, err = el.RoundTripper.RoundTrip(req)
+	return resp, err
+
+	resp, err = el.RoundTripper.RoundTrip(req)
 	if err != nil {
+		seelog.Criticalf("transport.roundTrip.error: %v", err)
 		return nil, err
 	}
 
@@ -313,4 +395,14 @@ func (t *transport) RoundTrip(req *http.Request) (resp *http.Response, err error
 	resp.ContentLength = int64(len(b))
 	resp.Header.Set("Content-Length", strconv.Itoa(len(b)))
 	return resp, nil
+}
+
+type DebugLogger struct{}
+
+func (d DebugLogger) Write(p []byte) (n int, err error) {
+	s := string(p)
+	if strings.Contains(s, "multiple response.WriteHeader") {
+		debug.PrintStack()
+	}
+	return os.Stderr.Write(p)
 }

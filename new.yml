@@ -29,8 +29,9 @@ capibaribe:
       - filePath: /docker/static
         serverPath: static
 
-    crazyMonkeys:
+    pygocentrus:
       enabled: true
+      transportError: 0.5
       dontRespond: 0.1
       changeLength: 0.1
       changeContent: 0.1

@@ -3,7 +3,7 @@ package main
 import (
 	capib "./capibaribe"
 	"flag"
-	"github.com/xenolf/lego/log"
+	"log"
 	"net/http"
 	"os"
 	"sync"
@@ -19,7 +19,7 @@ func main() {
 	config := capib.MainConfig{}
 	err = config.Unmarshal(*filePath)
 	if err != nil {
-		log.Fatal(err.Error())
+		log.Fatal("3 error: %v", err.Error())
 	}
 
 	for projectName, projectConfig := range config.AffluentRiver {
@@ -44,9 +44,12 @@ func main() {
 
 			server.HandleFunc("/", config.HandleFunc)
 
-			if err = http.ListenAndServe(config.Listen, server); err != nil {
-				log.Fatalf(err.Error())
+			newserver := &http.Server{
+				Addr:     config.Listen,
+				Handler:  server,
+				ErrorLog: log.New(capib.DebugLogger{}, "", 0),
 			}
+			log.Fatal(newserver.ListenAndServe())
 
 		}(projectConfig)
 
