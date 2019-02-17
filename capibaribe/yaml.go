@@ -5,6 +5,7 @@ import (
 	"github.com/helmutkemper/seelog"
 	"github.com/helmutkemper/yaml"
 	"github.com/pkg/errors"
+	"io"
 	"io/ioutil"
 	"log"
 	"math/rand"
@@ -22,6 +23,12 @@ const (
 	kIgnorePortRegExp      = "^(.*?):[0-9]+$"
 	kLoadBalanceRoundRobin = "roundRobin"
 	kLoadBalanceRandom     = "random"
+
+	kPygocentrusDontRespond   = 0
+	kPygocentrusChangeLength  = 1
+	kPygocentrusChangeContent = 2
+	kPygocentrusDeleteContent = 3
+	kPygocentrusChangeHeaders = 4
 )
 
 type MainConfig struct {
@@ -243,13 +250,12 @@ type ssl struct {
 }
 
 type pygocentrus struct {
-	Enabled        bool            `yaml:"enabled"`
-	DontRespond    float64         `yaml:"dontRespond"`
-	ChangeLength   float64         `yaml:"changeLength"`
-	ChangeContent  float64         `yaml:"changeContent"`
-	DeleteContent  float64         `yaml:"deleteContent"`
-	TransportError float64         `yaml:"transportError"`
-	ChangeHeaders  []changeHeaders `yaml:"changeHeaders"`
+	Enabled       bool            `yaml:"enabled"`
+	DontRespond   float64         `yaml:"dontRespond"`
+	ChangeLength  float64         `yaml:"changeLength"`
+	ChangeContent float64         `yaml:"changeContent"`
+	DeleteContent float64         `yaml:"deleteContent"`
+	ChangeHeaders []changeHeaders `yaml:"changeHeaders"`
 }
 
 type changeHeaders struct {
@@ -355,33 +361,17 @@ type transport struct {
 	Project      *Project
 }
 
-func (el *transport) RoundTrip(req *http.Request) (resp *http.Response, err error) {
-	if el.Project.Pygocentrus.Enabled == false {
-		resp, err = el.RoundTripper.RoundTrip(req)
-		return resp, err
-	}
-
-	var randomNumber = rand.Float64()
-
-	if el.Project.Pygocentrus.TransportError != 0 {
-
-		if el.Project.Pygocentrus.TransportError >= randomNumber {
-			//resp, err = el.RoundTripper.RoundTrip(req)
-			return nil, errors.New("this data were eaten by a pygocentrus attack")
-		}
-
-	}
-
-	resp, err = el.RoundTripper.RoundTrip(req)
-	return resp, err
+func (el *transport) roundTripReadBody(req *http.Request) ([]byte, error) {
+	var resp *http.Response
+	var err error
+	var inBody []byte
 
 	resp, err = el.RoundTripper.RoundTrip(req)
 	if err != nil {
-		seelog.Criticalf("transport.roundTrip.error: %v", err)
 		return nil, err
 	}
 
-	b, err := ioutil.ReadAll(resp.Body)
+	inBody, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -389,12 +379,87 @@ func (el *transport) RoundTrip(req *http.Request) (resp *http.Response, err erro
 	if err != nil {
 		return nil, err
 	}
-	b = bytes.Replace(b, []byte("reverse"), []byte("schmerver"), -1)
-	body := ioutil.NopCloser(bytes.NewReader(b))
-	resp.Body = body
-	resp.ContentLength = int64(len(b))
-	resp.Header.Set("Content-Length", strconv.Itoa(len(b)))
-	return resp, nil
+
+	return inBody, err
+}
+
+func (el *transport) roundTripCopyBody(inBody []byte) io.ReadCloser {
+	inBody = make([]byte, len(inBody))
+	return ioutil.NopCloser(bytes.NewReader(inBody))
+}
+
+func (el *transport) RoundTrip(req *http.Request) (resp *http.Response, err error) {
+
+	if el.Project.Pygocentrus.Enabled == true {
+
+		randAttack := rand.Intn(4)
+
+		if randAttack == kPygocentrusDontRespond {
+			if el.Project.Pygocentrus.DontRespond >= rand.Float64() {
+
+				return nil, errors.New("this data were eaten by a pygocentrus attack")
+
+			}
+		}
+
+		if randAttack == kPygocentrusDeleteContent {
+			if el.Project.Pygocentrus.DeleteContent >= rand.Float64() {
+
+				var inBody []byte
+				inBody, err = el.roundTripReadBody(req)
+				if err != nil {
+					return nil, err
+				}
+
+				inBody = make([]byte, len(inBody))
+
+				resp.Body = el.roundTripCopyBody(inBody)
+				return resp, nil
+
+			}
+		}
+
+		if randAttack == kPygocentrusChangeContent {
+			if el.Project.Pygocentrus.ChangeContent >= rand.Float64() {
+
+				var inBody []byte
+				inBody, err = el.roundTripReadBody(req)
+				if err != nil {
+					return nil, err
+				}
+
+				for i := 0; i != rand.Intn(len(inBody)); i += 1 {
+					inBody = append(append(inBody[:i], byte(rand.Intn(255))), inBody[i+1:]...)
+				}
+
+				resp.Body = el.roundTripCopyBody(inBody)
+				return resp, nil
+
+			}
+		}
+
+		if randAttack == kPygocentrusChangeLength {
+			if el.Project.Pygocentrus.ChangeLength >= rand.Float64() {
+
+				var inBody []byte
+				inBody, err = el.roundTripReadBody(req)
+				if err != nil {
+					return nil, err
+				}
+				resp.Body = el.roundTripCopyBody(inBody)
+
+				randLength := rand.Intn(len(inBody))
+
+				resp.ContentLength = int64(randLength)
+				resp.Header.Set("Content-Length", strconv.Itoa(randLength))
+				return resp, nil
+
+			}
+		}
+	}
+
+	resp, err = el.RoundTripper.RoundTrip(req)
+	return resp, err
 }
 
 type DebugLogger struct{}
