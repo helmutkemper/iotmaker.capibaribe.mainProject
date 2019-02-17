@@ -31,11 +31,11 @@ capibaribe:
 
     pygocentrus:
       enabled: true
-      transportError: 0.5
-      dontRespond: 0.1
-      changeLength: 0.1
-      changeContent: 0.1
-      deleteContent: 0.1
+      transportError: 0.0
+      dontRespond: 0.0
+      changeLength: 0.0
+      changeContent: 1.0
+      deleteContent: 0.0
       changeHeaders:
         - number: 500
           header:
@@ -88,12 +88,12 @@ capibaribe:
             body:
               - expreg
         servers:
-          - host: http://localhost:2368
+          - host: http://localhost:2367
             weight: 1
             overLoad: 1000000
           - host: http://localhost:2368
             weight: 1
             overLoad: 1000000
-          - host: http://localhost:2368
+          - host: http://localhost:2369
             weight: 1
             overLoad: 1000000

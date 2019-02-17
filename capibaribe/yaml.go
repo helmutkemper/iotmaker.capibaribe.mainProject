@@ -361,30 +361,30 @@ type transport struct {
 	Project      *Project
 }
 
-func (el *transport) roundTripReadBody(req *http.Request) ([]byte, error) {
+func (el *transport) roundTripReadBody(req *http.Request) (*http.Response, []byte, error) {
 	var resp *http.Response
 	var err error
 	var inBody []byte
 
 	resp, err = el.RoundTripper.RoundTrip(req)
 	if err != nil {
-		return nil, err
+		return resp, nil, err
 	}
 
 	inBody, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return resp, nil, err
 	}
 	err = resp.Body.Close()
 	if err != nil {
-		return nil, err
+		return resp, nil, err
 	}
 
-	return inBody, err
+	return resp, inBody, err
 }
 
 func (el *transport) roundTripCopyBody(inBody []byte) io.ReadCloser {
-	inBody = make([]byte, len(inBody))
+	//inBody = make([]byte, len(inBody))
 	return ioutil.NopCloser(bytes.NewReader(inBody))
 }
 
@@ -392,12 +392,38 @@ func (el *transport) RoundTrip(req *http.Request) (resp *http.Response, err erro
 
 	if el.Project.Pygocentrus.Enabled == true {
 
-		randAttack := rand.Intn(4)
+		var randAttack int
+		//fixme: condição de erro no prepare para evitar loop infinito
+		//fixme: fica melhor se for feito na inicialização
+		//       em vez de const um valor dinamico para cada tipo habilitado de 0 a n
+		for {
+			randAttack = rand.Intn(4)
+
+			if randAttack == kPygocentrusDontRespond && el.Project.Pygocentrus.DontRespond != 0.0 {
+				break
+			}
+
+			if randAttack == kPygocentrusChangeContent && el.Project.Pygocentrus.ChangeContent != 0.0 {
+				break
+			}
+
+			if randAttack == kPygocentrusChangeLength && el.Project.Pygocentrus.ChangeLength != 0.0 {
+				break
+			}
+
+			if randAttack == kPygocentrusDeleteContent && el.Project.Pygocentrus.DeleteContent != 0.0 {
+				break
+			}
+
+			//if randAttack == kPygocentrusChangeHeaders && el.Project.Pygocentrus.ChangeHeaders != 0.0 {
+			//	break
+			//}
+		}
 
 		if randAttack == kPygocentrusDontRespond {
 			if el.Project.Pygocentrus.DontRespond >= rand.Float64() {
 
-				return nil, errors.New("this data were eaten by a pygocentrus attack")
+				return nil, errors.New("this data were eaten by a pygocentrus attack dont respond")
 
 			}
 		}
@@ -406,7 +432,7 @@ func (el *transport) RoundTrip(req *http.Request) (resp *http.Response, err erro
 			if el.Project.Pygocentrus.DeleteContent >= rand.Float64() {
 
 				var inBody []byte
-				inBody, err = el.roundTripReadBody(req)
+				resp, inBody, err = el.roundTripReadBody(req)
 				if err != nil {
 					return nil, err
 				}
@@ -414,7 +440,7 @@ func (el *transport) RoundTrip(req *http.Request) (resp *http.Response, err erro
 				inBody = make([]byte, len(inBody))
 
 				resp.Body = el.roundTripCopyBody(inBody)
-				return resp, nil
+				return resp, errors.New("this data were eaten by a pygocentrus attack delete content")
 
 			}
 		}
@@ -423,17 +449,19 @@ func (el *transport) RoundTrip(req *http.Request) (resp *http.Response, err erro
 			if el.Project.Pygocentrus.ChangeContent >= rand.Float64() {
 
 				var inBody []byte
-				inBody, err = el.roundTripReadBody(req)
+				resp, inBody, err = el.roundTripReadBody(req)
 				if err != nil {
 					return nil, err
 				}
 
-				for i := 0; i != rand.Intn(len(inBody)); i += 1 {
+				//l := rand.Intn(len(inBody))
+				/*l := len(inBody)
+				for i := 0; i != l; i += 1 {
 					inBody = append(append(inBody[:i], byte(rand.Intn(255))), inBody[i+1:]...)
-				}
-
+				}*/
+				inBody = bytes.Replace(inBody, []byte("Welcome"), []byte("123467"), -1)
 				resp.Body = el.roundTripCopyBody(inBody)
-				return resp, nil
+				return resp, nil //errors.New("this data were eaten by a pygocentrus attack change content")
 
 			}
 		}
@@ -442,17 +470,17 @@ func (el *transport) RoundTrip(req *http.Request) (resp *http.Response, err erro
 			if el.Project.Pygocentrus.ChangeLength >= rand.Float64() {
 
 				var inBody []byte
-				inBody, err = el.roundTripReadBody(req)
+				resp, inBody, err = el.roundTripReadBody(req)
 				if err != nil {
 					return nil, err
 				}
-				resp.Body = el.roundTripCopyBody(inBody)
+				resp.Body = ioutil.NopCloser(bytes.NewReader(inBody))
 
 				randLength := rand.Intn(len(inBody))
 
 				resp.ContentLength = int64(randLength)
 				resp.Header.Set("Content-Length", strconv.Itoa(randLength))
-				return resp, nil
+				return resp, errors.New("this data were eaten by a pygocentrus attack change length")
 
 			}
 		}
