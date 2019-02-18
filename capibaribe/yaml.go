@@ -18,6 +18,7 @@ import (
 	"runtime/debug"
 	"strconv"
 	"strings"
+	"time"
 )
 
 const (
@@ -64,6 +65,10 @@ func (el *MainConfig) prepare() error {
 	for affluentKey := range el.AffluentRiver {
 
 		for proxyKey, proxyData := range el.AffluentRiver[affluentKey].Proxy {
+
+			if el.AffluentRiver[affluentKey].Proxy[proxyKey].MaxAttemptToRescueLoop == 0 {
+				el.AffluentRiver[affluentKey].Proxy[proxyKey].MaxAttemptToRescueLoop = 10
+			}
 
 			if proxyData.LoadBalancing == kLoadBalanceRoundRobin || proxyData.LoadBalancing == "" {
 
@@ -160,9 +165,8 @@ func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
 				for {
 
 					loopCounter += 1
-					if loopCounter > 10 {
+					if loopCounter > el.Proxy[proxyKey].MaxAttemptToRescueLoop {
 						// fixme: colocar o que fazer no erro de todas as rotas
-						// fixme: o valor 10 deve ser configurado no sistema
 						return
 					}
 
@@ -194,18 +198,19 @@ func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
 						//}
 						//proxy.ModifyResponse = proxyData.ModifyResponse
 
-						proxy.ErrorHandler = func(w http.ResponseWriter, r *http.Request, err error) {
+						proxy.ErrorHandler = el.Proxy[proxyKey].ErrorHandler
+						/*proxy.ErrorHandler = func(w http.ResponseWriter, r *http.Request, err error) {
 
-							//w.WriteHeader(500)
-							el.Proxy[proxyKey].consecutiveErrors += 1
-							el.Proxy[proxyKey].consecutiveSuccess = 0
-							el.Proxy[proxyKey].Servers[serverKey].consecutiveErrors += 1
-							el.Proxy[proxyKey].Servers[serverKey].consecutiveSuccess = 0
-							el.Proxy[proxyKey].Servers[serverKey].errors += 1
-							el.Proxy[proxyKey].Servers[serverKey].lastRoundError = true
+						  //w.WriteHeader(500)
+						  el.Proxy[proxyKey].consecutiveErrors += 1
+						  el.Proxy[proxyKey].consecutiveSuccess = 0
+						  el.Proxy[proxyKey].Servers[serverKey].consecutiveErrors += 1
+						  el.Proxy[proxyKey].Servers[serverKey].consecutiveSuccess = 0
+						  el.Proxy[proxyKey].Servers[serverKey].errors += 1
+						  el.Proxy[proxyKey].Servers[serverKey].lastRoundError = true
 
-							seelog.Criticalf("1 server host %v error - %v", hostServer, err.Error())
-						}
+						  seelog.Criticalf("1 server host %v error - %v", hostServer, err.Error())
+						}*/
 
 						el.Proxy[proxyKey].Servers[serverKey].lastRoundError = false
 
@@ -217,7 +222,7 @@ func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
 							el.Proxy[proxyKey].consecutiveSuccess += 1
 							el.Proxy[proxyKey].Servers[serverKey].consecutiveErrors = 0
 							el.Proxy[proxyKey].Servers[serverKey].consecutiveSuccess += 1
-
+							return
 							if el.Pygocentrus.Enabled == true {
 								seelog.Critical("return after a pygocentrus attack")
 								return
@@ -262,9 +267,59 @@ type pygocentrus struct {
 	Enabled       bool            `yaml:"enabled"`
 	DontRespond   float64         `yaml:"dontRespond"`
 	ChangeLength  float64         `yaml:"changeLength"`
-	ChangeContent float64         `yaml:"changeContent"`
+	ChangeContent changeContent   `yaml:"changeContent"`
 	DeleteContent float64         `yaml:"deleteContent"`
 	ChangeHeaders []changeHeaders `yaml:"changeHeaders"`
+}
+
+type changeContent struct {
+	ChangeRateMin  float64 `yaml:"changeRateMin"`
+	ChangeRateMax  float64 `yaml:"changeRateMax"`
+	ChangeBytesMin int     `yaml:"changeBytesMin"`
+	ChangeBytesMax int     `yaml:"changeBytesMax"`
+	Rate           float64 `yaml:"rate"`
+}
+
+func (el *changeContent) prepare() error {
+	if el.Rate == 0.0 {
+		return nil
+	}
+
+	if el.ChangeRateMin == el.ChangeRateMax && el.ChangeBytesMin == el.ChangeBytesMax && el.ChangeRateMin == 0.0 {
+		el.Rate = 0.0
+		return errors.New("pygocentrus attack > changeContent > rate set to zero")
+	}
+
+	if el.ChangeRateMin > el.ChangeRateMax {
+		return errors.New("pygocentrus attack > changeContent > rate > the minimum value is greater than the maximum value")
+	}
+
+	if el.ChangeBytesMin > el.ChangeBytesMax {
+		return errors.New("pygocentrus attack > changeContent > bytes > the minimum value is greater than the maximum value")
+	}
+
+	if (el.ChangeRateMin != 0.0 || el.ChangeRateMax != 0.0) && (el.ChangeBytesMin != 0.0 || el.ChangeBytesMax != 0.0) {
+		return errors.New("pygocentrus attack > changeContent > you must choose option rate change or option bytes change")
+	}
+
+	return nil
+}
+
+func (el *changeContent) GetRandomByMaxMin(length int) int {
+	r1 := rand.New(rand.NewSource(time.Now().UnixNano()))
+
+	if el.ChangeRateMin != 0.0 || el.ChangeRateMax != 0.0 {
+		var changeMin = int(float64(length) * el.ChangeRateMin)
+		var changeMax = int(float64(length) * el.ChangeRateMax)
+
+		return r1.Intn(changeMax-changeMin) + changeMin
+	}
+
+	return r1.Intn(el.ChangeBytesMax-el.ChangeBytesMin) + el.ChangeBytesMin
+}
+
+func (el *changeContent) GetRandomByLength(length int) int {
+	return rand.New(rand.NewSource(time.Now().UnixNano())).Intn(length)
 }
 
 type changeHeaders struct {
@@ -284,15 +339,39 @@ type proxy struct {
 	errors             int
 	success            int
 
+	keyProxy  int
+	keyServer int
+
+	lastError      error
 	lastRoundError bool
 
-	IgnorePort    bool        `yaml:"ignorePort"`
-	Host          string      `yaml:"host"`
-	Bind          []bind      `yaml:"bind"`
-	LoadBalancing string      `yaml:"loadBalancing"`
-	Path          string      `yaml:"path"`
-	HealthCheck   healthCheck `yaml:"healthCheck"`
-	Servers       []servers   `yaml:"servers"`
+	MaxAttemptToRescueLoop int         `yaml:"maxAttemptToRescueLoop"`
+	IgnorePort             bool        `yaml:"ignorePort"`
+	Host                   string      `yaml:"host"`
+	Bind                   []bind      `yaml:"bind"`
+	LoadBalancing          string      `yaml:"loadBalancing"`
+	Path                   string      `yaml:"path"`
+	HealthCheck            healthCheck `yaml:"healthCheck"`
+	Servers                []servers   `yaml:"servers"`
+}
+
+func (el *proxy) ErrorHandler(w http.ResponseWriter, r *http.Request, err error) {
+
+	//w.WriteHeader(500)
+	el.consecutiveErrors += 1
+	el.consecutiveSuccess = 0
+	el.consecutiveErrors += 1
+	el.consecutiveSuccess = 0
+	el.errors += 1
+	el.lastRoundError = true
+	el.lastError = err
+
+	//seelog.Criticalf("1 server host %v error - %v", hostServer, err.Error())
+}
+
+func (el *proxy) SuccessHandler(w http.ResponseWriter, r *http.Request, err error) {
+
+	//seelog.Criticalf("1 server host %v error - %v", hostServer, err.Error())
 }
 
 func (el *proxy) ModifyResponse(resp *http.Response) error {
@@ -408,36 +487,37 @@ func (el *transport) roundTripCopyBody(inBody []byte) io.ReadCloser {
 }
 
 func (el *transport) RoundTrip(req *http.Request) (resp *http.Response, err error) {
+	//return el.RoundTripper.RoundTrip(req)
 	/*resp, err = el.RoundTripper.RoundTrip(req)
-	if err != nil {
-		return nil, err
-	}
+	  if err != nil {
+	    return nil, err
+	  }
 
-	fmt.Printf( "roundTripReadBody Host: %v\n", req.Host )
-	fmt.Printf( "roundTripReadBody RequestURI: %v\n", req.RequestURI )
-	fmt.Printf( "roundTripReadBody RemoteAddr: %v\n", req.RemoteAddr )
+	  fmt.Printf( "roundTripReadBody Host: %v\n", req.Host )
+	  fmt.Printf( "roundTripReadBody RequestURI: %v\n", req.RequestURI )
+	  fmt.Printf( "roundTripReadBody RemoteAddr: %v\n", req.RemoteAddr )
 
-	b, err := ioutil.ReadAll(resp.Body)
-	fmt.Printf("roundTripReadBody body: %s\n", b)
-	if err != nil {
-		return nil, err
-	}
-	err = resp.Body.Close()
-	if err != nil {
-		return nil, err
-	}
-	b = bytes.Replace(b, []byte("Welcome"), []byte("1234567"), -1)
-	body := ioutil.NopCloser(bytes.NewReader(b))
-	resp.Body = body
-	resp.ContentLength = int64(len(b))
-	resp.Header.Set("Content-Length", strconv.Itoa(len(b)))
-	return resp, nil*/
+	  b, err := ioutil.ReadAll(resp.Body)
+	  fmt.Printf("roundTripReadBody body: %s\n", b)
+	  if err != nil {
+	    return nil, err
+	  }
+	  err = resp.Body.Close()
+	  if err != nil {
+	    return nil, err
+	  }
+	  b = bytes.Replace(b, []byte("Welcome"), []byte("1234567"), -1)
+	  body := ioutil.NopCloser(bytes.NewReader(b))
+	  resp.Body = body
+	  resp.ContentLength = int64(len(b))
+	  resp.Header.Set("Content-Length", strconv.Itoa(len(b)))
+	  return resp, nil*/
 
 	if el.Project.Pygocentrus.Enabled == true {
 
-		fmt.Printf("RoundTrip Host: %v\n", req.Host)
-		fmt.Printf("RoundTrip RequestURI: %v\n", req.RequestURI)
-		fmt.Printf("RoundTrip RemoteAddr: %v\n", req.RemoteAddr)
+		//fmt.Printf("RoundTrip Host: %v\n", req.Host)
+		//fmt.Printf("RoundTrip RequestURI: %v\n", req.RequestURI)
+		//fmt.Printf("RoundTrip RemoteAddr: %v\n", req.RemoteAddr)
 
 		var randAttack int
 		//fixme: condição de erro no prepare para evitar loop infinito
@@ -450,7 +530,7 @@ func (el *transport) RoundTrip(req *http.Request) (resp *http.Response, err erro
 				break
 			}
 
-			if randAttack == kPygocentrusChangeContent && el.Project.Pygocentrus.ChangeContent != 0.0 {
+			if randAttack == kPygocentrusChangeContent && el.Project.Pygocentrus.ChangeContent.Rate != 0.0 {
 				break
 			}
 
@@ -470,7 +550,7 @@ func (el *transport) RoundTrip(req *http.Request) (resp *http.Response, err erro
 		if randAttack == kPygocentrusDontRespond {
 			if el.Project.Pygocentrus.DontRespond >= rand.Float64() {
 
-				return nil, errors.New("this data were eaten by a pygocentrus attack dont respond")
+				return nil, nil //errors.New("this data were eaten by a pygocentrus attack: dont respond")
 
 			}
 		}
@@ -487,13 +567,13 @@ func (el *transport) RoundTrip(req *http.Request) (resp *http.Response, err erro
 				inBody = make([]byte, len(inBody))
 
 				resp.Body = el.roundTripCopyBody(inBody)
-				return resp, errors.New("this data were eaten by a pygocentrus attack delete content")
+				return resp, nil //errors.New("this data were eaten by a pygocentrus attack: delete content")
 
 			}
 		}
 
 		if randAttack == kPygocentrusChangeContent {
-			if el.Project.Pygocentrus.ChangeContent >= rand.Float64() {
+			if el.Project.Pygocentrus.ChangeContent.Rate >= rand.Float64() {
 
 				var inBody []byte
 				resp, inBody, err = el.roundTripReadBody(req)
@@ -501,14 +581,14 @@ func (el *transport) RoundTrip(req *http.Request) (resp *http.Response, err erro
 					return nil, err
 				}
 
-				l := rand.Intn(len(inBody))
-				//l := len(inBody)
+				l := el.Project.Pygocentrus.ChangeContent.GetRandomByMaxMin(len(inBody))
 				for i := 0; i != l; i += 1 {
-					inBody = append(append(inBody[:i], byte(rand.Intn(255))), inBody[i+1:]...)
+					indexChange := el.Project.Pygocentrus.ChangeContent.GetRandomByLength(len(inBody))
+					inBody = append(append(inBody[:indexChange], byte(rand.Intn(255))), inBody[indexChange+1:]...)
 				}
-				//inBody = bytes.Replace(inBody, []byte("10782662528_IMG_3461_2.jpg</a>"), []byte("____________IMG_3461_2.jpg</a>"), -1)
+				//inBody = bytes.Replace(inBody, []byte("Welcome"), []byte("1234567"), -1)
 				resp.Body = el.roundTripCopyBody(inBody)
-				return resp, errors.New("this data were eaten by a pygocentrus attack change content")
+				return resp, nil //errors.New("this data were eaten by a pygocentrus attack: change content")
 
 			}
 		}
@@ -527,7 +607,7 @@ func (el *transport) RoundTrip(req *http.Request) (resp *http.Response, err erro
 
 				resp.ContentLength = int64(randLength)
 				resp.Header.Set("Content-Length", strconv.Itoa(randLength))
-				return resp, errors.New("this data were eaten by a pygocentrus attack change length")
+				return resp, nil //errors.New("this data were eaten by a pygocentrus attack: change length")
 
 			}
 		}

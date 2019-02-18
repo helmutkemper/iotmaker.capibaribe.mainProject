@@ -31,11 +31,15 @@ capibaribe:
 
     pygocentrus:
       enabled: true
-      transportError: 0.3
-      dontRespond: 0.3
-      changeLength: 0.3
-      changeContent: 0.3
-      deleteContent: 0.3
+      dontRespond: 0.0
+      changeLength: 0.0
+      changeContent:
+        changeRateMin: 0.01
+        changeRateMax: 0.10
+        changeBytesMin: 1
+        changeBytesMax: 1
+        rate: 0.5
+      deleteContent: 0.0
       changeHeaders:
         - number: 500
           header:
@@ -59,6 +63,7 @@ capibaribe:
 #            ignorePort: true
         loadBalancing: roundRobin # roundRobin | lowTimeResponseHeader | lowTimeResponseLastByte | random | overLoad | ipv4Hash | ipv6Hash | hash
         path: /
+        maxAttemptToRescueLoop: 10
         healthCheck:
           enabled: true
           # padrão: 5 segundos
@@ -88,12 +93,12 @@ capibaribe:
             body:
               - expreg
         servers:
-          - host: http://localhost:2367
+          - host: http://localhost:3000
             weight: 1
             overLoad: 1000000
-          - host: http://localhost:2368
+          - host: http://localhost:3000
             weight: 1
             overLoad: 1000000
-          - host: http://localhost:2369
+          - host: http://localhost:3000
             weight: 1
             overLoad: 1000000
