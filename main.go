@@ -1,110 +1,59 @@
 package main
 
 import (
+	capib "./capibaribe"
 	"flag"
-	"fmt"
-	sProxy "github.com/helmutkemper/SimpleReverseProxy"
 	"log"
 	"net/http"
+	"os"
+	"sync"
 )
 
 func main() {
 	var err error
+	var wg sync.WaitGroup
 
-	filePath := flag.String("f", "./capibaribe-config.yml", "./your-capibaribe-config-file.yml")
+	filePath := flag.String("f", "./new.yml", "./your-capibaribe-config-file.yml")
 	flag.Parse()
 
-	fmt.Printf("reverseProxy version: %v\n", sProxy.KCodeVersion)
-
-	configServer := sProxy.NewConfig()
-	if err = configServer.Unmarshal(*filePath); err != nil {
-		log.Fatalf("file %v parser error: %v\n", *filePath, err.Error())
+	config := capib.MainConfig{}
+	err = config.Unmarshal(*filePath)
+	if err != nil {
+		log.Fatal("3 error: %v", err.Error())
 	}
 
-	if configServer.ReverseProxy.Config.OutputConfig == true {
-		fmt.Print("\nServer configs:\n\n")
+	for projectName, projectConfig := range config.AffluentRiver {
 
-		fmt.Printf("listen and server: %v\n", configServer.ReverseProxy.Config.ListenAndServer)
+		_ = projectName
 
-		if configServer.ReverseProxy.Config.StaticServer == true {
-			fmt.Print("static server enabled at folders:\n")
-			for _, folder := range configServer.ReverseProxy.Config.StaticFolder {
-				fmt.Printf("  [%v]: %v \n", folder.ServerPath, folder.Folder)
-			}
-		}
+		wg.Add(1)
+		go func(config capib.Project) {
+			var err error
+			server := http.NewServeMux()
 
-		fmt.Print("\nProxy configs:\n\n")
+			defer wg.Done()
 
-		for proxyServiceName, proxyServiceConfig := range configServer.ReverseProxy.Proxy {
+			for _, staticPath := range config.Static {
 
-			fmt.Printf("proxy service name: %v\n", proxyServiceName)
-			fmt.Printf("proxy income host: %v\n", proxyServiceConfig.Host)
-			fmt.Printf("proxy alternative hosts: %v\n", len(proxyServiceConfig.Server))
+				if _, err = os.Stat(staticPath.FilePath); os.IsNotExist(err) {
+					log.Fatalf("static dir error: %v\n", err.Error())
+				}
 
-			for _, toServerConfig := range proxyServiceConfig.Server {
-				fmt.Printf("  alternative host name: %v\n", toServerConfig.Name)
-				fmt.Printf("  alternative host addr: %v\n", toServerConfig.Host)
+				server.Handle("/"+staticPath.ServerPath+"/", http.StripPrefix("/"+staticPath.ServerPath+"/", http.FileServer(http.Dir(staticPath.FilePath))))
 			}
 
-			fmt.Println()
-		}
-	}
+			server.HandleFunc("/", config.HandleFunc)
 
-	fmt.Print("stating server...\n\n")
-
-	for proxyConfigName, proxyConfig := range configServer.ReverseProxy.Proxy {
-
-		servers := make([]sProxy.ProxyUrl, len(proxyConfig.Server))
-		for k, v := range proxyConfig.Server {
-			servers[k] = sProxy.ProxyUrl{
-				Name: v.Name,
-				Url:  v.Host,
+			newserver := &http.Server{
+				Addr:     config.Listen,
+				Handler:  server,
+				ErrorLog: log.New(capib.DebugLogger{}, "", 0),
 			}
-		}
+			log.Fatal(newserver.ListenAndServe())
 
-		route := sProxy.ProxyRoute{
-			Name: proxyConfigName,
-			Domain: sProxy.ProxyDomain{
-				Host:              proxyConfig.Host,
-				Path:              proxyConfig.Path,
-				PathExpReg:        proxyConfig.PathExpReg,
-				QueryStringEnable: proxyConfig.QueryStringEnable,
-			},
-			ProxyEnable: true,
-		}
-		route.ProxyServers.Set(servers)
-		err = sProxy.ProxyRootConfig.AddRouteToProxyStt(
-			route,
-		)
+		}(projectConfig)
+
 	}
 
-	startConfig := sProxy.NewStartConfig()
-	sProxy.ProxyRootConfig.Prepare(startConfig)
-
-	if configServer.ReverseProxy.Config.StaticServer {
-		for _, staticPath := range configServer.ReverseProxy.Config.StaticFolder {
-			http.Handle("/"+staticPath.ServerPath+"/", http.StripPrefix("/"+staticPath.ServerPath+"/", http.FileServer(http.Dir(staticPath.Folder))))
-		}
-	}
-
-	http.HandleFunc("/", sProxy.ProxyFunc)
-
-	if err = http.ListenAndServe(configServer.ReverseProxy.Config.ListenAndServer, nil); err != nil {
-		log.Fatalf(err.Error())
-	}
-
-	/*
-	  mux := http.NewServeMux()
-	  if configServer.ReverseProxy.Config.StaticServer {
-	    for _, staticPath := range configServer.ReverseProxy.Config.StaticFolder {
-	      mux.Handle("/" + staticPath.ServerPath + "/", http.StripPrefix("/" + staticPath.ServerPath + "/", http.FileServer( http.Dir( staticPath.Folder ) ) ) )
-	    }
-	  }
-	  mux.HandleFunc("/", sProxy.ProxyFunc)
-
-	  if err = certmagic.HTTPS([]string{configServer.ReverseProxy.Config.ListenAndServer}, mux); err != nil {
-	    log.Fatalf( err.Error() )
-	  }
-	*/
-
+	wg.Wait()
 }
