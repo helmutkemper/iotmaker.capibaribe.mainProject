@@ -520,11 +520,12 @@ func (el *transport) RoundTrip(req *http.Request) (resp *http.Response, err erro
 		//fmt.Printf("RoundTrip RemoteAddr: %v\n", req.RemoteAddr)
 
 		var randAttack int
+
 		//fixme: condição de erro no prepare para evitar loop infinito
 		//fixme: fica melhor se for feito na inicialização
 		//       em vez de const um valor dinamico para cada tipo habilitado de 0 a n
 		for {
-			randAttack = rand.Intn(4)
+			randAttack = inLineRand().Intn(4)
 
 			if randAttack == kPygocentrusDontRespond && el.Project.Pygocentrus.DontRespond != 0.0 {
 				break
@@ -580,13 +581,13 @@ func (el *transport) RoundTrip(req *http.Request) (resp *http.Response, err erro
 				if err != nil {
 					return nil, err
 				}
-
-				l := el.Project.Pygocentrus.ChangeContent.GetRandomByMaxMin(len(inBody))
-				for i := 0; i != l; i += 1 {
-					indexChange := el.Project.Pygocentrus.ChangeContent.GetRandomByLength(len(inBody))
+				length := len(inBody)
+				forLength := el.Project.Pygocentrus.ChangeContent.GetRandomByMaxMin(length)
+				for i := 0; i != forLength; i += 1 {
+					indexChange := el.Project.Pygocentrus.ChangeContent.GetRandomByLength(length)
 					inBody = append(append(inBody[:indexChange], byte(rand.Intn(255))), inBody[indexChange+1:]...)
 				}
-				//inBody = bytes.Replace(inBody, []byte("Welcome"), []byte("1234567"), -1)
+
 				resp.Body = el.roundTripCopyBody(inBody)
 				return resp, nil //errors.New("this data were eaten by a pygocentrus attack: change content")
 
@@ -625,4 +626,8 @@ func (d DebugLogger) Write(p []byte) (n int, err error) {
 		debug.PrintStack()
 	}
 	return os.Stderr.Write(p)
+}
+
+func inLineRand() *rand.Rand {
+	return rand.New(rand.NewSource(time.Now().UnixNano()))
 }
