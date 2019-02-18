@@ -31,11 +31,11 @@ capibaribe:
 
     pygocentrus:
       enabled: true
-      transportError: 0.0
-      dontRespond: 0.0
-      changeLength: 0.0
-      changeContent: 1.0
-      deleteContent: 0.0
+      transportError: 0.3
+      dontRespond: 0.3
+      changeLength: 0.3
+      changeContent: 0.3
+      deleteContent: 0.3
       changeHeaders:
         - number: 500
           header:

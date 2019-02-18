@@ -2,9 +2,10 @@ package capibaribe
 
 import (
 	"bytes"
+	"errors"
+	"fmt"
 	"github.com/helmutkemper/seelog"
 	"github.com/helmutkemper/yaml"
-	"github.com/pkg/errors"
 	"io"
 	"io/ioutil"
 	"log"
@@ -182,6 +183,8 @@ func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
 							HandleCriticalError(err)
 						}
 
+						fmt.Printf("proxy Host: %v\n", rpURL.Host)
+						fmt.Printf("proxy Path: %v\n", rpURL.Path)
 						proxy := httputil.NewSingleHostReverseProxy(rpURL)
 
 						proxy.ErrorLog = log.New(DebugLogger{}, "", 0)
@@ -189,7 +192,7 @@ func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
 						//if el.Pygocentrus.Enabled == true {
 						proxy.Transport = &transport{RoundTripper: http.DefaultTransport, Project: el}
 						//}
-						proxy.ModifyResponse = proxyData.ModifyResponse
+						//proxy.ModifyResponse = proxyData.ModifyResponse
 
 						proxy.ErrorHandler = func(w http.ResponseWriter, r *http.Request, err error) {
 
@@ -214,6 +217,12 @@ func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
 							el.Proxy[proxyKey].consecutiveSuccess += 1
 							el.Proxy[proxyKey].Servers[serverKey].consecutiveErrors = 0
 							el.Proxy[proxyKey].Servers[serverKey].consecutiveSuccess += 1
+
+							if el.Pygocentrus.Enabled == true {
+								seelog.Critical("return after a pygocentrus attack")
+								return
+							}
+
 							seelog.Critical("continue")
 							continue
 						}
@@ -287,6 +296,16 @@ type proxy struct {
 }
 
 func (el *proxy) ModifyResponse(resp *http.Response) error {
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("host: %s\n", resp.Request.Host)
+	fmt.Printf("requestURI: %s\n", resp.Request.RequestURI)
+
+	fmt.Printf("%s\n\n\n\n\n\n\n", b)
+
 	//seelog.Criticalf("header code %v", resp.StatusCode)
 	return nil
 }
@@ -389,8 +408,36 @@ func (el *transport) roundTripCopyBody(inBody []byte) io.ReadCloser {
 }
 
 func (el *transport) RoundTrip(req *http.Request) (resp *http.Response, err error) {
+	/*resp, err = el.RoundTripper.RoundTrip(req)
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Printf( "roundTripReadBody Host: %v\n", req.Host )
+	fmt.Printf( "roundTripReadBody RequestURI: %v\n", req.RequestURI )
+	fmt.Printf( "roundTripReadBody RemoteAddr: %v\n", req.RemoteAddr )
+
+	b, err := ioutil.ReadAll(resp.Body)
+	fmt.Printf("roundTripReadBody body: %s\n", b)
+	if err != nil {
+		return nil, err
+	}
+	err = resp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+	b = bytes.Replace(b, []byte("Welcome"), []byte("1234567"), -1)
+	body := ioutil.NopCloser(bytes.NewReader(b))
+	resp.Body = body
+	resp.ContentLength = int64(len(b))
+	resp.Header.Set("Content-Length", strconv.Itoa(len(b)))
+	return resp, nil*/
 
 	if el.Project.Pygocentrus.Enabled == true {
+
+		fmt.Printf("RoundTrip Host: %v\n", req.Host)
+		fmt.Printf("RoundTrip RequestURI: %v\n", req.RequestURI)
+		fmt.Printf("RoundTrip RemoteAddr: %v\n", req.RemoteAddr)
 
 		var randAttack int
 		//fixme: condição de erro no prepare para evitar loop infinito
@@ -454,14 +501,14 @@ func (el *transport) RoundTrip(req *http.Request) (resp *http.Response, err erro
 					return nil, err
 				}
 
-				//l := rand.Intn(len(inBody))
-				/*l := len(inBody)
+				l := rand.Intn(len(inBody))
+				//l := len(inBody)
 				for i := 0; i != l; i += 1 {
 					inBody = append(append(inBody[:i], byte(rand.Intn(255))), inBody[i+1:]...)
-				}*/
-				inBody = bytes.Replace(inBody, []byte("Welcome"), []byte("123467"), -1)
+				}
+				//inBody = bytes.Replace(inBody, []byte("10782662528_IMG_3461_2.jpg</a>"), []byte("____________IMG_3461_2.jpg</a>"), -1)
 				resp.Body = el.roundTripCopyBody(inBody)
-				return resp, nil //errors.New("this data were eaten by a pygocentrus attack change content")
+				return resp, errors.New("this data were eaten by a pygocentrus attack change content")
 
 			}
 		}
