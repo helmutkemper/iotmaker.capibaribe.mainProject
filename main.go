@@ -13,13 +13,13 @@ func main() {
 	var err error
 	var wg sync.WaitGroup
 
-	filePath := flag.String("f", "./new.yml", "./your-capibaribe-config-file.yml")
+	filePath := flag.String("f", "./capibaribe-config.yml", "./your-capibaribe-config-file.yml")
 	flag.Parse()
 
 	config := capib.MainConfig{}
 	err = config.Unmarshal(*filePath)
 	if err != nil {
-		log.Fatal("3 error: %v", err.Error())
+		log.Fatal(err.Error())
 	}
 
 	for projectName, projectConfig := range config.AffluentRiver {
@@ -44,12 +44,12 @@ func main() {
 
 			server.HandleFunc("/", config.HandleFunc)
 
-			newserver := &http.Server{
+			newServer := &http.Server{
 				Addr:     config.Listen,
 				Handler:  server,
 				ErrorLog: log.New(capib.DebugLogger{}, "", 0),
 			}
-			log.Fatal(newserver.ListenAndServe())
+			log.Fatal(newServer.ListenAndServe())
 
 		}(projectConfig)
 

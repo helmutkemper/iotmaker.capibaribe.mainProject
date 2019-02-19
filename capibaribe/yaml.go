@@ -3,7 +3,6 @@ package capibaribe
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"github.com/helmutkemper/seelog"
 	"github.com/helmutkemper/yaml"
 	"io"
@@ -16,7 +15,6 @@ import (
 	"os"
 	"regexp"
 	"runtime/debug"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -25,12 +23,6 @@ const (
 	kIgnorePortRegExp      = "^(.*?):[0-9]+$"
 	kLoadBalanceRoundRobin = "roundRobin"
 	kLoadBalanceRandom     = "random"
-
-	kPygocentrusDontRespond   = 0
-	kPygocentrusChangeLength  = 1
-	kPygocentrusChangeContent = 2
-	kPygocentrusDeleteContent = 3
-	kPygocentrusChangeHeaders = 4
 )
 
 type MainConfig struct {
@@ -187,30 +179,16 @@ func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
 							HandleCriticalError(err)
 						}
 
-						fmt.Printf("proxy Host: %v\n", rpURL.Host)
-						fmt.Printf("proxy Path: %v\n", rpURL.Path)
 						proxy := httputil.NewSingleHostReverseProxy(rpURL)
 
 						proxy.ErrorLog = log.New(DebugLogger{}, "", 0)
 
-						//if el.Pygocentrus.Enabled == true {
 						proxy.Transport = &transport{RoundTripper: http.DefaultTransport, Project: el}
-						//}
+
+						//todo: implementar
 						//proxy.ModifyResponse = proxyData.ModifyResponse
 
 						proxy.ErrorHandler = el.Proxy[proxyKey].ErrorHandler
-						/*proxy.ErrorHandler = func(w http.ResponseWriter, r *http.Request, err error) {
-
-						  //w.WriteHeader(500)
-						  el.Proxy[proxyKey].consecutiveErrors += 1
-						  el.Proxy[proxyKey].consecutiveSuccess = 0
-						  el.Proxy[proxyKey].Servers[serverKey].consecutiveErrors += 1
-						  el.Proxy[proxyKey].Servers[serverKey].consecutiveSuccess = 0
-						  el.Proxy[proxyKey].Servers[serverKey].errors += 1
-						  el.Proxy[proxyKey].Servers[serverKey].lastRoundError = true
-
-						  seelog.Criticalf("1 server host %v error - %v", hostServer, err.Error())
-						}*/
 
 						el.Proxy[proxyKey].Servers[serverKey].lastRoundError = false
 
@@ -224,15 +202,15 @@ func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
 							el.Proxy[proxyKey].Servers[serverKey].consecutiveSuccess += 1
 							return
 							if el.Pygocentrus.Enabled == true {
-								seelog.Critical("return after a pygocentrus attack")
+								//seelog.Critical("return after a pygocentrus attack")
 								return
 							}
 
-							seelog.Critical("continue")
+							//seelog.Critical("continue")
 							continue
 						}
 
-						seelog.Critical("return")
+						//seelog.Critical("return")
 						return
 
 					} else {
@@ -380,12 +358,6 @@ func (el *proxy) ModifyResponse(resp *http.Response) error {
 		return err
 	}
 
-	fmt.Printf("host: %s\n", resp.Request.Host)
-	fmt.Printf("requestURI: %s\n", resp.Request.RequestURI)
-
-	fmt.Printf("%s\n\n\n\n\n\n\n", b)
-
-	//seelog.Criticalf("header code %v", resp.StatusCode)
 	return nil
 }
 
@@ -459,6 +431,8 @@ type transport struct {
 	Project      *Project
 }
 
+type pygocentrusFunc func(req *http.Request) (resp *http.Response, err error)
+
 func (el *transport) roundTripReadBody(req *http.Request) (*http.Response, []byte, error) {
 	var resp *http.Response
 	var err error
@@ -482,140 +456,119 @@ func (el *transport) roundTripReadBody(req *http.Request) (*http.Response, []byt
 }
 
 func (el *transport) roundTripCopyBody(inBody []byte) io.ReadCloser {
-	//inBody = make([]byte, len(inBody))
 	return ioutil.NopCloser(bytes.NewReader(inBody))
 }
 
+func (el *transport) PygocentrusDontRespond(req *http.Request) (resp *http.Response, err error) {
+
+	seelog.Debugf("%v%v were eaten by a pygocentrus attack: dont respond", req.RemoteAddr, req.RequestURI)
+	return nil, nil
+
+}
+
+func (el *transport) PygocentrusDeleteContent(req *http.Request) (resp *http.Response, err error) {
+
+	seelog.Debugf("%v%v were eaten by a pygocentrus attack: delete content", req.RemoteAddr, req.RequestURI)
+
+	var inBody []byte
+	resp, inBody, err = el.roundTripReadBody(req)
+	if err != nil {
+		return nil, err
+	}
+
+	inBody = make([]byte, len(inBody))
+
+	resp.Body = el.roundTripCopyBody(inBody)
+	return resp, nil
+
+}
+
+func (el *transport) PygocentrusChangeContent(req *http.Request) (resp *http.Response, err error) {
+
+	seelog.Debugf("%v%v were eaten by a pygocentrus attack: change content", req.RemoteAddr, req.RequestURI)
+
+	var inBody []byte
+	resp, inBody, err = el.roundTripReadBody(req)
+	if err != nil {
+		return nil, err
+	}
+
+	length := len(inBody)
+	forLength := el.Project.Pygocentrus.ChangeContent.GetRandomByMaxMin(length)
+	for i := 0; i != forLength; i += 1 {
+		indexChange := el.Project.Pygocentrus.ChangeContent.GetRandomByLength(length)
+		inBody = append(append(inBody[:indexChange], byte(rand.Intn(255))), inBody[indexChange+1:]...)
+	}
+
+	resp.Body = el.roundTripCopyBody(inBody)
+	return resp, nil
+
+}
+
+func (el *transport) PygocentrusChangeLength(req *http.Request) (resp *http.Response, err error) {
+
+	seelog.Debugf("%v%v were eaten by a pygocentrus attack: change length", req.RemoteAddr, req.RequestURI)
+
+	var inBody []byte
+	resp, inBody, err = el.roundTripReadBody(req)
+	if err != nil {
+		return nil, err
+	}
+	resp.Body = ioutil.NopCloser(bytes.NewReader(inBody))
+
+	randLength := rand.Intn(len(inBody))
+
+	resp.ContentLength = int64(randLength)
+	//resp.Header.Set("Content-Length", strconv.Itoa(randLength))
+	return resp, nil
+
+}
+
+// todo: fazer
+//func (el *transport) PygocentrusChangeHeaders(req *http.Request) (resp *http.Response, err error) {}
+
 func (el *transport) RoundTrip(req *http.Request) (resp *http.Response, err error) {
-	//return el.RoundTripper.RoundTrip(req)
-	/*resp, err = el.RoundTripper.RoundTrip(req)
-	  if err != nil {
-	    return nil, err
-	  }
-
-	  fmt.Printf( "roundTripReadBody Host: %v\n", req.Host )
-	  fmt.Printf( "roundTripReadBody RequestURI: %v\n", req.RequestURI )
-	  fmt.Printf( "roundTripReadBody RemoteAddr: %v\n", req.RemoteAddr )
-
-	  b, err := ioutil.ReadAll(resp.Body)
-	  fmt.Printf("roundTripReadBody body: %s\n", b)
-	  if err != nil {
-	    return nil, err
-	  }
-	  err = resp.Body.Close()
-	  if err != nil {
-	    return nil, err
-	  }
-	  b = bytes.Replace(b, []byte("Welcome"), []byte("1234567"), -1)
-	  body := ioutil.NopCloser(bytes.NewReader(b))
-	  resp.Body = body
-	  resp.ContentLength = int64(len(b))
-	  resp.Header.Set("Content-Length", strconv.Itoa(len(b)))
-	  return resp, nil*/
 
 	if el.Project.Pygocentrus.Enabled == true {
 
-		//fmt.Printf("RoundTrip Host: %v\n", req.Host)
-		//fmt.Printf("RoundTrip RequestURI: %v\n", req.RequestURI)
-		//fmt.Printf("RoundTrip RemoteAddr: %v\n", req.RemoteAddr)
-
 		var randAttack int
 
-		//fixme: condição de erro no prepare para evitar loop infinito
-		//fixme: fica melhor se for feito na inicialização
-		//       em vez de const um valor dinamico para cada tipo habilitado de 0 a n
-		for {
-			randAttack = inLineRand().Intn(4)
+		var list = make([]pygocentrusFunc, 0)
 
-			if randAttack == kPygocentrusDontRespond && el.Project.Pygocentrus.DontRespond != 0.0 {
-				break
-			}
+		if el.Project.Pygocentrus.DontRespond != 0.0 {
 
-			if randAttack == kPygocentrusChangeContent && el.Project.Pygocentrus.ChangeContent.Rate != 0.0 {
-				break
-			}
+			list = append(list, el.PygocentrusDontRespond)
 
-			if randAttack == kPygocentrusChangeLength && el.Project.Pygocentrus.ChangeLength != 0.0 {
-				break
-			}
-
-			if randAttack == kPygocentrusDeleteContent && el.Project.Pygocentrus.DeleteContent != 0.0 {
-				break
-			}
-
-			//if randAttack == kPygocentrusChangeHeaders && el.Project.Pygocentrus.ChangeHeaders != 0.0 {
-			//	break
-			//}
 		}
 
-		if randAttack == kPygocentrusDontRespond {
-			if el.Project.Pygocentrus.DontRespond >= rand.Float64() {
+		if el.Project.Pygocentrus.DeleteContent != 0.0 {
 
-				return nil, nil //errors.New("this data were eaten by a pygocentrus attack: dont respond")
+			list = append(list, el.PygocentrusDeleteContent)
 
-			}
 		}
 
-		if randAttack == kPygocentrusDeleteContent {
-			if el.Project.Pygocentrus.DeleteContent >= rand.Float64() {
+		if el.Project.Pygocentrus.ChangeContent.Rate != 0.0 {
 
-				var inBody []byte
-				resp, inBody, err = el.roundTripReadBody(req)
-				if err != nil {
-					return nil, err
-				}
+			list = append(list, el.PygocentrusChangeContent)
 
-				inBody = make([]byte, len(inBody))
-
-				resp.Body = el.roundTripCopyBody(inBody)
-				return resp, nil //errors.New("this data were eaten by a pygocentrus attack: delete content")
-
-			}
 		}
 
-		if randAttack == kPygocentrusChangeContent {
-			if el.Project.Pygocentrus.ChangeContent.Rate >= rand.Float64() {
+		if el.Project.Pygocentrus.ChangeLength != 0.0 {
 
-				var inBody []byte
-				resp, inBody, err = el.roundTripReadBody(req)
-				if err != nil {
-					return nil, err
-				}
-				length := len(inBody)
-				forLength := el.Project.Pygocentrus.ChangeContent.GetRandomByMaxMin(length)
-				for i := 0; i != forLength; i += 1 {
-					indexChange := el.Project.Pygocentrus.ChangeContent.GetRandomByLength(length)
-					inBody = append(append(inBody[:indexChange], byte(rand.Intn(255))), inBody[indexChange+1:]...)
-				}
+			list = append(list, el.PygocentrusChangeLength)
 
-				resp.Body = el.roundTripCopyBody(inBody)
-				return resp, nil //errors.New("this data were eaten by a pygocentrus attack: change content")
-
-			}
 		}
 
-		if randAttack == kPygocentrusChangeLength {
-			if el.Project.Pygocentrus.ChangeLength >= rand.Float64() {
+		/* todo: fazer
+		if el.Project.Pygocentrus.ChangeHeaders[0].Rate != 0.0 {}
+		*/
 
-				var inBody []byte
-				resp, inBody, err = el.roundTripReadBody(req)
-				if err != nil {
-					return nil, err
-				}
-				resp.Body = ioutil.NopCloser(bytes.NewReader(inBody))
+		randAttack = inLineRand().Intn(len(list))
+		return list[randAttack](req)
 
-				randLength := rand.Intn(len(inBody))
-
-				resp.ContentLength = int64(randLength)
-				resp.Header.Set("Content-Length", strconv.Itoa(randLength))
-				return resp, nil //errors.New("this data were eaten by a pygocentrus attack: change length")
-
-			}
-		}
 	}
 
-	resp, err = el.RoundTripper.RoundTrip(req)
-	return resp, err
+	return el.RoundTripper.RoundTrip(req)
 }
 
 type DebugLogger struct{}
