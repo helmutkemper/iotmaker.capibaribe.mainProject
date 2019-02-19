@@ -353,10 +353,10 @@ func (el *proxy) SuccessHandler(w http.ResponseWriter, r *http.Request, err erro
 }
 
 func (el *proxy) ModifyResponse(resp *http.Response) error {
-	b, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
+	//b, err := ioutil.ReadAll(resp.Body)
+	//if err != nil {
+	//	return err
+	//}
 
 	return nil
 }
