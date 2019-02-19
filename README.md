@@ -27,55 +27,99 @@ How to configure:
 
 ```yaml
 
-version: '1.0'
+version: 1.0
 
-reverseProxy:
+capibaribe:
 
-  config:                                # Server configuration
-    listenAndServer: :8080               # Local server address and port. Format: server:port
-    outputConfig: true                   # Print the configuration before server start. Format: true/false
-    staticServer: true                   # Enable a static files server with files contained into same 
-                                         # server machine. Format: true/false
-    staticFolder:                        # Static file server config
-      - folder: /docker/static/          # Files folders to server
-        serverPath: static               # Main server path. Example: 'yourdomain.com/static'
-      - folder: /docker/another_static/  # Files folders to server
-        serverPath: another_static       # Main server path. Example: 'yourdomain.com/static'
+  affluentRiverName:
 
-  proxy:                                 # Servidor proxy. Redireciona o endereço para um novo servidor
+    listen: :8081
 
-    # To the example below, run the docker command to enable ghost blog at port 2368
-    # docker run -d --name ghost-blog-1 -p 2368:2368 ghost
-    blog:                                # Name from server 1 log file
-      host: blog.localhost:8080          # Income host address
-      loadBalance: round robin           # Round Robin, Least Connections and IP Hash
-      maxErrorLoops: 20
-      server:                            # Alternatives servers list
-        - name:   docker 1 - ok          # Name from alternative content server 1
-          host:   http://localhost:2368  # Host from alternative content server 1
-          weight: 10                     # Faz o calculo percentual para distribuir as conexões
-          
-        - name:   docker 2 - error       # Name from alternative content server 2
-          host:   http://localhost:2369  # Host from alternative content server 2
-          weight: 10                     # 
-        - name:   docker 3 - error       # Name from alternative content server 3
-          host:   http://localhost:2370  # Host from alternative content server 3
-          weight: 10                     # 
+    ssl:
+      enabled: true
+      certificate: /etc/nginx/company.com.crt
+      certificateKey: /etc/nginx/company.com.key
+      sslProtocols:
+        - TLSv1
+        - TLSv1.1
+        - TLSv1.2
 
-    # To the example below, run the docker command to enable ghost blog at port 2378
-    # docker run -d --name ghost-blog-2 -p 2378:2368 ghost
-    blog_2:                              # Name from server 2 log file
-      host: blog2.localhost:8080         # Income host address
-      loadBalance: round robin           # Round Robin, Least Connections and IP Hash
-      server:                            # Alternatives servers list
-        - name:   docker 4 - ok          # Name from alternative content server 4
-          host:   http://localhost:2378  # Host from alternative content server 4
-          weight: 10                     # 
-        - name:   docker 5 - error       # Name from alternative content server 5
-          host:   http://localhost:2379  # Host from alternative content server 5
-          weight: 10                     # 
-        - name:   docker 6 - error       # Name from alternative content server 6
-          host:   http://localhost:2380  # Host from alternative content server 6
-          weight: 10                     # 
+    static:
+      - filePath: /docker/static
+        serverPath: static
+
+    pygocentrus:
+      enabled: true
+      dontRespond: 0.0
+      changeLength: 0.0
+      changeContent:
+        changeRateMin: 0.01
+        changeRateMax: 0.10
+        changeBytesMin: 1
+        changeBytesMax: 1
+        rate: 0.5
+      deleteContent: 0.0
+      changeHeaders:
+        - number: 500
+          header:
+            - key: Content-Type
+              value: application/json
+          rate: 0.1
+
+    proxy:
+      - ignorePort: true
+        host: 127.0.0.1
+        # roundRobin -              joga a carga para o próximo servidor
+        # lowTimeResponseHeader -   procura o servidor com menor tempo de resposta inicial
+        # lowTimeResponseLastByte - procura o servidor com menor tempo de resposta do último byte
+        # random -                  joga a carga de forma aleatória
+        # overLoad -                joga todas a carga para o primeiro servidor até o número máximo de conexões ser atingido
+        # ipv4Hash -                000.000.*: de onde tiver o asterisco vai para um servidor
+        # ipv6Hash -                lista de ips
+        # hash -                    request_uri
+#        bind:
+#          - host: 127.0.0.1
+#            ignorePort: true
+        loadBalancing: roundRobin # roundRobin | lowTimeResponseHeader | lowTimeResponseLastByte | random | overLoad | ipv4Hash | ipv6Hash | hash
+        path: /
+        maxAttemptToRescueLoop: 10
+        healthCheck:
+          enabled: true
+          # padrão: 5 segundos
+          interval: 5000
+          # numeros de falhas consecutivas para erro
+          fails: 3
+          # numeros de ok consecutivos para zerar falhas
+          passes: 2
+          # caminho de teste
+          uri: /some/path
+          # se 0 suspende para sempre
+          # se !0 suspende por milesegundos
+          suspendInterval: 30000
+          match:
+            status:
+              - expReg: expreg
+                value: 300
+                in:
+                  - min: 200
+                    max: 299
+                notIn:
+                  - min: 200
+                    max: 299
+            header:
+              - key: Content-Type
+                value: text/html
+            body:
+              - expreg
+        servers:
+          - host: http://localhost:3000
+            weight: 1
+            overLoad: 1000000
+          - host: http://localhost:3000
+            weight: 1
+            overLoad: 1000000
+          - host: http://localhost:3000
+            weight: 1
+            overLoad: 1000000
 
 ```
