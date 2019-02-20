@@ -13,6 +13,7 @@ type MainConfig struct {
 
 func (el *MainConfig) Unmarshal(filePath string) error {
 	var fileContent []byte
+	var configInterface interface{}
 	var err error
 
 	fileContent, err = ioutil.ReadFile(filePath)
@@ -20,15 +21,16 @@ func (el *MainConfig) Unmarshal(filePath string) error {
 		return err
 	}
 
-	err = yaml.Unmarshal(fileContent, el)
+	err = yaml.Unmarshal(fileContent, &configInterface)
 	if err != nil {
 		return err
 	}
 
-	return el.prepare()
+	return el.prepare(&configInterface)
 }
 
-func (el *MainConfig) prepare() error {
+func (el *MainConfig) prepare(dataInterface interface{}) error {
+
 	var WeightsSum = 0.0
 
 	if el.Version != 1.0 {

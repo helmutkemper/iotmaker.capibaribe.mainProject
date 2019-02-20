@@ -59,20 +59,20 @@ func main() {
 
 				newServer := &http.Server{
 					TLSConfig: &tls.Config{
-						MinVersion: tls.VersionTLS10,
-						MaxVersion: tls.VersionSSL30,
-						/*CurvePreferences: []tls.CurveID{tls.CurveP521, tls.CurveP384, tls.CurveP256},
+						MinVersion:               tls.VersionTLS10,
+						MaxVersion:               tls.VersionSSL30,
+						CurvePreferences:         []tls.CurveID{tls.CurveP521, tls.CurveP384, tls.CurveP256},
 						PreferServerCipherSuites: true,
 						CipherSuites: []uint16{
 							tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
 							tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
 							tls.TLS_RSA_WITH_AES_256_GCM_SHA384,
 							tls.TLS_RSA_WITH_AES_256_CBC_SHA,
-						},*/
+						},
 					},
 					Addr:     config.Listen,
 					Handler:  server,
-					ErrorLog: log.New(capib.DebugLogger{}, "", 0),
+					ErrorLog: log.New(capib.DebugLogger{}, "", 0), //fixme: tem que ser opcional
 				}
 
 				/*
@@ -92,7 +92,7 @@ func main() {
 				newServer := &http.Server{
 					Addr:     config.Listen,
 					Handler:  server,
-					ErrorLog: log.New(capib.DebugLogger{}, "", 0),
+					ErrorLog: log.New(capib.DebugLogger{}, "", 0), //fixme: tem que ser opcional
 				}
 				log.Fatal(newServer.ListenAndServe())
 

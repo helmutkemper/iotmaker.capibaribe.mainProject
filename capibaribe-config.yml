@@ -4,24 +4,52 @@ version: 1.0
 
 capibaribe:
 
-  affluentRiverName1:
-
-    listen: :8082
-
-    static:
-      - filePath: /docker/static
-        serverPath: static
-
-  affluentRiverName2:
+  affluentRiverNameProject:
 
     listen: :8081
 
     ssl:
       enabled: false
-      minVersion: 1.0 #1.0 1.1 1.2 3.0
-      maxVersion: 3.0
+      version:  #1.0 1.1 1.2 3.0
+        min: 1.0
+        max: 3.0
       certificate: /etc/nginx/company.com.crt
       certificateKey: /etc/nginx/company.com.key
+      curvePreferences:
+        - P256
+        - P384
+        - P521
+        - X25519
+      preferServerCipherSuites: false
+
+      # A list of cipher suite IDs that are, or have been, implemented by this
+      # package.
+      #
+      # Taken from https://www.iana.org/assignments/tls-parameters/tls-parameters.xml
+      cipherSuites:
+        - TLS_RSA_WITH_RC4_128_SHA
+        - TLS_RSA_WITH_3DES_EDE_CBC_SHA
+        - TLS_RSA_WITH_AES_128_CBC_SHA
+        - TLS_RSA_WITH_AES_256_CBC_SHA
+        - TLS_RSA_WITH_AES_128_CBC_SHA256
+        - TLS_RSA_WITH_AES_128_GCM_SHA256
+        - TLS_RSA_WITH_AES_256_GCM_SHA384
+        - TLS_ECDHE_ECDSA_WITH_RC4_128_SHA
+        - TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA
+        - TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA
+        - TLS_ECDHE_RSA_WITH_RC4_128_SHA
+        - TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA
+        - TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA
+        - TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA
+        - TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256
+        - TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256
+        - TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        - TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
+        - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        - TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
+        - TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305
+        - TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305
+        - TLS_FALLBACK_SCSV uint16
       X509:
         certificate: /etc/nginx/company.com.crt
         certificateKey: /etc/nginx/company.com.key
