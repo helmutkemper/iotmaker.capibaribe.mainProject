@@ -18,8 +18,13 @@ capibaribe:
 
     ssl:
       enabled: false
+      minVersion: 1.0 #1.0 1.1 1.2 3.0
+      maxVersion: 3.0
       certificate: /etc/nginx/company.com.crt
       certificateKey: /etc/nginx/company.com.key
+      X509:
+        certificate: /etc/nginx/company.com.crt
+        certificateKey: /etc/nginx/company.com.key
 
     static:
       - filePath: /docker/static
