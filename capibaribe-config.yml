@@ -17,13 +17,9 @@ capibaribe:
     listen: :8081
 
     ssl:
-      enabled: true
+      enabled: false
       certificate: /etc/nginx/company.com.crt
       certificateKey: /etc/nginx/company.com.key
-      sslProtocols:
-        - TLSv1
-        - TLSv1.1
-        - TLSv1.2
 
     static:
       - filePath: /docker/static
