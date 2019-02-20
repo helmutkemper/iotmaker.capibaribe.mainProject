@@ -44,12 +44,25 @@ func main() {
 
 			server.HandleFunc("/", config.HandleFunc)
 
-			newServer := &http.Server{
-				Addr:     config.Listen,
-				Handler:  server,
-				ErrorLog: log.New(capib.DebugLogger{}, "", 0),
+			if config.Sll.Enabled == true {
+
+				newServer := &http.Server{
+					Addr:     config.Listen,
+					Handler:  server,
+					ErrorLog: log.New(capib.DebugLogger{}, "", 0),
+				}
+				log.Fatal(newServer.ListenAndServeTLS(config.Sll.Certificate, config.Sll.CertificateKey))
+
+			} else {
+
+				newServer := &http.Server{
+					Addr:     config.Listen,
+					Handler:  server,
+					ErrorLog: log.New(capib.DebugLogger{}, "", 0),
+				}
+				log.Fatal(newServer.ListenAndServe())
+
 			}
-			log.Fatal(newServer.ListenAndServe())
 
 		}(projectConfig)
 
