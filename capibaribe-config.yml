@@ -10,9 +10,14 @@ capibaribe:
 
     ssl:
       enabled: false
-      version:  #1.0 1.1 1.2 3.0
-        min: 1.0
-        max: 3.0
+
+      # TLS 1.0 - 10
+      # TLS 1.1 - 11
+      # TLS 1.2 - 12
+      # SSL 3.0 - 30
+      version:
+        min: 10
+        max: 30
       certificate: /etc/nginx/company.com.crt
       certificateKey: /etc/nginx/company.com.key
       curvePreferences:
@@ -49,8 +54,8 @@ capibaribe:
         - TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
         - TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305
         - TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305
-        - TLS_FALLBACK_SCSV uint16
-      X509:
+        - TLS_FALLBACK_SCSV
+      x509:
         certificate: /etc/nginx/company.com.crt
         certificateKey: /etc/nginx/company.com.key
 

@@ -57,18 +57,99 @@ func main() {
 					config := &tls.Config{Certificates: []tls.Certificate{cer}}
 				*/
 
+				var tlsMinVersion uint16 = 0
+				if config.Sll.Version.Min == 10 {
+					tlsMinVersion = tls.VersionTLS10
+				} else if config.Sll.Version.Min == 11 {
+					tlsMinVersion = tls.VersionTLS11
+				} else if config.Sll.Version.Min == 12 {
+					tlsMinVersion = tls.VersionTLS12
+				} else if config.Sll.Version.Min == 30 {
+					tlsMinVersion = tls.VersionSSL30
+				}
+
+				var tlsMaxVersion uint16 = 0
+				if config.Sll.Version.Max == 10 {
+					tlsMaxVersion = tls.VersionTLS10
+				} else if config.Sll.Version.Max == 11 {
+					tlsMaxVersion = tls.VersionTLS11
+				} else if config.Sll.Version.Max == 12 {
+					tlsMaxVersion = tls.VersionTLS12
+				} else if config.Sll.Version.Max == 30 {
+					tlsMaxVersion = tls.VersionSSL30
+				}
+
+				var curveIdList = make([]tls.CurveID, len(config.Sll.CurvePreferences.([]string)))
+				for k, v := range config.Sll.CurvePreferences.([]string) {
+					if v == "P256" {
+						curveIdList[k] = tls.CurveP256
+					} else if v == "P384" {
+						curveIdList[k] = tls.CurveP384
+					} else if v == "P521" {
+						curveIdList[k] = tls.CurveP521
+					} else if v == "X25519" {
+						curveIdList[k] = tls.X25519
+					}
+				}
+
+				var cipherSuitesList = make([]uint16, len(config.Sll.CipherSuites.([]string)))
+				for k, v := range config.Sll.CurvePreferences.([]string) {
+					if v == "TLS_RSA_WITH_RC4_128_SHA" {
+						cipherSuitesList[k] = tls.TLS_RSA_WITH_RC4_128_SHA
+					} else if v == "TLS_RSA_WITH_3DES_EDE_CBC_SHA" {
+						cipherSuitesList[k] = tls.TLS_RSA_WITH_3DES_EDE_CBC_SHA
+					} else if v == "TLS_RSA_WITH_AES_128_CBC_SHA" {
+						cipherSuitesList[k] = tls.TLS_RSA_WITH_AES_128_CBC_SHA
+					} else if v == "TLS_RSA_WITH_AES_256_CBC_SHA" {
+						cipherSuitesList[k] = tls.TLS_RSA_WITH_AES_256_CBC_SHA
+					} else if v == "TLS_RSA_WITH_AES_128_CBC_SHA256" {
+						cipherSuitesList[k] = tls.TLS_RSA_WITH_AES_128_CBC_SHA256
+					} else if v == "TLS_RSA_WITH_AES_128_GCM_SHA256" {
+						cipherSuitesList[k] = tls.TLS_RSA_WITH_AES_128_GCM_SHA256
+					} else if v == "TLS_RSA_WITH_AES_256_GCM_SHA384" {
+						cipherSuitesList[k] = tls.TLS_RSA_WITH_AES_256_GCM_SHA384
+					} else if v == "TLS_ECDHE_ECDSA_WITH_RC4_128_SHA" {
+						cipherSuitesList[k] = tls.TLS_ECDHE_ECDSA_WITH_RC4_128_SHA
+					} else if v == "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA" {
+						cipherSuitesList[k] = tls.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA
+					} else if v == "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA" {
+						cipherSuitesList[k] = tls.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA
+					} else if v == "TLS_ECDHE_RSA_WITH_RC4_128_SHA" {
+						cipherSuitesList[k] = tls.TLS_ECDHE_RSA_WITH_RC4_128_SHA
+					} else if v == "TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA" {
+						cipherSuitesList[k] = tls.TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA
+					} else if v == "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA" {
+						cipherSuitesList[k] = tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA
+					} else if v == "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA" {
+						cipherSuitesList[k] = tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA
+					} else if v == "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256" {
+						cipherSuitesList[k] = tls.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256
+					} else if v == "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256" {
+						cipherSuitesList[k] = tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256
+					} else if v == "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256" {
+						cipherSuitesList[k] = tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+					} else if v == "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256" {
+						cipherSuitesList[k] = tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
+					} else if v == "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384" {
+						cipherSuitesList[k] = tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+					} else if v == "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384" {
+						cipherSuitesList[k] = tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
+					} else if v == "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305" {
+						cipherSuitesList[k] = tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305
+					} else if v == "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305" {
+						cipherSuitesList[k] = tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305
+					} else if v == "TLS_FALLBACK_SCSV" {
+						cipherSuitesList[k] = tls.TLS_FALLBACK_SCSV
+					}
+				}
+
 				newServer := &http.Server{
 					TLSConfig: &tls.Config{
-						MinVersion:               tls.VersionTLS10,
-						MaxVersion:               tls.VersionSSL30,
-						CurvePreferences:         []tls.CurveID{tls.CurveP521, tls.CurveP384, tls.CurveP256},
-						PreferServerCipherSuites: true,
-						CipherSuites: []uint16{
-							tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
-							tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
-							tls.TLS_RSA_WITH_AES_256_GCM_SHA384,
-							tls.TLS_RSA_WITH_AES_256_CBC_SHA,
-						},
+						MinVersion:               tlsMinVersion,
+						MaxVersion:               tlsMaxVersion,
+						CurvePreferences:         curveIdList,
+						PreferServerCipherSuites: config.Sll.PreferServerCipherSuites,
+						CipherSuites:             cipherSuitesList,
 					},
 					Addr:     config.Listen,
 					Handler:  server,
