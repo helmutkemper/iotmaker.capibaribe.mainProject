@@ -29,6 +29,7 @@ func (el *MainConfig) Unmarshal(filePath string) error {
 }
 
 func (el *MainConfig) prepare() error {
+
 	var WeightsSum = 0.0
 
 	if el.Version != 1.0 {
