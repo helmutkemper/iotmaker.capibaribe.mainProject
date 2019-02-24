@@ -2,6 +2,7 @@ package capibaribe
 
 type pygocentrus struct {
 	Enabled       bool            `yaml:"enabled"`
+	Delay         delay           `yaml:"delay"`
 	DontRespond   float64         `yaml:"dontRespond"`
 	ChangeLength  float64         `yaml:"changeLength"`
 	ChangeContent changeContent   `yaml:"changeContent"`

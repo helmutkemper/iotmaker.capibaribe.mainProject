@@ -7,14 +7,29 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"regexp"
+	"sync"
 )
 
 type Project struct {
-	Listen      string      `yaml:"listen"`
-	Sll         ssl         `yaml:"ssl"`
-	Pygocentrus pygocentrus `yaml:"pygocentrus"`
-	Proxy       []proxy     `yaml:"proxy"`
-	Static      []static    `yaml:"static"`
+	Listen            string         `yaml:"listen"`
+	Sll               ssl            `yaml:"ssl"`
+	Pygocentrus       pygocentrus    `yaml:"pygocentrus"`
+	Proxy             []proxy        `yaml:"proxy"`
+	Static            []static       `yaml:"static"`
+	DebugServerEnable bool           `yaml:"debugServerEnable"`
+	waitGroup         sync.WaitGroup `yaml:"-"`
+}
+
+func (el *Project) WaitAddDelta() {
+	el.waitGroup.Add(1)
+}
+
+func (el *Project) WaitDone() {
+	el.waitGroup.Done()
+}
+
+func (el *Project) Wait() {
+	el.waitGroup.Wait()
 }
 
 func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
@@ -25,6 +40,10 @@ func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
 	var hostServer string
 	var serverKey int
 	var loopCounter = 0
+
+	el.waitGroup.Add(1)
+
+	defer el.waitGroup.Done()
 
 	if el.Proxy != nil {
 

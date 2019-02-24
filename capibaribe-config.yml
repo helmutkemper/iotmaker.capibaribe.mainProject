@@ -7,6 +7,7 @@ capibaribe:
   affluentRiverNameProject:
 
     listen: :8081
+    debugServerEnable: true
 
     ssl:
       enabled: false
@@ -64,7 +65,11 @@ capibaribe:
         serverPath: static
 
     pygocentrus:
-      enabled: true
+      enabled: false
+      delay:
+        range: 0.2
+        min: 100
+        max: 5000
       dontRespond: 0.0
       changeLength: 0.0
       changeContent:

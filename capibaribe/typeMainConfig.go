@@ -8,6 +8,7 @@ import (
 
 type MainConfig struct {
 	Version       float64            `yaml:"version"`
+	Etcd          etcd               `yaml:"etcd"`
 	AffluentRiver map[string]Project `yaml:"capibaribe"`
 }
 
@@ -19,6 +20,17 @@ func (el *MainConfig) Unmarshal(filePath string) error {
 	if err != nil {
 		return err
 	}
+
+	err = yaml.Unmarshal(fileContent, el)
+	if err != nil {
+		return err
+	}
+
+	return el.prepare()
+}
+
+func (el *MainConfig) UnmarshalByte(fileContent []byte) error {
+	var err error
 
 	err = yaml.Unmarshal(fileContent, el)
 	if err != nil {

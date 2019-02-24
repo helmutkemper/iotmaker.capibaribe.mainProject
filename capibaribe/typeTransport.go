@@ -5,8 +5,8 @@ import (
 	"github.com/helmutkemper/seelog"
 	"io"
 	"io/ioutil"
-	"math/rand"
 	"net/http"
+	"time"
 )
 
 type transport struct {
@@ -40,6 +40,23 @@ func (el *transport) roundTripReadBody(req *http.Request) (*http.Response, []byt
 
 func (el *transport) roundTripCopyBody(inBody []byte) io.ReadCloser {
 	return ioutil.NopCloser(bytes.NewReader(inBody))
+}
+
+func (el *transport) PygocentrusDelay(req *http.Request) (resp *http.Response, err error) {
+
+	seelog.Debugf("%v%v were delayed by a pygocentrus attack: delay content", req.RemoteAddr, req.RequestURI)
+
+	var inBody []byte
+	resp, inBody, err = el.roundTripReadBody(req)
+	if err != nil {
+		return nil, err
+	}
+
+	time.Sleep(time.Duration(inLineIntRange(el.Project.Pygocentrus.Delay.Min, el.Project.Pygocentrus.Delay.Max)) * time.Microsecond)
+
+	resp.Body = el.roundTripCopyBody(inBody)
+	return resp, nil
+
 }
 
 func (el *transport) PygocentrusDontRespond(req *http.Request) (resp *http.Response, err error) {
@@ -80,7 +97,7 @@ func (el *transport) PygocentrusChangeContent(req *http.Request) (resp *http.Res
 	forLength := el.Project.Pygocentrus.ChangeContent.GetRandomByMaxMin(length)
 	for i := 0; i != forLength; i += 1 {
 		indexChange := el.Project.Pygocentrus.ChangeContent.GetRandomByLength(length)
-		inBody = append(append(inBody[:indexChange], byte(rand.Intn(255))), inBody[indexChange+1:]...)
+		inBody = append(append(inBody[:indexChange], byte(inLineRand().Intn(255))), inBody[indexChange+1:]...)
 	}
 
 	resp.Body = el.roundTripCopyBody(inBody)
@@ -99,7 +116,7 @@ func (el *transport) PygocentrusChangeLength(req *http.Request) (resp *http.Resp
 	}
 	resp.Body = ioutil.NopCloser(bytes.NewReader(inBody))
 
-	randLength := rand.Intn(len(inBody))
+	randLength := inLineRand().Intn(len(inBody))
 
 	resp.ContentLength = int64(randLength)
 	//resp.Header.Set("Content-Length", strconv.Itoa(randLength))
