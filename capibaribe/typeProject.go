@@ -41,9 +41,9 @@ func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
 	var serverKey int
 	var loopCounter = 0
 
-	el.waitGroup.Add(1)
+	//el.waitGroup.Add(1)
 
-	defer el.waitGroup.Done()
+	//defer el.waitGroup.Done()
 
 	if el.Proxy != nil {
 
@@ -125,8 +125,9 @@ func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
 							el.Proxy[proxyKey].consecutiveSuccess += 1
 							el.Proxy[proxyKey].Servers[serverKey].consecutiveErrors = 0
 							el.Proxy[proxyKey].Servers[serverKey].consecutiveSuccess += 1
-							return
-							if el.Pygocentrus.Enabled == true {
+
+							if el.Pygocentrus.GetAttack() == true {
+								el.Pygocentrus.ClearAttack()
 								//seelog.Critical("return after a pygocentrus attack")
 								return
 							}

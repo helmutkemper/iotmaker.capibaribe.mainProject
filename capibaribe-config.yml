@@ -7,7 +7,7 @@ capibaribe:
   affluentRiverNameProject:
 
     listen: :8081
-    debugServerEnable: true
+    debugServerEnable: false
 
     ssl:
       enabled: false
@@ -65,26 +65,31 @@ capibaribe:
         serverPath: static
 
     pygocentrus:
-      enabled: false
+      enabled: true
       delay:
-        range: 0.2
-        min: 100
-        max: 5000
-      dontRespond: 0.0
+        rate: 0.1
+        # time em uS
+        min: 2000000
+        max: 5000000
+      dontRespond:
+        rate: 0.1
+          # time em uS
+          min: 2000000
+          max: 5000000
       changeLength: 0.0
       changeContent:
-        changeRateMin: 0.01
-        changeRateMax: 0.10
+        changeRateMin: 0.0
+        changeRateMax: 0.0
         changeBytesMin: 1
-        changeBytesMax: 1
-        rate: 0.5
-      deleteContent: 0.0
+        changeBytesMax: 10
+        rate: 0.1
+      deleteContent: 0.1
       changeHeaders:
         - number: 500
           header:
             - key: Content-Type
               value: application/json
-          rate: 0.1
+          rate: 0.0
 
     proxy:
       - ignorePort: true

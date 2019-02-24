@@ -43,7 +43,6 @@ func (el *transport) roundTripCopyBody(inBody []byte) io.ReadCloser {
 }
 
 func (el *transport) PygocentrusDelay(req *http.Request) (resp *http.Response, err error) {
-
 	seelog.Debugf("%v%v were delayed by a pygocentrus attack: delay content", req.RemoteAddr, req.RequestURI)
 
 	var inBody []byte
@@ -60,14 +59,14 @@ func (el *transport) PygocentrusDelay(req *http.Request) (resp *http.Response, e
 }
 
 func (el *transport) PygocentrusDontRespond(req *http.Request) (resp *http.Response, err error) {
-
 	seelog.Debugf("%v%v were eaten by a pygocentrus attack: dont respond", req.RemoteAddr, req.RequestURI)
+
+	time.Sleep(time.Duration(inLineIntRange(el.Project.Pygocentrus.Delay.Min, el.Project.Pygocentrus.Delay.Max)) * time.Microsecond)
 	return nil, nil
 
 }
 
 func (el *transport) PygocentrusDeleteContent(req *http.Request) (resp *http.Response, err error) {
-
 	seelog.Debugf("%v%v were eaten by a pygocentrus attack: delete content", req.RemoteAddr, req.RequestURI)
 
 	var inBody []byte
@@ -84,7 +83,6 @@ func (el *transport) PygocentrusDeleteContent(req *http.Request) (resp *http.Res
 }
 
 func (el *transport) PygocentrusChangeContent(req *http.Request) (resp *http.Response, err error) {
-
 	seelog.Debugf("%v%v were eaten by a pygocentrus attack: change content", req.RemoteAddr, req.RequestURI)
 
 	var inBody []byte
@@ -106,7 +104,6 @@ func (el *transport) PygocentrusChangeContent(req *http.Request) (resp *http.Res
 }
 
 func (el *transport) PygocentrusChangeLength(req *http.Request) (resp *http.Response, err error) {
-
 	seelog.Debugf("%v%v were eaten by a pygocentrus attack: change length", req.RemoteAddr, req.RequestURI)
 
 	var inBody []byte
@@ -135,27 +132,43 @@ func (el *transport) RoundTrip(req *http.Request) (resp *http.Response, err erro
 
 		var list = make([]pygocentrusFunc, 0)
 
-		if el.Project.Pygocentrus.DontRespond != 0.0 {
+		if el.Project.Pygocentrus.Delay.Rate != 0.0 {
 
-			list = append(list, el.PygocentrusDontRespond)
+			if el.Project.Pygocentrus.Delay.Rate >= inLineRand().Float64() {
+				list = append(list, el.PygocentrusDelay)
+			}
+
+		}
+
+		if el.Project.Pygocentrus.DontRespond.Rate != 0.0 {
+
+			if el.Project.Pygocentrus.DontRespond.Rate >= inLineRand().Float64() {
+				list = append(list, el.PygocentrusDontRespond)
+			}
 
 		}
 
 		if el.Project.Pygocentrus.DeleteContent != 0.0 {
 
-			list = append(list, el.PygocentrusDeleteContent)
+			if el.Project.Pygocentrus.DeleteContent >= inLineRand().Float64() {
+				list = append(list, el.PygocentrusDeleteContent)
+			}
 
 		}
 
 		if el.Project.Pygocentrus.ChangeContent.Rate != 0.0 {
 
-			list = append(list, el.PygocentrusChangeContent)
+			if el.Project.Pygocentrus.ChangeContent.Rate >= inLineRand().Float64() {
+				list = append(list, el.PygocentrusChangeContent)
+			}
 
 		}
 
 		if el.Project.Pygocentrus.ChangeLength != 0.0 {
 
-			list = append(list, el.PygocentrusChangeLength)
+			if el.Project.Pygocentrus.ChangeLength <= inLineRand().Float64() {
+				list = append(list, el.PygocentrusChangeLength)
+			}
 
 		}
 
@@ -163,9 +176,14 @@ func (el *transport) RoundTrip(req *http.Request) (resp *http.Response, err erro
 		   if el.Project.Pygocentrus.ChangeHeaders[0].Rate != 0.0 {}
 		*/
 
-		randAttack = inLineRand().Intn(len(list))
-		return list[randAttack](req)
+		listLength := len(list)
+		if listLength != 0 {
+			el.Project.Pygocentrus.SetAttack()
+			randAttack = inLineRand().Intn(len(list))
+			return list[randAttack](req)
+		}
 
+		return el.RoundTripper.RoundTrip(req)
 	}
 
 	return el.RoundTripper.RoundTrip(req)

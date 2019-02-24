@@ -1,10 +1,15 @@
 # Capibaribe
 
-> This project is in test.
+> This project is under test and have bugs
 
-This is the preliminary version of my version of the reverse proxy, designed to be simple and fast. 
-The initial idea is to allow a single machine to receive multiple small sites, and can host then at a low 
-cost.
+The initial idea is to enable the micro-service developer to simulate network / transport errors in their own software 
+development environment and understand how services will behave in error conditions.
+
+> Portuguese:
+>
+> A ideia inicial é permitir ao desenvolvedor de microsserviços a possibilidade de simular erros de rede/transporte no 
+> seu próprio ambiente de desenvolvimento de software e entender como os serviços vão se comportar em condições de erro.
+
 
 To run this project:
 
@@ -23,6 +28,197 @@ or
 
 ```
 
+## SSL
+
+SSL max and min versions:
+
+| Version                                    | Value                                      |
+|--------------------------------------------|--------------------------------------------|
+| TLS 1.0                                    | 10                                         |
+| TLS 1.1                                    | 11                                         |
+| TLS 1.2                                    | 12                                         |
+| SSL 3.0                                    | 30                                         |
+
+```yaml
+
+    ssl:
+      enabled: true
+      version:
+        min: 10
+        max: 30
+
+```
+
+Certificate and certificate key
+
+Filenames containing a certificate and matching private key for the server must be provided if neither the Server's 
+TLSConfig.Certificates nor TLSConfig.GetCertificate are populated. If the certificate is signed by a certificate 
+authority, the certFile should be the concatenation of the server's certificate, any intermediates, and the CA's 
+certificate.
+
+
+```yaml
+
+    ssl:
+      enabled: true
+      certificate: ./company.com.crt
+      certificateKey: ./company.com.key
+
+```
+
+CurvePreferences contains the elliptic curves that will be used in an ECDHE handshake, in preference order. If empty, 
+the default will be used.
+
+See https://www.iana.org/assignments/tls-parameters/tls-parameters.xml#tls-parameters-8
+
+```yaml
+
+    ssl:
+      enabled: true
+      curvePreferences:
+        - P256
+        - P384
+        - P521
+        - X25519
+
+```
+
+PreferServerCipherSuites controls whether the server selects the client's most preferred ciphersuite, or the server's 
+most preferred ciphersuite. If true then the server's preference, as expressed in the order of elements in CipherSuites, 
+is used.
+	
+```yaml
+
+    ssl:
+      enabled: true
+      preferServerCipherSuites: true
+
+```
+
+CipherSuites is a list of supported cipher suites. If CipherSuites is nil, TLS uses a list of suites supported by the 
+implementation.
+
+```yaml
+
+    ssl:
+      enabled: true
+      cipherSuites:
+        - TLS_RSA_WITH_RC4_128_SHA
+        - TLS_RSA_WITH_3DES_EDE_CBC_SHA
+        - TLS_RSA_WITH_AES_128_CBC_SHA
+        - TLS_RSA_WITH_AES_256_CBC_SHA
+        - TLS_RSA_WITH_AES_128_CBC_SHA256
+        - TLS_RSA_WITH_AES_128_GCM_SHA256
+        - TLS_RSA_WITH_AES_256_GCM_SHA384
+        - TLS_ECDHE_ECDSA_WITH_RC4_128_SHA
+        - TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA
+        - TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA
+        - TLS_ECDHE_RSA_WITH_RC4_128_SHA
+        - TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA
+        - TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA
+        - TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA
+        - TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256
+        - TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256
+        - TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        - TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
+        - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        - TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
+        - TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305
+        - TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305
+        - TLS_FALLBACK_SCSV
+
+```
+
+Reads and parses a public/private key pair from a pair of files. The files must contain PEM encoded data. The 
+certificate file may contain intermediate certificates following the leaf certificate to form a certificate chain. 
+
+```yaml
+
+    ssl:
+      enabled: true
+      x509:
+        certificate: ./company.com.crt
+        certificateKey: ./company.com.key
+
+```
+
+The static server functionality was made to allow a static file service contained on the primary server
+
+```yaml
+
+    static:
+      - filePath: /disk_path/static
+        serverPath: static
+
+```
+
+Pygocentrus is the scientific name of a family of red piranhas common in the rivers of NE Brazil, and in our case, it is 
+the configuration of the system of random failures. Use 'rate' 0.0 to disable functionality or 'rate' values x/100 for 
+select percentage of attacks.
+
+| Version        | Value                                                                                               |
+|----------------|-----------------------------------------------------------------------------------------------------|
+| delay          | The information is delayed for a random period of time chosen between the maximum and minimum values|
+|                | determined in microseconds                                                                          |
+| dontRespond    | The information is deleted after a random period of time chosen between the maximum and minimum     |
+|                | values determined in microseconds                                                                   |
+| changeLength   | The size of the transmitted information is randomly adulterated                                     |
+| changeContent  | Some bytes of the information carried are randomly changed by a random bytes ( changeRate precedes  |
+|                | changeBytes )                                                                                       |
+| deleteContent  | All bytes of the information carried are changed by 0x00                                            |
+| changeHeaders  | **not yet implemented**                                                                             |
+
+```yaml
+
+    pygocentrus:
+      enabled: true
+      delay:
+        rate: 0.1
+        # time em uS
+        min: 2000000
+        max: 5000000
+      dontRespond:
+        rate: 0.1
+        # time em uS
+        min: 2000000
+        max: 5000000
+      changeLength: 0.0
+      changeContent:
+        changeRateMin: 0.0
+        changeRateMax: 0.0
+        changeBytesMin: 1
+        changeBytesMax: 10
+        rate: 0.1
+      deleteContent: 0.1
+      changeHeaders:
+        - number: 500
+          header:
+            - key: Content-Type
+              value: application/json
+          rate: 0.0
+
+```
+
+
+
+```yaml
+```
+
+```yaml
+```
+
+```yaml
+```
+
+```yaml
+```
+
+```yaml
+```
+
+```yaml
+```
+
 How to configure:
 
 ```yaml
@@ -31,18 +227,61 @@ version: 1.0
 
 capibaribe:
 
-  affluentRiverName:
+  affluentRiverNameProject:
 
     listen: :8081
+    debugServerEnable: false
 
     ssl:
-      enabled: true
+      enabled: false
+
+      # TLS 1.0 - 10
+      # TLS 1.1 - 11
+      # TLS 1.2 - 12
+      # SSL 3.0 - 30
+      version:
+        min: 10
+        max: 30
       certificate: /etc/nginx/company.com.crt
       certificateKey: /etc/nginx/company.com.key
-      sslProtocols:
-        - TLSv1
-        - TLSv1.1
-        - TLSv1.2
+      curvePreferences:
+        - P256
+        - P384
+        - P521
+        - X25519
+      preferServerCipherSuites: false
+
+      # A list of cipher suite IDs that are, or have been, implemented by this
+      # package.
+      #
+      # Taken from https://www.iana.org/assignments/tls-parameters/tls-parameters.xml
+      cipherSuites:
+        - TLS_RSA_WITH_RC4_128_SHA
+        - TLS_RSA_WITH_3DES_EDE_CBC_SHA
+        - TLS_RSA_WITH_AES_128_CBC_SHA
+        - TLS_RSA_WITH_AES_256_CBC_SHA
+        - TLS_RSA_WITH_AES_128_CBC_SHA256
+        - TLS_RSA_WITH_AES_128_GCM_SHA256
+        - TLS_RSA_WITH_AES_256_GCM_SHA384
+        - TLS_ECDHE_ECDSA_WITH_RC4_128_SHA
+        - TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA
+        - TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA
+        - TLS_ECDHE_RSA_WITH_RC4_128_SHA
+        - TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA
+        - TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA
+        - TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA
+        - TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256
+        - TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256
+        - TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        - TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
+        - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        - TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
+        - TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305
+        - TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305
+        - TLS_FALLBACK_SCSV
+      x509:
+        certificate: /etc/nginx/company.com.crt
+        certificateKey: /etc/nginx/company.com.key
 
     static:
       - filePath: /docker/static
@@ -50,21 +289,26 @@ capibaribe:
 
     pygocentrus:
       enabled: true
-      dontRespond: 0.0
+      delay:
+        rate: 0.1
+        # time em uS
+        min: 2000000
+        max: 5000000
+      dontRespond: 0.1
       changeLength: 0.0
       changeContent:
-        changeRateMin: 0.01
-        changeRateMax: 0.10
+        changeRateMin: 0.0
+        changeRateMax: 0.0
         changeBytesMin: 1
-        changeBytesMax: 1
-        rate: 0.5
-      deleteContent: 0.0
+        changeBytesMax: 10
+        rate: 0.1
+      deleteContent: 0.1
       changeHeaders:
         - number: 500
           header:
             - key: Content-Type
               value: application/json
-          rate: 0.1
+          rate: 0.0
 
     proxy:
       - ignorePort: true
