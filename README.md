@@ -199,9 +199,135 @@ select percentage of attacks.
 
 ```
 
+proxy is the reverse proxy functionality, where a service can be pointed to multiple routes within the 
+network.
+
+| Key                      | Value                                                                                       |
+|--------------------------|---------------------------------------------------------------------------------------------|
+| ignorePort               | if true, process all requests to a given address host                                       |
+| host                     | address to be monitored                                                                     |
+| bind                     | allowed list of addresses                                                                   |
+| loadBalancing            | determines how load balancing will be made for each route on the server                     |
+| path                     | does not apply to proxy functionality                                                       |
+| maxAttemptToRescueLoop   | maximum number of attempts before an error is propagated to the end user                    |
+| healthCheck              | checks the integrity of a route at periodic intervals                                       |
+| servers                  | list with all available servers and hosts for the main host                                 |
+
+
+
+| loadBalancing            | description                                                                                 |
+|--------------------------|---------------------------------------------------------------------------------------------|
+| roundRobin               | choose the route to be used according to the percentage value based on the parameter weight |
+| lowTimeResponseHeader    | search for the route with the lowest initial response time                                  |
+| lowTimeResponseLastByte  | search for the route with the lowest response time of the last byte                         |
+| random                   | makes a totally random choice                                                               |
+| overLoad                 | throws all the load to the first server until the maximum number of connections is reached  |
+| ipv4Hash                 | 000.000.*: Where you have the asterisk goes to a server route                               |
+| ipv6Hash                 | ips list                                                                                    |
+| hash                     | request uri                                                                                 |
+
+
+
+| healthCheck              | description                                                                                 |
+|--------------------------|---------------------------------------------------------------------------------------------|
+| enabled                  |                                                                                             |
+| interval                 |                                                                                             |
+| fails                    |                                                                                             |
+| passes                   |                                                                                             |
+| uri                      |                                                                                             |
+| suspendInterval          |                                                                                             |
+| match                    |                                                                                             |
+
+
+
+| match                    | description                                                                                 |
+|--------------------------|---------------------------------------------------------------------------------------------|
+| status                   |                                                                                             |
+| header                   |                                                                                             |
+| body                     |                                                                                             |
+
+
+
+| status                   | description                                                                                 |
+|--------------------------|---------------------------------------------------------------------------------------------|
+| expReg                   |                                                                                             |
+| value                    |                                                                                             |
+| in                       |                                                                                             |
+| notIn                    |                                                                                             |
+
+
+
+| header                   | description                                                                                 |
+|--------------------------|---------------------------------------------------------------------------------------------|
+| key                      |                                                                                             |
+| value                    |                                                                                             |
+
+
+
+| body                     | description                                                                                 |
+|--------------------------|---------------------------------------------------------------------------------------------|
+| expReg                   |                                                                                             |
+
 
 
 ```yaml
+
+    proxy:
+      - ignorePort: true
+        host: 127.0.0.1
+        # roundRobin -              joga a carga para o próximo servidor
+        # lowTimeResponseHeader -   procura o servidor com menor tempo de resposta inicial
+        # lowTimeResponseLastByte - procura o servidor com menor tempo de resposta do último byte
+        # random -                  joga a carga de forma aleatória
+        # overLoad -                joga todas a carga para o primeiro servidor até o número máximo de conexões ser atingido
+        # ipv4Hash -                000.000.*: de onde tiver o asterisco vai para um servidor
+        # ipv6Hash -                lista de ips
+        # hash -                    request_uri
+        bind:
+          - host: 127.0.0.1
+            ignorePort: true
+        loadBalancing: roundRobin # roundRobin | lowTimeResponseHeader | lowTimeResponseLastByte | random | overLoad | ipv4Hash | ipv6Hash | hash
+        path: /
+        maxAttemptToRescueLoop: 10
+        healthCheck:
+          enabled: true
+          # padrão: 5 segundos
+          interval: 5000
+          # numeros de falhas consecutivas para erro
+          fails: 3
+          # numeros de ok consecutivos para zerar falhas
+          passes: 2
+          # caminho de teste
+          uri: /some/path
+          # se 0 suspende para sempre
+          # se !0 suspende por milesegundos
+          suspendInterval: 30000
+          match:
+            status:
+              - expReg: expreg
+                value: 300
+                in:
+                  - min: 200
+                    max: 299
+                notIn:
+                  - min: 200
+                    max: 299
+            header:
+              - key: Content-Type
+                value: text/html
+            body:
+              - expreg
+        servers:
+          - host: http://localhost:3000
+            weight: 1
+            overLoad: 1000000
+          - host: http://localhost:3000
+            weight: 1
+            overLoad: 1000000
+          - host: http://localhost:3000
+            weight: 1
+            overLoad: 1000000
+
 ```
 
 ```yaml
