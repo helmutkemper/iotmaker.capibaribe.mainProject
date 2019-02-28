@@ -1,3 +1,5 @@
+//todo: tem que ter um log avisando quando foi a ultima requisição
+
 package main
 
 import (
