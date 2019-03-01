@@ -4,12 +4,12 @@ package main
 
 import (
 	capib "./capibaribe"
-	"context"
+	//"context"
 	"crypto/tls"
 	"encoding/json"
 	"flag"
-	"fmt"
-	"github.com/etcd-io/etcd/clientv3"
+	//"fmt"
+	//"github.com/etcd-io/etcd/clientv3"
 	"log"
 	"net/http"
 	"os"
@@ -22,7 +22,7 @@ var (
 	requestTimeout = 10 * time.Second
 )
 
-func etcdTest() {
+/*func etcdTest() {
 	ctx, _ := context.WithTimeout(context.Background(), requestTimeout)
 	cli, _ := clientv3.New(clientv3.Config{
 		DialTimeout: dialTimeout,
@@ -33,9 +33,9 @@ func etcdTest() {
 	wt := clientv3.NewWatcher(cli)
 
 	GetSingleValueDemo(ctx, kv, wt)
-}
+}*/
 
-func GetSingleValueDemo(ctx context.Context, kv clientv3.KV, wt clientv3.Watcher) {
+/*func GetSingleValueDemo(ctx context.Context, kv clientv3.KV, wt clientv3.Watcher) {
 	go func() {
 
 		rch := wt.Watch(context.Background(), "key")
@@ -70,7 +70,7 @@ func GetSingleValueDemo(ctx context.Context, kv clientv3.KV, wt clientv3.Watcher
 	fmt.Println("Value: ", string(gr.Kvs[0].Value), "Revision: ", gr.Header.Revision)
 
 	kv.Delete(ctx, "key", clientv3.WithPrefix())
-}
+}*/
 
 /*var mutexTerminateServer map[string]*sync.WaitGroup
 
@@ -115,7 +115,7 @@ func main() {
 
 func loadConf(filePath, howToConfig, etcdConn, etcdKey string) {
 	var err error
-	var etcdKeyConfig *clientv3.GetResponse
+	//var etcdKeyConfig *clientv3.GetResponse
 
 	//config = capib.MainConfig{}
 
@@ -147,7 +147,7 @@ func loadConf(filePath, howToConfig, etcdConn, etcdKey string) {
 
 	config.Etcd.Prepare()
 
-	ctx, _ := context.WithTimeout(context.Background(), config.Etcd.RequestTimeout)
+	/*ctx, _ := context.WithTimeout(context.Background(), config.Etcd.RequestTimeout)
 	cli, _ := clientv3.New(clientv3.Config{
 		DialTimeout: config.Etcd.DialTimeOut,
 		Endpoints:   config.Etcd.Connection,
@@ -170,7 +170,7 @@ func loadConf(filePath, howToConfig, etcdConn, etcdKey string) {
 			log.Fatal(err.Error())
 		}
 
-	}
+	}*/
 
 	for projectName, projectConfig := range config.AffluentRiver {
 
