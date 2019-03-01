@@ -1,5 +1,5 @@
 //todo: tem que ter um log avisando quando foi a ultima requisição
-
+//todo: microsservico deveria ter um id inicial que permita seguir uma requisição em caso de erro
 package main
 
 import (
