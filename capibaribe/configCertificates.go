@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-func ConfigCertificates(config ssl, server *http.ServeMux) {
+func ConfigCertificates(config ssl, server *http.Server) {
 	var err error
 
 	if config.Enabled == true {
@@ -117,46 +117,14 @@ func ConfigCertificates(config ssl, server *http.ServeMux) {
 			}
 		}
 
-		newServer := &http.Server{
-			TLSConfig: &tls.Config{
-				MinVersion:               tlsMinVersion,
-				MaxVersion:               tlsMaxVersion,
-				CurvePreferences:         curveIdList,
-				PreferServerCipherSuites: config.PreferServerCipherSuites,
-				CipherSuites:             cipherSuitesList,
-				Certificates:             []tls.Certificate{certificatesList},
-			},
-			//TLSNextProto:               make(map[string]func(*http.Server, *tls.Conn, http.Handler), 0),
-			Addr:    config.Listen,
-			Handler: server,
+		server.TLSConfig = &tls.Config{
+			MinVersion:               tlsMinVersion,
+			MaxVersion:               tlsMaxVersion,
+			CurvePreferences:         curveIdList,
+			PreferServerCipherSuites: config.PreferServerCipherSuites,
+			CipherSuites:             cipherSuitesList,
+			Certificates:             []tls.Certificate{certificatesList},
 		}
-
-		if config.DebugServerEnable == true {
-			newServer.ErrorLog = log.New(capib.DebugLogger{}, "", 0)
-		}
-
-		if config.Certificate != "" && config.CertificateKey != "" {
-
-			log.Fatal(newServer.ListenAndServeTLS(config.Certificate, config.CertificateKey))
-
-		} else {
-
-			log.Fatal(newServer.ListenAndServe())
-
-		}
-
-	} else {
-
-		newServer := &http.Server{
-			Addr:    config.Listen,
-			Handler: server,
-		}
-
-		if config.DebugServerEnable == true {
-			newServer.ErrorLog = log.New(capib.DebugLogger{}, "", 0)
-		}
-
-		log.Fatal(newServer.ListenAndServe())
 
 	}
 

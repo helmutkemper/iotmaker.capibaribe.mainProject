@@ -6,7 +6,8 @@ capibaribe:
 
   affluentRiverNameProject:
 
-    listen: :8081
+    listenAndServer:
+      inAddress: 8081
     debugServerEnable: false
 
     ssl:

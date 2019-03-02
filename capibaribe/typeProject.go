@@ -2,7 +2,6 @@ package capibaribe
 
 import (
 	"github.com/helmutkemper/seelog"
-	"log"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -11,15 +10,15 @@ import (
 )
 
 type Project struct {
-	Listen            string         `yaml:"listen"`
-	ListenAndServer   string         `yaml:"listenAndServer"`
-	Sll               ssl            `yaml:"ssl"`
-	Protocol          string         `yaml:"protocol"`
-	Pygocentrus       pygocentrus    `yaml:"pygocentrus"`
-	Proxy             []proxy        `yaml:"proxy"`
-	Static            []static       `yaml:"static"`
-	DebugServerEnable bool           `yaml:"debugServerEnable"`
-	waitGroup         sync.WaitGroup `yaml:"-"`
+	ListenAndServer   ListenAndServer `yaml:"listenAndServer"`
+	Sll               ssl             `yaml:"ssl"`
+	Protocol          string          `yaml:"protocol"`
+	Pygocentrus       pygocentrus     `yaml:"pygocentrus"`
+	Proxy             []proxy         `yaml:"proxy"`
+	Static            []static        `yaml:"static"`
+	DebugServerEnable bool            `yaml:"debugServerEnable"`
+	Listen            Listen          `yaml:"-"`
+	waitGroup         sync.WaitGroup  `yaml:"-"`
 }
 
 func (el *Project) WaitAddDelta() {
@@ -108,7 +107,7 @@ func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
 
 						proxy := httputil.NewSingleHostReverseProxy(rpURL)
 
-						proxy.ErrorLog = log.New(DebugLogger{}, "", 0)
+						//						proxy.ErrorLog = log.New(DebugLogger{}, "", 0)
 
 						proxy.Transport = &transport{RoundTripper: http.DefaultTransport, Project: el}
 
@@ -146,13 +145,8 @@ func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
 						//fixme: colocar um log aqui
 
 					}
-
 				}
-
 			}
-
 		}
-
 	}
-
 }
