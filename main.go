@@ -174,169 +174,175 @@ func loadConf(filePath, howToConfig, etcdConn, etcdKey string) {
 
 	for projectName, projectConfig := range config.AffluentRiver {
 
-		go func(name string, config capib.Project) {
-			var err error
+		if projectConfig.ListenAndServer != "" {
 
-			//mutexTerminateServer[ name ].Add(1)
+			go func(name string, config capib.Project) {
+				var err error
 
-			server := http.NewServeMux()
+				//mutexTerminateServer[ name ].Add(1)
 
-			//defer mutexTerminateServer[ name ].Done()
+				server := http.NewServeMux()
 
-			for _, staticPath := range config.Static {
+				//defer mutexTerminateServer[ name ].Done()
 
-				if _, err = os.Stat(staticPath.FilePath); os.IsNotExist(err) {
-					log.Fatalf("static dir error: %v\n", err.Error())
-				}
+				capib.ConfigStatic(&config.Static, server)
 
-				server.Handle("/"+staticPath.ServerPath+"/", http.StripPrefix("/"+staticPath.ServerPath+"/", http.FileServer(http.Dir(staticPath.FilePath))))
-			}
+				server.HandleFunc("/", config.HandleFunc)
 
-			server.HandleFunc("/", config.HandleFunc)
+				if config.Sll.Enabled == true {
 
-			if config.Sll.Enabled == true {
+					var certificatesList = tls.Certificate{}
 
-				var certificatesList = tls.Certificate{}
+					if config.Sll.X509.Certificate != "" && config.Sll.X509.CertificateKey != "" {
 
-				if config.Sll.X509.Certificate != "" && config.Sll.X509.CertificateKey != "" {
+						if _, err = os.Stat(config.Sll.X509.Certificate); os.IsNotExist(err) {
+							log.Fatalf("sll x509 certificate error: %v\n", err.Error())
+						}
 
-					if _, err = os.Stat(config.Sll.X509.Certificate); os.IsNotExist(err) {
-						log.Fatalf("sll x509 certificate error: %v\n", err.Error())
+						if _, err = os.Stat(config.Sll.X509.CertificateKey); os.IsNotExist(err) {
+							log.Fatalf("sll x509 certificate key error: %v\n", err.Error())
+						}
+
+						certificatesList, err = tls.LoadX509KeyPair(config.Sll.X509.Certificate, config.Sll.X509.CertificateKey)
+						if err != nil {
+							log.Fatalf("sll x509 certificate load pair error: %v\n", err.Error())
+						}
+
 					}
 
-					if _, err = os.Stat(config.Sll.X509.CertificateKey); os.IsNotExist(err) {
-						log.Fatalf("sll x509 certificate key error: %v\n", err.Error())
+					var tlsMinVersion uint16 = 0
+					if config.Sll.Version.Min == 10 {
+						tlsMinVersion = tls.VersionTLS10
+					} else if config.Sll.Version.Min == 11 {
+						tlsMinVersion = tls.VersionTLS11
+					} else if config.Sll.Version.Min == 12 {
+						tlsMinVersion = tls.VersionTLS12
+					} else if config.Sll.Version.Min == 30 {
+						tlsMinVersion = tls.VersionSSL30
 					}
 
-					certificatesList, err = tls.LoadX509KeyPair(config.Sll.X509.Certificate, config.Sll.X509.CertificateKey)
-					if err != nil {
-						log.Fatalf("sll x509 certificate load pair error: %v\n", err.Error())
+					var tlsMaxVersion uint16 = 0
+					if config.Sll.Version.Max == 10 {
+						tlsMaxVersion = tls.VersionTLS10
+					} else if config.Sll.Version.Max == 11 {
+						tlsMaxVersion = tls.VersionTLS11
+					} else if config.Sll.Version.Max == 12 {
+						tlsMaxVersion = tls.VersionTLS12
+					} else if config.Sll.Version.Max == 30 {
+						tlsMaxVersion = tls.VersionSSL30
 					}
 
-				}
-
-				var tlsMinVersion uint16 = 0
-				if config.Sll.Version.Min == 10 {
-					tlsMinVersion = tls.VersionTLS10
-				} else if config.Sll.Version.Min == 11 {
-					tlsMinVersion = tls.VersionTLS11
-				} else if config.Sll.Version.Min == 12 {
-					tlsMinVersion = tls.VersionTLS12
-				} else if config.Sll.Version.Min == 30 {
-					tlsMinVersion = tls.VersionSSL30
-				}
-
-				var tlsMaxVersion uint16 = 0
-				if config.Sll.Version.Max == 10 {
-					tlsMaxVersion = tls.VersionTLS10
-				} else if config.Sll.Version.Max == 11 {
-					tlsMaxVersion = tls.VersionTLS11
-				} else if config.Sll.Version.Max == 12 {
-					tlsMaxVersion = tls.VersionTLS12
-				} else if config.Sll.Version.Max == 30 {
-					tlsMaxVersion = tls.VersionSSL30
-				}
-
-				var curveIdList = make([]tls.CurveID, len(config.Sll.CurvePreferences.([]string)))
-				for k, v := range config.Sll.CurvePreferences.([]string) {
-					if v == "P256" {
-						curveIdList[k] = tls.CurveP256
-					} else if v == "P384" {
-						curveIdList[k] = tls.CurveP384
-					} else if v == "P521" {
-						curveIdList[k] = tls.CurveP521
-					} else if v == "X25519" {
-						curveIdList[k] = tls.X25519
+					var curveIdList = make([]tls.CurveID, len(config.Sll.CurvePreferences.([]string)))
+					for k, v := range config.Sll.CurvePreferences.([]string) {
+						if v == "P256" {
+							curveIdList[k] = tls.CurveP256
+						} else if v == "P384" {
+							curveIdList[k] = tls.CurveP384
+						} else if v == "P521" {
+							curveIdList[k] = tls.CurveP521
+						} else if v == "X25519" {
+							curveIdList[k] = tls.X25519
+						}
 					}
-				}
 
-				var cipherSuitesList = make([]uint16, len(config.Sll.CipherSuites.([]string)))
-				for k, v := range config.Sll.CurvePreferences.([]string) {
-					if v == "TLS_RSA_WITH_RC4_128_SHA" {
-						cipherSuitesList[k] = tls.TLS_RSA_WITH_RC4_128_SHA
-					} else if v == "TLS_RSA_WITH_3DES_EDE_CBC_SHA" {
-						cipherSuitesList[k] = tls.TLS_RSA_WITH_3DES_EDE_CBC_SHA
-					} else if v == "TLS_RSA_WITH_AES_128_CBC_SHA" {
-						cipherSuitesList[k] = tls.TLS_RSA_WITH_AES_128_CBC_SHA
-					} else if v == "TLS_RSA_WITH_AES_256_CBC_SHA" {
-						cipherSuitesList[k] = tls.TLS_RSA_WITH_AES_256_CBC_SHA
-					} else if v == "TLS_RSA_WITH_AES_128_CBC_SHA256" {
-						cipherSuitesList[k] = tls.TLS_RSA_WITH_AES_128_CBC_SHA256
-					} else if v == "TLS_RSA_WITH_AES_128_GCM_SHA256" {
-						cipherSuitesList[k] = tls.TLS_RSA_WITH_AES_128_GCM_SHA256
-					} else if v == "TLS_RSA_WITH_AES_256_GCM_SHA384" {
-						cipherSuitesList[k] = tls.TLS_RSA_WITH_AES_256_GCM_SHA384
-					} else if v == "TLS_ECDHE_ECDSA_WITH_RC4_128_SHA" {
-						cipherSuitesList[k] = tls.TLS_ECDHE_ECDSA_WITH_RC4_128_SHA
-					} else if v == "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA" {
-						cipherSuitesList[k] = tls.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA
-					} else if v == "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA" {
-						cipherSuitesList[k] = tls.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA
-					} else if v == "TLS_ECDHE_RSA_WITH_RC4_128_SHA" {
-						cipherSuitesList[k] = tls.TLS_ECDHE_RSA_WITH_RC4_128_SHA
-					} else if v == "TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA" {
-						cipherSuitesList[k] = tls.TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA
-					} else if v == "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA" {
-						cipherSuitesList[k] = tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA
-					} else if v == "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA" {
-						cipherSuitesList[k] = tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA
-					} else if v == "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256" {
-						cipherSuitesList[k] = tls.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256
-					} else if v == "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256" {
-						cipherSuitesList[k] = tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256
-					} else if v == "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256" {
-						cipherSuitesList[k] = tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-					} else if v == "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256" {
-						cipherSuitesList[k] = tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
-					} else if v == "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384" {
-						cipherSuitesList[k] = tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-					} else if v == "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384" {
-						cipherSuitesList[k] = tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
-					} else if v == "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305" {
-						cipherSuitesList[k] = tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305
-					} else if v == "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305" {
-						cipherSuitesList[k] = tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305
-					} else if v == "TLS_FALLBACK_SCSV" {
-						cipherSuitesList[k] = tls.TLS_FALLBACK_SCSV
+					var cipherSuitesList = make([]uint16, len(config.Sll.CipherSuites.([]string)))
+					for k, v := range config.Sll.CurvePreferences.([]string) {
+						if v == "TLS_RSA_WITH_RC4_128_SHA" {
+							cipherSuitesList[k] = tls.TLS_RSA_WITH_RC4_128_SHA
+						} else if v == "TLS_RSA_WITH_3DES_EDE_CBC_SHA" {
+							cipherSuitesList[k] = tls.TLS_RSA_WITH_3DES_EDE_CBC_SHA
+						} else if v == "TLS_RSA_WITH_AES_128_CBC_SHA" {
+							cipherSuitesList[k] = tls.TLS_RSA_WITH_AES_128_CBC_SHA
+						} else if v == "TLS_RSA_WITH_AES_256_CBC_SHA" {
+							cipherSuitesList[k] = tls.TLS_RSA_WITH_AES_256_CBC_SHA
+						} else if v == "TLS_RSA_WITH_AES_128_CBC_SHA256" {
+							cipherSuitesList[k] = tls.TLS_RSA_WITH_AES_128_CBC_SHA256
+						} else if v == "TLS_RSA_WITH_AES_128_GCM_SHA256" {
+							cipherSuitesList[k] = tls.TLS_RSA_WITH_AES_128_GCM_SHA256
+						} else if v == "TLS_RSA_WITH_AES_256_GCM_SHA384" {
+							cipherSuitesList[k] = tls.TLS_RSA_WITH_AES_256_GCM_SHA384
+						} else if v == "TLS_ECDHE_ECDSA_WITH_RC4_128_SHA" {
+							cipherSuitesList[k] = tls.TLS_ECDHE_ECDSA_WITH_RC4_128_SHA
+						} else if v == "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA" {
+							cipherSuitesList[k] = tls.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA
+						} else if v == "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA" {
+							cipherSuitesList[k] = tls.TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA
+						} else if v == "TLS_ECDHE_RSA_WITH_RC4_128_SHA" {
+							cipherSuitesList[k] = tls.TLS_ECDHE_RSA_WITH_RC4_128_SHA
+						} else if v == "TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA" {
+							cipherSuitesList[k] = tls.TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA
+						} else if v == "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA" {
+							cipherSuitesList[k] = tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA
+						} else if v == "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA" {
+							cipherSuitesList[k] = tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA
+						} else if v == "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256" {
+							cipherSuitesList[k] = tls.TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256
+						} else if v == "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256" {
+							cipherSuitesList[k] = tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256
+						} else if v == "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256" {
+							cipherSuitesList[k] = tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+						} else if v == "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256" {
+							cipherSuitesList[k] = tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
+						} else if v == "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384" {
+							cipherSuitesList[k] = tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+						} else if v == "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384" {
+							cipherSuitesList[k] = tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
+						} else if v == "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305" {
+							cipherSuitesList[k] = tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305
+						} else if v == "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305" {
+							cipherSuitesList[k] = tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305
+						} else if v == "TLS_FALLBACK_SCSV" {
+							cipherSuitesList[k] = tls.TLS_FALLBACK_SCSV
+						}
 					}
+
+					newServer := &http.Server{
+						TLSConfig: &tls.Config{
+							MinVersion:               tlsMinVersion,
+							MaxVersion:               tlsMaxVersion,
+							CurvePreferences:         curveIdList,
+							PreferServerCipherSuites: config.Sll.PreferServerCipherSuites,
+							CipherSuites:             cipherSuitesList,
+							Certificates:             []tls.Certificate{certificatesList},
+						},
+						//TLSNextProto:               make(map[string]func(*http.Server, *tls.Conn, http.Handler), 0),
+						Addr:    config.Listen,
+						Handler: server,
+					}
+
+					if config.DebugServerEnable == true {
+						newServer.ErrorLog = log.New(capib.DebugLogger{}, "", 0)
+					}
+
+					if config.Sll.Certificate != "" && config.Sll.CertificateKey != "" {
+
+						log.Fatal(newServer.ListenAndServeTLS(config.Sll.Certificate, config.Sll.CertificateKey))
+
+					} else {
+
+						log.Fatal(newServer.ListenAndServe())
+
+					}
+
+				} else {
+
+					newServer := &http.Server{
+						Addr:    config.Listen,
+						Handler: server,
+					}
+
+					if config.DebugServerEnable == true {
+						newServer.ErrorLog = log.New(capib.DebugLogger{}, "", 0)
+					}
+
+					log.Fatal(newServer.ListenAndServe())
+
 				}
 
-				newServer := &http.Server{
-					TLSConfig: &tls.Config{
-						MinVersion:               tlsMinVersion,
-						MaxVersion:               tlsMaxVersion,
-						CurvePreferences:         curveIdList,
-						PreferServerCipherSuites: config.Sll.PreferServerCipherSuites,
-						CipherSuites:             cipherSuitesList,
-						Certificates:             []tls.Certificate{certificatesList},
-					},
-					//TLSNextProto:               make(map[string]func(*http.Server, *tls.Conn, http.Handler), 0),
-					Addr:    config.Listen,
-					Handler: server,
-				}
+			}(projectName, projectConfig)
 
-				if config.DebugServerEnable == true {
-					newServer.ErrorLog = log.New(capib.DebugLogger{}, "", 0)
-				}
+		} else if projectConfig.Listen != "" {
 
-				log.Fatal(newServer.ListenAndServeTLS(config.Sll.Certificate, config.Sll.CertificateKey))
-
-			} else {
-
-				newServer := &http.Server{
-					Addr:    config.Listen,
-					Handler: server,
-				}
-
-				if config.DebugServerEnable == true {
-					newServer.ErrorLog = log.New(capib.DebugLogger{}, "", 0)
-				}
-
-				log.Fatal(newServer.ListenAndServe())
-
-			}
-
-		}(projectName, projectConfig)
-
+		}
 	}
 }

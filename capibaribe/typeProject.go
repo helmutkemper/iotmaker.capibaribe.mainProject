@@ -12,7 +12,9 @@ import (
 
 type Project struct {
 	Listen            string         `yaml:"listen"`
+	ListenAndServer   string         `yaml:"listenAndServer"`
 	Sll               ssl            `yaml:"ssl"`
+	Protocol          string         `yaml:"protocol"`
 	Pygocentrus       pygocentrus    `yaml:"pygocentrus"`
 	Proxy             []proxy        `yaml:"proxy"`
 	Static            []static       `yaml:"static"`

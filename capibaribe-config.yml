@@ -73,9 +73,9 @@ capibaribe:
         max: 5000000
       dontRespond:
         rate: 0.1
-          # time em uS
-          min: 2000000
-          max: 5000000
+        # time em uS
+        min: 2000000
+        max: 5000000
       changeLength: 0.0
       changeContent:
         changeRateMin: 0.0
