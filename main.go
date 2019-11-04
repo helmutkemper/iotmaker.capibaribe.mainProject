@@ -5,7 +5,6 @@ package main
 import (
 	capib "./capibaribe"
 
-	"encoding/json"
 	"flag"
 	//"fmt"
 	//"github.com/etcd-io/etcd/clientv3"
@@ -99,76 +98,21 @@ func main() {
 	//mutexTerminateServer = make( map[string]*sync.WaitGroup )
 
 	filePath := flag.String("f", "./capibaribe-config.yml", "./your-capibaribe-config-file.yml")
-	howToConfig := flag.String("howToConf", "file", "file|etcd")
-	etcdConn := flag.String("etcdConn", "['127.0.0.1:2379']", "['127.0.0.1:2379']")
-	etcdKey := flag.String("etcdKey", "capibaribe-config-yaml-file", "capibaribe-config-yaml-file")
 	flag.Parse()
 
-	loadConf(*filePath, *howToConfig, *etcdConn, *etcdKey)
+	loadConf(*filePath)
 
 	//etcdTest()
 
 	wg.Wait()
 }
 
-func loadConf(filePath, howToConfig, etcdConn, etcdKey string) {
+func loadConf(filePath string) {
 	var err error
-	//var etcdKeyConfig *clientv3.GetResponse
-
-	//config = capib.MainConfig{}
-
-	//for _, AffluentRiverConfig := range config.AffluentRiver {
-	//AffluentRiverConfig.Wait()
-	//}
-
-	switch howToConfig {
-
-	case "etcd":
-
-		err = json.Unmarshal([]byte(etcdConn), &config.Etcd.Connection)
-		if err != nil {
-			log.Fatal(err.Error())
-		}
-
-		config.Etcd.ConfigKey = etcdKey
-
-	case "file":
-
-		err = config.Unmarshal(filePath)
-		if err != nil {
-			log.Fatal(err.Error())
-		}
-
-	default:
-		log.Fatal("-howToConf must be 'file' or 'etcd'")
+	err = config.Unmarshal(filePath)
+	if err != nil {
+		log.Fatal(err.Error())
 	}
-
-	config.Etcd.Prepare()
-
-	/*ctx, _ := context.WithTimeout(context.Background(), config.Etcd.RequestTimeout)
-	cli, _ := clientv3.New(clientv3.Config{
-		DialTimeout: config.Etcd.DialTimeOut,
-		Endpoints:   config.Etcd.Connection,
-	})
-	defer cli.Close()
-
-	kv := clientv3.NewKV(cli)
-	//wt := clientv3.NewWatcher(cli)
-
-	switch howToConfig {
-	case "etcd":
-
-		etcdKeyConfig, err = kv.Get(ctx, config.Etcd.ConfigKey)
-		if err != nil {
-			log.Fatal(err.Error())
-		}
-
-		err = config.UnmarshalByte([]byte(etcdKeyConfig.Kvs[0].Value))
-		if err != nil {
-			log.Fatal(err.Error())
-		}
-
-	}*/
 
 	for projectName, projectConfig := range config.AffluentRiver {
 

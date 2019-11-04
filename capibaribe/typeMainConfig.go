@@ -8,7 +8,6 @@ import (
 
 type MainConfig struct {
 	Version       float64            `yaml:"version"`
-	Etcd          etcd               `yaml:"etcd"`
 	AffluentRiver map[string]Project `yaml:"capibaribe"`
 }
 
