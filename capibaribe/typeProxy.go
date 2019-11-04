@@ -57,7 +57,6 @@ func (el *proxy) ErrorHandler(w http.ResponseWriter, r *http.Request, err error)
 }
 
 func (el *proxy) SuccessHandler(w http.ResponseWriter, r *http.Request, err error) {
-
 	//seelog.Criticalf("1 server host %v error - %v", hostServer, err.Error())
 }
 
