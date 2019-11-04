@@ -76,9 +76,6 @@ capibaribe:
         # ipv4Hash -                000.000.*: de onde tiver o asterisco vai para um servidor
         # ipv6Hash -                lista de ips
         # hash -                    request_uri
-#        bind:
-#          - host: 127.0.0.1
-#            ignorePort: true
         loadBalancing: roundRobin # roundRobin | lowTimeResponseHeader | lowTimeResponseLastByte | random | overLoad | ipv4Hash | ipv6Hash | hash
         path: /
         maxAttemptToRescueLoop: 10

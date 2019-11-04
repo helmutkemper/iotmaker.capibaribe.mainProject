@@ -18,9 +18,6 @@ type proxy struct {
 	// pt_br: host local, ex.: 127.0.0.1 //todo: é isto mesmo?
 	Host string `yaml:"host"                   json:"host"`
 
-	// todo: o que ś isto
-	Bind []bind `yaml:"bind"                   json:"bind"`
-
 	// escolha do tipo de load balancing
 	LoadBalancing string `yaml:"loadBalancing"          json:"loadBalancing"`
 

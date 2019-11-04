@@ -1,7 +1,6 @@
 package capibaribe
 
 import (
-	"github.com/helmutkemper/seelog"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -10,14 +9,13 @@ import (
 )
 
 type Project struct {
-	ListenAndServer ListenAndServer `yaml:"listenAndServer"   json:"listenAndServer"`
-	Sll             ssl             `yaml:"ssl"               json:"ssl"`
-	//Protocol          string          `yaml:"protocol"          json:"protocol"`
-	Proxy             []proxy        `yaml:"proxy"             json:"proxy"`
-	Static            []static       `yaml:"static"            json:"static"`
-	DebugServerEnable bool           `yaml:"debugServerEnable" json:"debugServerEnable"`
-	Listen            Listen         `yaml:"-"                 json:"-"`
-	waitGroup         sync.WaitGroup `yaml:"-"                 json:"-"`
+	ListenAndServer   ListenAndServer `yaml:"listenAndServer"   json:"listenAndServer"`
+	Sll               ssl             `yaml:"ssl"               json:"ssl"`
+	Proxy             []proxy         `yaml:"proxy"             json:"proxy"`
+	Static            []static        `yaml:"static"            json:"static"`
+	DebugServerEnable bool            `yaml:"debugServerEnable" json:"debugServerEnable"`
+	Listen            Listen          `yaml:"-"                 json:"-"`
+	waitGroup         sync.WaitGroup  `yaml:"-"                 json:"-"`
 }
 
 func (el *Project) WaitAddDelta() {
@@ -35,7 +33,6 @@ func (el *Project) Wait() {
 func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var host = r.Host
-	var remoteAddr string
 	var re *regexp.Regexp
 	var hostServer string
 	var serverKey int
@@ -48,26 +45,6 @@ func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
 	if el.Proxy != nil {
 
 		for proxyKey, proxyData := range el.Proxy {
-
-			pass := len(proxyData.Bind) == 0
-			for _, bind := range proxyData.Bind {
-				if bind.IgnorePort == true {
-					if re, err = regexp.Compile(kIgnorePortRegExp); err != nil {
-						HandleCriticalError(err)
-					}
-
-					remoteAddr = re.ReplaceAllString(r.RemoteAddr, "$1")
-				}
-
-				if remoteAddr == bind.Host {
-					pass = true
-					break
-				}
-			}
-			if pass == false {
-				seelog.Debugf("remote address ( %v ) not in bind list\n", r.RemoteAddr)
-				return
-			}
 
 			if proxyData.IgnorePort == true {
 				if re, err = regexp.Compile(kIgnorePortRegExp); err != nil {
