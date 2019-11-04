@@ -67,7 +67,7 @@ capibaribe:
 
     proxy:
       - ignorePort: true
-        host: 127.0.0.1
+        # host: 127.0.0.1 # se host em branco, aceita qualquer coisa
         # roundRobin -              joga a carga para o próximo servidor
         # lowTimeResponseHeader -   procura o servidor com menor tempo de resposta inicial
         # lowTimeResponseLastByte - procura o servidor com menor tempo de resposta do último byte

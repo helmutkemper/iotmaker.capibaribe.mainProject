@@ -54,7 +54,7 @@ func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
 				host = re.ReplaceAllString(host, "$1")
 			}
 
-			if proxyData.Host == host {
+			if proxyData.Host == host || proxyData.Host == "" {
 
 				for {
 

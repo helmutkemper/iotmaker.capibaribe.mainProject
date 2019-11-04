@@ -34,12 +34,10 @@ type proxy struct {
 	consecutiveSuccess int
 	errors             int
 	success            int
-
-	keyProxy  int
-	keyServer int
-
-	lastError      error
-	lastRoundError bool
+	keyProxy           int
+	keyServer          int
+	lastError          error
+	lastRoundError     bool
 }
 
 func (el *proxy) ErrorHandler(w http.ResponseWriter, r *http.Request, err error) {
