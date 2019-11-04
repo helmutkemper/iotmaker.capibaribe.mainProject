@@ -4,11 +4,75 @@ import (
 	"errors"
 	"github.com/helmutkemper/yaml"
 	"io/ioutil"
+	"log"
+	"net/http"
+	"sync"
 )
 
 type MainConfig struct {
-	Version       float64            `yaml:"version"`
-	AffluentRiver map[string]Project `yaml:"capibaribe"`
+	Version       float64            `yaml:"version"           json:"version"`
+	AffluentRiver map[string]Project `yaml:"capibaribe"        json:"capibaribe"`
+	waitGroup     sync.WaitGroup     `yaml:"-"                 json:"-"`
+}
+
+func (el *MainConfig) WaitAddDelta() {
+	el.waitGroup.Add(1)
+}
+
+func (el *MainConfig) WaitDone() {
+	el.waitGroup.Done()
+}
+
+func (el *MainConfig) Wait() {
+	el.waitGroup.Wait()
+}
+
+func (el *MainConfig) LoadConfAndStart(filePath string) {
+	var err error
+	err = el.Unmarshal(filePath)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	for projectName, projectConfig := range el.AffluentRiver {
+
+		go func(name string, config Project) {
+
+			server := http.NewServeMux()
+
+			server.HandleFunc("/", config.HandleFunc)
+
+			newServer := &http.Server{
+				//TLSNextProto:               make(map[string]func(*http.Server, *tls.Conn, http.Handler), 0),
+				Addr:    config.ListenAndServer.InAddress,
+				Handler: server,
+			}
+
+			if config.DebugServerEnable == true {
+				newServer.ErrorLog = log.New(DebugLogger{}, "", 0)
+			}
+
+			ConfigCertificates(config.Sll, newServer)
+
+			if config.Sll.Enabled == true {
+
+				if config.Sll.Certificate != "" && config.Sll.CertificateKey != "" {
+
+					log.Fatal(newServer.ListenAndServeTLS(config.Sll.Certificate, config.Sll.CertificateKey))
+
+				} else {
+					//fixme: log de erro
+				}
+
+			} else {
+
+				log.Fatal(newServer.ListenAndServe())
+
+			}
+
+		}(projectName, projectConfig)
+
+	}
 }
 
 func (el *MainConfig) Unmarshal(filePath string) error {
@@ -75,7 +139,7 @@ func (el *MainConfig) prepare() error {
 				}
 
 				for _, serversData := range el.AffluentRiver[affluentKey].Proxy[proxyKey].Servers {
-					WeightsSum += float64(serversData.Weight)
+					WeightsSum += serversData.Weight
 				}
 
 				for serversKey, serversData := range el.AffluentRiver[affluentKey].Proxy[proxyKey].Servers {

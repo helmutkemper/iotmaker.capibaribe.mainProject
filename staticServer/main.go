@@ -10,7 +10,7 @@ import (
 func main() {
 
 	serverAndPortFlag := flag.String("server", "127.0.0.1:3000", "This option set server and port. Ex.: :3000")
-	staticDirPathFlag := flag.String("staticPath", "/docker/static", "This option set the file path to the static files server. Ex.: /docker/static")
+	staticDirPathFlag := flag.String("staticPath", "/media/kemper/c5d4fd1f-1a7e-4bdd-8124-e2ad60e18776", "This option set the file path to the static files server. Ex.: /docker/static")
 
 	flag.Parse()
 

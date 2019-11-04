@@ -6,17 +6,13 @@ import (
 	capib "./capibaribe"
 
 	"flag"
-	//"fmt"
-	//"github.com/etcd-io/etcd/clientv3"
-	"log"
-	"net/http"
+
 	"sync"
 )
 
-var config capib.MainConfig
-
 func main() {
 	var wg sync.WaitGroup
+	var capibaribe capib.MainConfig
 
 	wg.Add(1)
 
@@ -25,53 +21,7 @@ func main() {
 	filePath := flag.String("f", "./capibaribe-config.yml", "./your-capibaribe-config-file.yml")
 	flag.Parse()
 
-	loadConf(*filePath)
-
-	//etcdTest()
+	capibaribe.LoadConfAndStart(*filePath)
 
 	wg.Wait()
-}
-
-func loadConf(filePath string) {
-	var err error
-	err = config.Unmarshal(filePath)
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-
-	for projectName, projectConfig := range config.AffluentRiver {
-
-		go func(name string, config capib.Project) {
-
-			server := http.NewServeMux()
-
-			server.HandleFunc("/", config.HandleFunc)
-
-			newServer := &http.Server{
-				//TLSNextProto:               make(map[string]func(*http.Server, *tls.Conn, http.Handler), 0),
-				Addr:    config.ListenAndServer.InAddress,
-				Handler: server,
-			}
-
-			if config.DebugServerEnable == true {
-				newServer.ErrorLog = log.New(capib.DebugLogger{}, "", 0)
-			}
-
-			capib.ConfigCertificates(config.Sll, newServer)
-
-			// fixme: melhorar isto
-			// enabled == true e sem certificados é um erro
-			if config.Sll.Enabled == true && config.Sll.Certificate != "" && config.Sll.CertificateKey != "" {
-
-				log.Fatal(newServer.ListenAndServeTLS(config.Sll.Certificate, config.Sll.CertificateKey))
-
-			} else {
-
-				log.Fatal(newServer.ListenAndServe())
-
-			}
-
-		}(projectName, projectConfig)
-
-	}
 }

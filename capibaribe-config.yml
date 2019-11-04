@@ -4,15 +4,21 @@ version: 1.0
 
 capibaribe:
 
+  # nome do servidor
   affluentRiverNameProject:
 
     listenAndServer:
+      # endereço e porta, ou apenas porta
       inAddress: ":8081"
+
+    # ajuda com alguns erros para fase de teste
     debugServerEnable: true
 
+    # habilita SSL
     ssl:
       enabled: false
 
+      # Versões aceitas pelo Go na epoca em que o documento foi escrito
       # TLS 1.0 - 10
       # TLS 1.1 - 11
       # TLS 1.2 - 12
@@ -20,8 +26,12 @@ capibaribe:
       version:
         min: 10
         max: 30
+
+      # caminho completo do certificado
       certificate: /etc/nginx/company.com.crt
       certificateKey: /etc/nginx/company.com.key
+
+      # veja a documentação do Go
       curvePreferences:
         - P256
         - P384
@@ -58,10 +68,12 @@ capibaribe:
         - TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305
         - TLS_FALLBACK_SCSV
       x509:
+        # caminho completo do certificado
         certificate: /etc/nginx/company.com.crt
         certificateKey: /etc/nginx/company.com.key
 
     proxy:
+        # ignore port faz com que apenas o host seja usado como referencia
       - ignorePort: true
         # host: 127.0.0.1 # se host em branco, aceita qualquer coisa
         # roundRobin -              joga a carga para o próximo servidor

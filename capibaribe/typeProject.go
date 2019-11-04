@@ -5,7 +5,6 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"regexp"
-	"sync"
 )
 
 type Project struct {
@@ -14,19 +13,15 @@ type Project struct {
 	Proxy             []proxy         `yaml:"proxy"             json:"proxy"`
 	DebugServerEnable bool            `yaml:"debugServerEnable" json:"debugServerEnable"`
 	Listen            Listen          `yaml:"-"                 json:"-"`
-	waitGroup         sync.WaitGroup  `yaml:"-"                 json:"-"`
+	waitGroup         int             `yaml:"-"                 json:"-"`
 }
 
 func (el *Project) WaitAddDelta() {
-	el.waitGroup.Add(1)
+	el.waitGroup += 1
 }
 
 func (el *Project) WaitDone() {
-	el.waitGroup.Done()
-}
-
-func (el *Project) Wait() {
-	el.waitGroup.Wait()
+	el.waitGroup -= 1
 }
 
 func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
@@ -37,9 +32,9 @@ func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
 	var serverKey int
 	var loopCounter = 0
 
-	//el.waitGroup.Add(1)
+	el.WaitAddDelta()
 
-	//defer el.waitGroup.Done()
+	defer el.WaitDone()
 
 	if el.Proxy != nil {
 
@@ -82,7 +77,7 @@ func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
 
 						proxy := httputil.NewSingleHostReverseProxy(rpURL)
 
-						//						proxy.ErrorLog = log.New(DebugLogger{}, "", 0)
+						//proxy.ErrorLog = log.New(DebugLogger{}, "", 0)
 
 						proxy.Transport = &transport{RoundTripper: http.DefaultTransport, Project: el}
 
@@ -91,14 +86,14 @@ func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
 
 						proxy.ErrorHandler = el.Proxy[proxyKey].ErrorHandler
 
+						el.Proxy[proxyKey].lastRoundError = false
 						el.Proxy[proxyKey].Servers[serverKey].lastRoundError = false
 
 						proxy.ServeHTTP(w, r)
 
-						if el.Proxy[proxyKey].Servers[serverKey].lastRoundError == true {
+						if el.Proxy[proxyKey].lastRoundError == true {
 
-							el.Proxy[proxyKey].consecutiveErrors = 0
-							el.Proxy[proxyKey].consecutiveSuccess += 1
+							el.Proxy[proxyKey].Servers[serverKey].lastRoundError = true
 							el.Proxy[proxyKey].Servers[serverKey].consecutiveErrors = 0
 							el.Proxy[proxyKey].Servers[serverKey].consecutiveSuccess += 1
 
@@ -106,12 +101,14 @@ func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
 							continue
 						}
 
+						el.Proxy[proxyKey].SuccessHandler(w, r)
 						//seelog.Critical("return")
 						return
 
 					} else {
 
 						//fixme: colocar um log aqui
+						return
 
 					}
 				}
