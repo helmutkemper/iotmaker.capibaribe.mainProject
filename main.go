@@ -172,6 +172,7 @@ func loadConf(filePath, howToConfig, etcdConn, etcdKey string) {
 
 	for projectName, projectConfig := range config.AffluentRiver {
 
+		// fixme: isto tem lógica se ficar em branco?
 		if projectConfig.ListenAndServer.InAddress != "" {
 
 			go func(name string, config capib.Project) {
@@ -194,7 +195,9 @@ func loadConf(filePath, howToConfig, etcdConn, etcdKey string) {
 
 				capib.ConfigCertificates(config.Sll, newServer)
 
-				if config.Sll.Certificate != "" && config.Sll.CertificateKey != "" {
+				// fixme: melhorar isto
+				// enabled == true e sem certificados é um erro
+				if config.Sll.Enabled == true && config.Sll.Certificate != "" && config.Sll.CertificateKey != "" {
 
 					log.Fatal(newServer.ListenAndServeTLS(config.Sll.Certificate, config.Sll.CertificateKey))
 
@@ -206,9 +209,10 @@ func loadConf(filePath, howToConfig, etcdConn, etcdKey string) {
 
 			}(projectName, projectConfig)
 
+			// todo: pygocentrus não deveria está aqui
 		} else if projectConfig.Listen.InAddress != "" {
 
-			projectConfig.Listen.Pygocentrus = projectConfig.Pygocentrus
+			//projectConfig.Listen.Pygocentrus = projectConfig.Pygocentrus
 			log.Fatal(projectConfig.Listen.Listen())
 
 		}

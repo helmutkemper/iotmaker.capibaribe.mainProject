@@ -5,7 +5,34 @@ import (
 	"net/http"
 )
 
+/*
+pt_br: Recebe a lista de containers e endpoints para redirecionar cada endpoint de entrada
+*/
 type proxy struct {
+	// pt_br: Quantidade máxima de testes antes de de uma falha ser aceita
+	MaxAttemptToRescueLoop int `yaml:"maxAttemptToRescueLoop" json:"maxAttemptToRescueLoop"`
+
+	// pt_br: ignora a porta de entrada de dados //todo: é isto mesmo?
+	IgnorePort bool `yaml:"ignorePort"             json:"ignorePort"`
+
+	// pt_br: host local, ex.: 127.0.0.1 //todo: é isto mesmo?
+	Host string `yaml:"host"                   json:"host"`
+
+	// todo: o que ś isto
+	Bind []bind `yaml:"bind"                   json:"bind"`
+
+	// escolha do tipo de load balancing
+	LoadBalancing string `yaml:"loadBalancing"          json:"loadBalancing"`
+
+	// todo: o que é isto?
+	Path string `yaml:"path"                   json:"path"`
+
+	// healthCheck //todo: fazer
+	HealthCheck healthCheck `yaml:"healthCheck"            json:"healthCheck"`
+
+	// pt_br: lista de servidores secundários
+	Servers []servers `yaml:"servers"                json:"servers"`
+
 	consecutiveErrors  int
 	consecutiveSuccess int
 	errors             int
@@ -16,15 +43,6 @@ type proxy struct {
 
 	lastError      error
 	lastRoundError bool
-
-	MaxAttemptToRescueLoop int         `yaml:"maxAttemptToRescueLoop" json:"maxAttemptToRescueLoop"`
-	IgnorePort             bool        `yaml:"ignorePort"             json:"ignorePort"`
-	Host                   string      `yaml:"host"                   json:"host"`
-	Bind                   []bind      `yaml:"bind"                   json:"bind"`
-	LoadBalancing          string      `yaml:"loadBalancing"          json:"loadBalancing"`
-	Path                   string      `yaml:"path"                   json:"path"`
-	HealthCheck            healthCheck `yaml:"healthCheck"            json:"healthCheck"`
-	Servers                []servers   `yaml:"servers"                json:"servers"`
 }
 
 func (el *proxy) ErrorHandler(w http.ResponseWriter, r *http.Request, err error) {

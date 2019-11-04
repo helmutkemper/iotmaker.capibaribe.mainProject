@@ -7,8 +7,8 @@ capibaribe:
   affluentRiverNameProject:
 
     listenAndServer:
-      inAddress: 8081
-    debugServerEnable: false
+      inAddress: ":8081"
+    debugServerEnable: true
 
     ssl:
       enabled: false
@@ -65,33 +65,6 @@ capibaribe:
       - filePath: /docker/static
         serverPath: static
 
-    pygocentrus:
-      enabled: true
-      delay:
-        rate: 0.1
-        # time em uS
-        min: 2000000
-        max: 5000000
-      dontRespond:
-        rate: 0.1
-        # time em uS
-        min: 2000000
-        max: 5000000
-      changeLength: 0.0
-      changeContent:
-        changeRateMin: 0.0
-        changeRateMax: 0.0
-        changeBytesMin: 1
-        changeBytesMax: 10
-        rate: 0.1
-      deleteContent: 0.1
-      changeHeaders:
-        - number: 500
-          header:
-            - key: Content-Type
-              value: application/json
-          rate: 0.0
-
     proxy:
       - ignorePort: true
         host: 127.0.0.1
@@ -138,12 +111,6 @@ capibaribe:
             body:
               - expreg
         servers:
-          - host: http://localhost:3000
-            weight: 1
-            overLoad: 1000000
-          - host: http://localhost:3000
-            weight: 1
-            overLoad: 1000000
           - host: http://localhost:3000
             weight: 1
             overLoad: 1000000
