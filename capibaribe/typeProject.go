@@ -12,7 +12,6 @@ type Project struct {
 	ListenAndServer   ListenAndServer `yaml:"listenAndServer"   json:"listenAndServer"`
 	Sll               ssl             `yaml:"ssl"               json:"ssl"`
 	Proxy             []proxy         `yaml:"proxy"             json:"proxy"`
-	Static            []static        `yaml:"static"            json:"static"`
 	DebugServerEnable bool            `yaml:"debugServerEnable" json:"debugServerEnable"`
 	Listen            Listen          `yaml:"-"                 json:"-"`
 	waitGroup         sync.WaitGroup  `yaml:"-"                 json:"-"`

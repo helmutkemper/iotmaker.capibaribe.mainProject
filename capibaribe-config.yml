@@ -61,10 +61,6 @@ capibaribe:
         certificate: /etc/nginx/company.com.crt
         certificateKey: /etc/nginx/company.com.key
 
-    static:
-      - filePath: /docker/static
-        serverPath: static
-
     proxy:
       - ignorePort: true
         # host: 127.0.0.1 # se host em branco, aceita qualquer coisa

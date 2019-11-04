@@ -11,12 +11,6 @@ import (
 	"log"
 	"net/http"
 	"sync"
-	"time"
-)
-
-var (
-	dialTimeout    = 2 * time.Second
-	requestTimeout = 10 * time.Second
 )
 
 var config capib.MainConfig
@@ -47,49 +41,37 @@ func loadConf(filePath string) {
 
 	for projectName, projectConfig := range config.AffluentRiver {
 
-		// fixme: isto tem lógica se ficar em branco?
-		if projectConfig.ListenAndServer.InAddress != "" {
+		go func(name string, config capib.Project) {
 
-			go func(name string, config capib.Project) {
+			server := http.NewServeMux()
 
-				server := http.NewServeMux()
+			server.HandleFunc("/", config.HandleFunc)
 
-				capib.ConfigStatic(&config.Static, server)
+			newServer := &http.Server{
+				//TLSNextProto:               make(map[string]func(*http.Server, *tls.Conn, http.Handler), 0),
+				Addr:    config.ListenAndServer.InAddress,
+				Handler: server,
+			}
 
-				server.HandleFunc("/", config.HandleFunc)
+			if config.DebugServerEnable == true {
+				newServer.ErrorLog = log.New(capib.DebugLogger{}, "", 0)
+			}
 
-				newServer := &http.Server{
-					//TLSNextProto:               make(map[string]func(*http.Server, *tls.Conn, http.Handler), 0),
-					Addr:    config.ListenAndServer.InAddress,
-					Handler: server,
-				}
+			capib.ConfigCertificates(config.Sll, newServer)
 
-				if config.DebugServerEnable == true {
-					newServer.ErrorLog = log.New(capib.DebugLogger{}, "", 0)
-				}
+			// fixme: melhorar isto
+			// enabled == true e sem certificados é um erro
+			if config.Sll.Enabled == true && config.Sll.Certificate != "" && config.Sll.CertificateKey != "" {
 
-				capib.ConfigCertificates(config.Sll, newServer)
+				log.Fatal(newServer.ListenAndServeTLS(config.Sll.Certificate, config.Sll.CertificateKey))
 
-				// fixme: melhorar isto
-				// enabled == true e sem certificados é um erro
-				if config.Sll.Enabled == true && config.Sll.Certificate != "" && config.Sll.CertificateKey != "" {
+			} else {
 
-					log.Fatal(newServer.ListenAndServeTLS(config.Sll.Certificate, config.Sll.CertificateKey))
+				log.Fatal(newServer.ListenAndServe())
 
-				} else {
+			}
 
-					log.Fatal(newServer.ListenAndServe())
+		}(projectName, projectConfig)
 
-				}
-
-			}(projectName, projectConfig)
-
-			// todo: pygocentrus não deveria está aqui
-		} else if projectConfig.Listen.InAddress != "" {
-
-			//projectConfig.Listen.Pygocentrus = projectConfig.Pygocentrus
-			log.Fatal(projectConfig.Listen.Listen())
-
-		}
 	}
 }
