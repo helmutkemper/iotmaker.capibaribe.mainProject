@@ -8,7 +8,7 @@ type servers struct {
 
 	lastRoundError bool
 
-	Host     string  `yaml:"host"`
-	Weight   float64 `yaml:"weight"`
-	OverLoad int     `yaml:"overLoad"`
+	Host     string  `yaml:"host"       json:"host"`
+	Weight   float64 `yaml:"weight"     json:"weight"`
+	OverLoad int     `yaml:"overLoad"   json:"overLoad"`
 }

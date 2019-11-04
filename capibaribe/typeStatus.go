@@ -1,8 +1,8 @@
 package capibaribe
 
 type status struct {
-	ExpReg string   `yaml:"expReg"`
-	Value  int      `yaml:"value"`
-	In     []maxMin `yaml:"in"`
-	NotIn  []maxMin `yaml:"notIn"`
+	ExpReg string   `yaml:"expReg"  json:"expReg"`
+	Value  int      `yaml:"value"   json:"value"`
+	In     []maxMin `yaml:"in"      json:"in"`
+	NotIn  []maxMin `yaml:"notIn"   json:"notIn"`
 }

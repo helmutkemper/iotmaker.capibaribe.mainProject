@@ -8,13 +8,13 @@ import (
 type pygocentrusListenFunc func(inData []byte) (int, []byte)
 
 type Listen struct {
-	InProtocol  string                `yaml:"inProtocol"`
-	InAddress   string                `yaml:"inAddress"`
-	OutProtocol string                `yaml:"outProtocol"`
-	OutAddress  string                `yaml:"outAddress"`
-	Pygocentrus pygocentrus           `yaml:"pygocentrus"`
-	stop        bool                  `yaml:"-"`
-	attack      pygocentrusListenFunc `yaml:"-"`
+	InProtocol  string                `yaml:"inProtocol"  json:"inProtocol"`
+	InAddress   string                `yaml:"inAddress"   json:"inAddress"`
+	OutProtocol string                `yaml:"outProtocol" json:"outProtocol"`
+	OutAddress  string                `yaml:"outAddress"  json:"outAddress"`
+	Pygocentrus pygocentrus           `yaml:"pygocentrus" json:"pygocentrus"`
+	stop        bool                  `yaml:"-"           json:"-"`
+	attack      pygocentrusListenFunc `yaml:"-"           json:"-"`
 }
 
 func (el *Listen) Listen() error {

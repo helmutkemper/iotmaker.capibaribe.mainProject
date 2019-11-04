@@ -10,15 +10,14 @@ import (
 )
 
 type Project struct {
-	ListenAndServer   ListenAndServer `yaml:"listenAndServer"`
-	Sll               ssl             `yaml:"ssl"`
-	Protocol          string          `yaml:"protocol"`
-	Pygocentrus       pygocentrus     `yaml:"pygocentrus"`
-	Proxy             []proxy         `yaml:"proxy"`
-	Static            []static        `yaml:"static"`
-	DebugServerEnable bool            `yaml:"debugServerEnable"`
-	Listen            Listen          `yaml:"-"`
-	waitGroup         sync.WaitGroup  `yaml:"-"`
+	ListenAndServer ListenAndServer `yaml:"listenAndServer"   json:"listenAndServer"`
+	Sll             ssl             `yaml:"ssl"               json:"ssl"`
+	//Protocol          string          `yaml:"protocol"          json:"protocol"`
+	Proxy             []proxy        `yaml:"proxy"             json:"proxy"`
+	Static            []static       `yaml:"static"            json:"static"`
+	DebugServerEnable bool           `yaml:"debugServerEnable" json:"debugServerEnable"`
+	Listen            Listen         `yaml:"-"                 json:"-"`
+	waitGroup         sync.WaitGroup `yaml:"-"                 json:"-"`
 }
 
 func (el *Project) WaitAddDelta() {
@@ -126,12 +125,6 @@ func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
 							el.Proxy[proxyKey].consecutiveSuccess += 1
 							el.Proxy[proxyKey].Servers[serverKey].consecutiveErrors = 0
 							el.Proxy[proxyKey].Servers[serverKey].consecutiveSuccess += 1
-
-							if el.Pygocentrus.GetAttack() == true {
-								el.Pygocentrus.ClearAttack()
-								//seelog.Critical("return after a pygocentrus attack")
-								return
-							}
 
 							//seelog.Critical("continue")
 							continue

@@ -1,14 +1,14 @@
 package capibaribe
 
 type pygocentrus struct {
-	Enabled          bool            `yaml:"enabled"`
-	Delay            rateMaxMin      `yaml:"delay"`
-	DontRespond      rateMaxMin      `yaml:"dontRespond"`
-	ChangeLength     float64         `yaml:"changeLength"`
-	ChangeContent    changeContent   `yaml:"changeContent"`
-	DeleteContent    float64         `yaml:"deleteContent"`
-	ChangeHeaders    []changeHeaders `yaml:"changeHeaders"`
-	successfulAttack bool            `yaml:"-"`
+	Enabled          bool            `yaml:"enabled"        json:"enabled"`
+	Delay            rateMaxMin      `yaml:"delay"          json:"delay"`
+	DontRespond      rateMaxMin      `yaml:"dontRespond"    json:"dontRespond"`
+	ChangeLength     float64         `yaml:"changeLength"   json:"changeLength"`
+	ChangeContent    changeContent   `yaml:"changeContent"  json:"changeContent"`
+	DeleteContent    float64         `yaml:"deleteContent"  json:"deleteContent"`
+	ChangeHeaders    []changeHeaders `yaml:"changeHeaders"  json:"changeHeaders"`
+	successfulAttack bool            `yaml:"-"              json:"-"`
 }
 
 func (el *pygocentrus) SetAttack() {

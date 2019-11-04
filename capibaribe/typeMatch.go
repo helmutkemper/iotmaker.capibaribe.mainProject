@@ -1,7 +1,7 @@
 package capibaribe
 
 type match struct {
-	Status []status `yaml:"status"`
-	Header []header `yaml:"header"`
-	Body   []string `yaml:"body"`
+	Status []status `yaml:"status"  json:"status"`
+	Header []header `yaml:"header"  json:"header"`
+	Body   []string `yaml:"body"    json:"body"`
 }

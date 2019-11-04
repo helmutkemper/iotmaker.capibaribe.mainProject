@@ -17,14 +17,14 @@ type proxy struct {
 	lastError      error
 	lastRoundError bool
 
-	MaxAttemptToRescueLoop int         `yaml:"maxAttemptToRescueLoop"`
-	IgnorePort             bool        `yaml:"ignorePort"`
-	Host                   string      `yaml:"host"`
-	Bind                   []bind      `yaml:"bind"`
-	LoadBalancing          string      `yaml:"loadBalancing"`
-	Path                   string      `yaml:"path"`
-	HealthCheck            healthCheck `yaml:"healthCheck"`
-	Servers                []servers   `yaml:"servers"`
+	MaxAttemptToRescueLoop int         `yaml:"maxAttemptToRescueLoop" json:"maxAttemptToRescueLoop"`
+	IgnorePort             bool        `yaml:"ignorePort"             json:"ignorePort"`
+	Host                   string      `yaml:"host"                   json:"host"`
+	Bind                   []bind      `yaml:"bind"                   json:"bind"`
+	LoadBalancing          string      `yaml:"loadBalancing"          json:"loadBalancing"`
+	Path                   string      `yaml:"path"                   json:"path"`
+	HealthCheck            healthCheck `yaml:"healthCheck"            json:"healthCheck"`
+	Servers                []servers   `yaml:"servers"                json:"servers"`
 }
 
 func (el *proxy) ErrorHandler(w http.ResponseWriter, r *http.Request, err error) {

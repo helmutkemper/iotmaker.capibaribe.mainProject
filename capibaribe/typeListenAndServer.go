@@ -1,5 +1,6 @@
 package capibaribe
 
 type ListenAndServer struct {
-	InAddress string `yaml:"inAddress"`
+	// Example: 8081
+	InAddress string `yaml:"inAddress" json:"inAddress"`
 }
