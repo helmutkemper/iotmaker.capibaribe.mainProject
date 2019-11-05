@@ -16,14 +16,17 @@ type proxy struct {
 	// pt_br: ignora a porta de entrada de dados //todo: é isto mesmo?
 	IgnorePort bool `yaml:"ignorePort" json:"ignorePort"`
 
-	// pt_br: host local, ex.: 127.0.0.1 //todo: é isto mesmo?
+	// pt_br: host do servidor para servidores com vários domínios
 	Host string `yaml:"host" json:"host"`
 
 	// escolha do tipo de load balancing
 	LoadBalancing string `yaml:"loadBalancing" json:"loadBalancing"`
 
-	// todo: o que é isto?
+	// pt_br: path dentro do domínio.
+	// quando definido, redireciona o path para um endereço específico
 	Path string `yaml:"path" json:"path"`
+
+	Header string `yaml:"header" json:"header"`
 
 	// healthCheck //todo: fazer
 	HealthCheck healthCheck `yaml:"healthCheck" json:"healthCheck"`

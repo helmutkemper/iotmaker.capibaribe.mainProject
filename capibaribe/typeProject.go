@@ -30,6 +30,7 @@ func (el *Project) WaitDone() {
 func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var host = r.Host
+	var path = r.URL.Path
 	var re *regexp.Regexp
 	var hostServer string
 	var serverKey int
@@ -52,6 +53,10 @@ func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
 			}
 
 			if proxyData.Host == host || proxyData.Host == "" {
+
+				if proxyData.Path != "" && proxyData.Path != path {
+					continue //fixme: é isto mesmo?
+				}
 
 				for {
 
