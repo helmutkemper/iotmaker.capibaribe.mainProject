@@ -1,6 +1,7 @@
 package capibaribe
 
 import (
+	"math"
 	"math/rand"
 	"net/http"
 )
@@ -73,6 +74,40 @@ func (el *proxy) ModifyResponse(resp *http.Response) error {
 	//}
 
 	return nil
+}
+
+func (el *proxy) executionTimeAverage() (string, int) {
+
+	minTime := int64(math.MaxInt64)
+	keyToReturn := 0
+
+	for serverKey, serverData := range el.Servers {
+		if minTime > serverData.executionTimeAverage {
+
+			keyToReturn = serverKey
+			minTime = serverData.executionTimeAverage
+
+		}
+	}
+
+	return el.Servers[keyToReturn].Host, keyToReturn
+}
+
+func (el *proxy) executionTime() (string, int) {
+
+	minTime := int64(math.MaxInt64)
+	keyToReturn := 0
+
+	for serverKey, serverData := range el.Servers {
+		if minTime > serverData.executionTimeMin {
+
+			keyToReturn = serverKey
+			minTime = serverData.executionTimeMin
+
+		}
+	}
+
+	return el.Servers[keyToReturn].Host, keyToReturn
 }
 
 func (el *proxy) roundRobin() (string, int) {

@@ -119,7 +119,8 @@ func (el *MainConfig) prepare() error {
 				el.AffluentRiver[affluentKey].Proxy[proxyKey].MaxAttemptToRescueLoop = 10
 			}
 
-			if proxyData.LoadBalancing == kLoadBalanceRoundRobin || proxyData.LoadBalancing == "" {
+			// fixme: por que o tipo de loadbalance está sendo levado em conta aqui?
+			if proxyData.LoadBalancing == KLoadBalanceRoundRobin || proxyData.LoadBalancing == "" {
 
 				pass := false
 				for serverKey := range el.AffluentRiver[affluentKey].Proxy[proxyKey].Servers {

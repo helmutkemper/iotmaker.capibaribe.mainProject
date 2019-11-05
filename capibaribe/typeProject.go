@@ -44,7 +44,7 @@ func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
 		for proxyKey, proxyData := range el.Proxy {
 
 			if proxyData.IgnorePort == true {
-				if re, err = regexp.Compile(kIgnorePortRegExp); err != nil {
+				if re, err = regexp.Compile(KIgnorePortRegExp); err != nil {
 					HandleCriticalError(err)
 				}
 
@@ -64,10 +64,14 @@ func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
 					}
 
 					// Select a type of load balancing to be applied on the proxy route
-					if proxyData.LoadBalancing == kLoadBalanceRoundRobin || proxyData.LoadBalancing == "" {
+					if proxyData.LoadBalancing == KLoadBalanceRoundRobin || proxyData.LoadBalancing == "" {
 						hostServer, serverKey = proxyData.roundRobin()
-					} else if proxyData.LoadBalancing == kLoadBalanceRandom {
+					} else if proxyData.LoadBalancing == KLoadBalanceRandom {
 						hostServer, serverKey = proxyData.random()
+					} else if proxyData.LoadBalancing == KLoadBalanceExecutionTime {
+						hostServer, serverKey = proxyData.executionTime()
+					} else if proxyData.LoadBalancing == KLoadBalanceExecutionTimeAverage {
+						hostServer, serverKey = proxyData.executionTimeAverage()
 					}
 
 					// Prepare the reverse proxy
@@ -91,13 +95,10 @@ func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
 					el.Proxy[proxyKey].lastRoundError = false
 					el.Proxy[proxyKey].Servers[serverKey].lastRoundError = false
 
+					// Run the route and measure execution time
 					startTime := time.Now()
-
-					// Run the route
 					proxy.ServeHTTP(w, r)
-
 					elapsedTime := time.Since(startTime)
-					log.Printf("execution time: %s", elapsedTime)
 
 					// Verify error
 					if el.Proxy[proxyKey].lastRoundError == true {
@@ -114,6 +115,8 @@ func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
 
 					// Statistics of successes of the route
 					el.Proxy[proxyKey].SuccessHandler(w, r)
+
+					el.Proxy[proxyKey].Servers[serverKey].AddExecutionTime(int64(elapsedTime))
 					_ = seelog.Critical("rota ok")
 					return
 

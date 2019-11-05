@@ -1,7 +1,9 @@
 package capibaribe
 
 const (
-	kIgnorePortRegExp      = "^(.*?):[0-9]+$"
-	kLoadBalanceRoundRobin = "roundRobin"
-	kLoadBalanceRandom     = "random"
+	KIgnorePortRegExp                = "^(.*?):[0-9]+$"
+	KLoadBalanceRoundRobin           = "roundRobin"
+	KLoadBalanceRandom               = "random"
+	KLoadBalanceExecutionTime        = "lowTimeResponse"
+	KLoadBalanceExecutionTimeAverage = "lowTimeResponseAverage"
 )
