@@ -16,8 +16,6 @@ func main() {
 
 	wg.Add(1)
 
-	//mutexTerminateServer = make( map[string]*sync.WaitGroup )
-
 	filePath := flag.String("f", "./capibaribe-config.yml", "./your-capibaribe-config-file.yml")
 	flag.Parse()
 

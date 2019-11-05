@@ -76,17 +76,18 @@ func (el *proxy) ModifyResponse(resp *http.Response) error {
 }
 
 func (el *proxy) roundRobin() (string, int) {
-	randNumber := rand.Float64()
 
-	for serverKey, serverData := range el.Servers {
+	for {
 
-		if randNumber <= serverData.Weight {
-			return serverData.Host, serverKey
+		randNumber := rand.Float64()
+		for serverKey, serverData := range el.Servers {
+			if randNumber <= serverData.Weight {
+				return serverData.Host, serverKey
+			}
 		}
 
 	}
 
-	return "", -1
 }
 
 func (el *proxy) random() (string, int) {
