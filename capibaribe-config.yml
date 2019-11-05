@@ -87,35 +87,46 @@ capibaribe:
         loadBalancing: roundRobin # roundRobin | lowTimeResponse | lowTimeResponseAverage | random
         path: /
         header:
+          - key: "test"
+            value: "estou vivo"
+            type: string # string | regExp
+          - key: "reg"
+            value: "^est"
+            type: regExp
         maxAttemptToRescueLoop: 10
         healthCheck:
-          enabled: true
-          # padrão: 5 segundos
-          interval: 5000
-          # numeros de falhas consecutivas para erro
-          fails: 3
-          # numeros de ok consecutivos para zerar falhas
-          passes: 2
-          # caminho de teste
-          uri: /some/path
-          # se 0 suspende para sempre
-          # se !0 suspende por milesegundos
-          suspendInterval: 30000
-          match:
-            status:
-              - expReg: expreg
-                value: 300
-                in:
-                  - min: 200
-                    max: 299
-                notIn:
-                  - min: 200
-                    max: 299
-            header:
-              - key: Content-Type
-                value: text/html
-            body:
-              - expreg
+          path: "/healthCheck"
+          header:
+            - key: "Content-Type"
+              value: "application/json"
+          body: "{\"code\": 200, \"status\":\"ok\"}"
+#          enabled: true
+#          # padrão: 5 segundos
+#          interval: 5000
+#          # numeros de falhas consecutivas para erro
+#          fails: 3
+#          # numeros de ok consecutivos para zerar falhas
+#          passes: 2
+#          # caminho de teste
+#          uri: /some/path
+#          # se 0 suspende para sempre
+#          # se !0 suspende por milesegundos
+#          suspendInterval: 30000
+#          match:
+#            status:
+#              - expReg: expreg
+#                value: 300
+#                in:
+#                  - min: 200
+#                    max: 299
+#                notIn:
+#                  - min: 200
+#                    max: 299
+#            header:
+#              - key: Content-Type
+#                value: text/html
+#            body:
+#              - expreg
         servers:
           - host: http://localhost:3000
             weight: 1

@@ -4,6 +4,7 @@ import (
 	"math"
 	"math/rand"
 	"net/http"
+	"regexp"
 )
 
 /*
@@ -26,7 +27,7 @@ type proxy struct {
 	// quando definido, redireciona o path para um endereço específico
 	Path string `yaml:"path" json:"path"`
 
-	Header string `yaml:"header" json:"header"`
+	Header []headerMonitor `yaml:"header" json:"header"`
 
 	// healthCheck //todo: fazer
 	HealthCheck healthCheck `yaml:"healthCheck" json:"healthCheck"`
@@ -52,6 +53,48 @@ type proxy struct {
 	keyServer      int
 	lastError      error
 	lastRoundError bool
+}
+
+func (el *proxy) SelectLoadBalance() (string, int) {
+	if el.LoadBalancing == KLoadBalanceRandom {
+		return el.random()
+	} else if el.LoadBalancing == KLoadBalanceExecutionTime {
+		return el.executionTime()
+	} else if el.LoadBalancing == KLoadBalanceExecutionTimeAverage {
+		return el.executionTimeAverage()
+	}
+
+	//if el.LoadBalancing == KLoadBalanceRoundRobin || el.LoadBalancing == ""
+	return el.roundRobin()
+
+}
+
+func (el *proxy) VerifyHeaderMatchValueToRoute(w http.ResponseWriter, r *http.Request) bool {
+	pass := false
+	for _, headerData := range el.Header {
+
+		if headerData.Type == KHeaderTypeString && r.Header.Get(headerData.Key) == headerData.Value {
+			pass = true
+			break
+		} else if headerData.Type == KHeaderTypeRegExp {
+			re := regexp.MustCompile(headerData.Value)
+			if re.MatchString(r.Header.Get(headerData.Key)) == true {
+				pass = true
+				break
+			}
+		}
+
+	}
+
+	return pass
+}
+
+func (el *proxy) WriteHealthCheckSignature(w http.ResponseWriter, r *http.Request) {
+	for _, headerData := range el.HealthCheck.Header {
+		w.Header().Add(headerData.Key, headerData.Value)
+	}
+
+	w.Write([]byte(el.HealthCheck.Body))
 }
 
 func (el *proxy) ErrorHandler(w http.ResponseWriter, r *http.Request, err error) {

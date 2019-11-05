@@ -6,4 +6,7 @@ const (
 	KLoadBalanceRandom               = "random"
 	KLoadBalanceExecutionTime        = "lowTimeResponse"
 	KLoadBalanceExecutionTimeAverage = "lowTimeResponseAverage"
+
+	KHeaderTypeString = "string"
+	KHeaderTypeRegExp = "regExp"
 )

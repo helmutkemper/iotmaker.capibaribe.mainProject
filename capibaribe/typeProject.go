@@ -47,6 +47,7 @@ func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
 			if proxyData.IgnorePort == true {
 				if re, err = regexp.Compile(KIgnorePortRegExp); err != nil {
 					HandleCriticalError(err)
+					return
 				}
 
 				host = re.ReplaceAllString(host, "$1")
@@ -54,8 +55,15 @@ func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
 
 			if proxyData.Host == host || proxyData.Host == "" {
 
+				if proxyData.HealthCheck.Path == path {
+					proxyData.WriteHealthCheckSignature(w, r)
+					return
+				}
+
 				if proxyData.Path != "" && proxyData.Path != path {
-					continue //fixme: é isto mesmo?
+					continue
+				} else if len(proxyData.Header) > 0 && proxyData.VerifyHeaderMatchValueToRoute(w, r) == false {
+					continue
 				}
 
 				for {
@@ -68,16 +76,7 @@ func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
 						return
 					}
 
-					// Select a type of load balancing to be applied on the proxy route
-					if proxyData.LoadBalancing == KLoadBalanceRoundRobin || proxyData.LoadBalancing == "" {
-						hostServer, serverKey = proxyData.roundRobin()
-					} else if proxyData.LoadBalancing == KLoadBalanceRandom {
-						hostServer, serverKey = proxyData.random()
-					} else if proxyData.LoadBalancing == KLoadBalanceExecutionTime {
-						hostServer, serverKey = proxyData.executionTime()
-					} else if proxyData.LoadBalancing == KLoadBalanceExecutionTimeAverage {
-						hostServer, serverKey = proxyData.executionTimeAverage()
-					}
+					hostServer, serverKey = proxyData.SelectLoadBalance()
 
 					// Prepare the reverse proxy
 					rpURL, err := url.Parse(hostServer)
@@ -86,19 +85,16 @@ func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
 					}
 
 					proxy := httputil.NewSingleHostReverseProxy(rpURL)
-
 					proxy.ErrorLog = log.New(DebugLogger{}, "", 0)
-
 					proxy.Transport = &transport{RoundTripper: http.DefaultTransport, Project: el}
-
-					//todo: implementar
-					//proxy.ModifyResponse = proxyData.ModifyResponse
-
 					// Prepare the statistics of the errors and successes of the route in the reverse proxy
 					proxy.ErrorHandler = el.Proxy[proxyKey].ErrorHandler
 
 					el.Proxy[proxyKey].lastRoundError = false
 					el.Proxy[proxyKey].Servers[serverKey].lastRoundError = false
+
+					//todo: implementar
+					//proxy.ModifyResponse = proxyData.ModifyResponse
 
 					// Run the route and measure execution time
 					startTime := time.Now()

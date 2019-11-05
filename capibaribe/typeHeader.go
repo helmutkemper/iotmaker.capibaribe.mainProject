@@ -8,5 +8,5 @@ type header struct {
 type headerMonitor struct {
 	Key   string `yaml:"key"    json:"key"`
 	Value string `yaml:"value"  json:"value"`
-	Type  string `yaml:"type"  json:"type"`
+	Type  string `yaml:"type"   json:"type"`
 }
