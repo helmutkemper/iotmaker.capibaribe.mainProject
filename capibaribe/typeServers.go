@@ -54,7 +54,7 @@ func (el *servers) OnExecutionEndWithErrorEvent(elapsedTime time.Duration) {
 	el.SetRouteHasErrorOnLastRoundFlag()
 	el.AddExecutionDateToEntireExecutionDateList()
 	el.AddExecutionDateToErrorExecutionDateList()
-	el.AddExecutionTime(elapsedTime, true)
+	el.AddExecutionTimeWithError(elapsedTime)
 }
 
 func (el *servers) OnExecutionEndWithSuccessEvent(elapsedTime time.Duration) {
@@ -64,7 +64,7 @@ func (el *servers) OnExecutionEndWithSuccessEvent(elapsedTime time.Duration) {
 	el.ResetRouteHasErrorOnLastRoundFlag()
 	el.AddExecutionDateToEntireExecutionDateList()
 	el.AddExecutionDateToSuccessExecutionDateList()
-	el.AddExecutionTime(elapsedTime, false)
+	el.AddExecutionTimeWithSuccess(elapsedTime)
 }
 
 func (el *servers) ResetConsecutiveErrosCounter() {
@@ -122,7 +122,15 @@ func (el *servers) AddExecutionDateToErrorExecutionDateList() {
 	}
 }
 
-func (el *servers) AddExecutionTime(duration time.Duration, error bool) {
+func (el *servers) AddExecutionTimeWithSuccess(duration time.Duration) {
+	el.addExecutionTime(duration, false)
+}
+
+func (el *servers) AddExecutionTimeWithError(duration time.Duration) {
+	el.addExecutionTime(duration, true)
+}
+
+func (el *servers) addExecutionTime(duration time.Duration, error bool) {
 
 	if duration > el.executionDurationMax {
 		el.executionDurationMax = duration
