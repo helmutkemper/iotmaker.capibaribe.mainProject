@@ -60,7 +60,10 @@ func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 
-				if proxyData.Path != "" && proxyData.Path != path {
+				// fixme: verificar primeiro caso
+				if proxyData.Path != "" && proxyData.Path != path && len(proxyData.Header) > 0 && proxyData.VerifyHeaderMatchValueToRoute(w, r) == false {
+					continue
+				} else if proxyData.Path != "" && proxyData.Path != path {
 					continue
 				} else if len(proxyData.Header) > 0 && proxyData.VerifyHeaderMatchValueToRoute(w, r) == false {
 					continue
