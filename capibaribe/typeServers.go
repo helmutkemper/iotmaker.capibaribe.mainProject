@@ -6,23 +6,40 @@ import (
 
 const KListMaxLength = 10
 
+type durationList struct {
+	Duration time.Duration
+	Error    bool
+}
+
+func (el *durationList) SuccessEvent(duration time.Duration) {
+	el.Duration = duration
+	el.Error = false
+}
+
+func (el *durationList) ErrorEvent(duration time.Duration) {
+	el.Duration = duration
+	el.Error = true
+}
+
 type servers struct {
-	numberCurrentExecutions  int64
-	executionDurationMax     int64
-	executionDurationMin     int64
-	executionDurationList    []int64
-	executionDurationAverage int64
-	executionDateList        []time.Time
-	executionDateSuccessList []time.Time
-	executionDateErrorList   []time.Time
-	consecutiveErrors        int
-	consecutiveSuccess       int
-	totalErrorsCounter       int
-	totalSuccessCounter      int
-	lastRoundError           bool
-	Host                     string  `yaml:"host"       json:"host"`
-	Weight                   float64 `yaml:"weight"     json:"weight"`
-	OverLoad                 int     `yaml:"overLoad"   json:"overLoad"`
+	numberCurrentExecutions      int64
+	executionDurationMax         time.Duration
+	executionDurationMin         time.Duration
+	executionDurationList        []durationList
+	executionDurationSuccessList []durationList
+	executionDurationErrorList   []durationList
+	executionDurationAverage     time.Duration
+	executionDateList            []time.Time
+	executionDateSuccessList     []time.Time
+	executionDateErrorList       []time.Time
+	consecutiveErrors            int
+	consecutiveSuccess           int
+	totalErrorsCounter           int
+	totalSuccessCounter          int
+	lastRoundError               bool
+	Host                         string  `yaml:"host"       json:"host"`
+	Weight                       float64 `yaml:"weight"     json:"weight"`
+	OverLoad                     int     `yaml:"overLoad"   json:"overLoad"`
 }
 
 func (el *servers) OnExecutionStartEvent() {
@@ -30,13 +47,14 @@ func (el *servers) OnExecutionStartEvent() {
 	el.OnExecutionStartCurrentExecutionsConterIncrementOne()
 }
 
-func (el *servers) OnExecutionEndWithErrorEvent() {
+func (el *servers) OnExecutionEndWithErrorEvent(elapsedTime time.Duration) {
 	el.OnExecutionEndCurrentExecutionsConterDecrementOne()
 	el.IncrementErrosCounters()
 	el.ResetConsecutiveSuccessCounter()
 	el.SetRouteHasErrorOnLastRoundFlag()
 	el.AddExecutionDateToEntireExecutionDateList()
 	el.AddExecutionDateToErrorExecutionDateList()
+	el.AddExecutionTime(elapsedTime, true)
 }
 
 func (el *servers) OnExecutionEndWithSuccessEvent(elapsedTime time.Duration) {
@@ -46,7 +64,7 @@ func (el *servers) OnExecutionEndWithSuccessEvent(elapsedTime time.Duration) {
 	el.ResetRouteHasErrorOnLastRoundFlag()
 	el.AddExecutionDateToEntireExecutionDateList()
 	el.AddExecutionDateToSuccessExecutionDateList()
-	el.AddExecutionTime(int64(elapsedTime))
+	el.AddExecutionTime(elapsedTime, false)
 }
 
 func (el *servers) ResetConsecutiveErrosCounter() {
@@ -104,7 +122,7 @@ func (el *servers) AddExecutionDateToErrorExecutionDateList() {
 	}
 }
 
-func (el *servers) AddExecutionTime(duration int64) {
+func (el *servers) AddExecutionTime(duration time.Duration, error bool) {
 
 	if duration > el.executionDurationMax {
 		el.executionDurationMax = duration
@@ -116,22 +134,28 @@ func (el *servers) AddExecutionTime(duration int64) {
 		el.executionDurationMin = duration
 	}
 
-	el.executionDurationList = append(el.executionDurationList, duration)
+	el.executionDurationList = append(el.executionDurationList, durationList{Duration: duration, Error: error})
 	if len(el.executionDurationList) > KListMaxLength {
 		el.executionDurationList = el.executionDurationList[1:]
 	}
 
 	el.executionDurationAverage = 0
-	for _, value := range el.executionDurationList {
-		el.executionDurationAverage += value
+	for _, durationEvent := range el.executionDurationList {
+		el.executionDurationAverage += durationEvent.Duration
 	}
 
-	el.executionDurationAverage = el.executionDurationAverage / int64(len(el.executionDurationList))
+	el.executionDurationAverage = time.Duration(int64(el.executionDurationAverage) / int64(len(el.executionDurationList)))
 }
 
 func NewServerStruct() servers {
 	ret := servers{}
-	ret.executionDurationList = make([]int64, 0)
+	ret.executionDurationList = make([]durationList, 0)
+	ret.executionDurationSuccessList = make([]durationList, 0)
+	ret.executionDurationErrorList = make([]durationList, 0)
+
+	ret.executionDateList = make([]time.Time, 0)
+	ret.executionDateSuccessList = make([]time.Time, 0)
+	ret.executionDateErrorList = make([]time.Time, 0)
 
 	return ret
 }

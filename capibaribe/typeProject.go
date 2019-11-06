@@ -56,7 +56,7 @@ func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
 			if proxyData.Host == host || proxyData.Host == "" {
 
 				if proxyData.HealthCheck.Path == path {
-					proxyData.WriteHealthCheckSignature(w, r)
+					proxyData.WriteHealthCheckDataToOutputEndpoint(w, r)
 					return
 				}
 
@@ -102,14 +102,10 @@ func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
 					proxy.ServeHTTP(w, r)
 					elapsedTime := time.Since(startTime)
 
-					// Verify error
+					// Verify error and continue to select a new route in case of error
 					if el.Proxy[proxyKey].lastRoundError == true {
-
-						selectedServerPointer.OnExecutionEndWithErrorEvent()
-
+						selectedServerPointer.OnExecutionEndWithErrorEvent(elapsedTime)
 						_ = seelog.Critical("todas as rotas deram erro. testando novamente")
-
-						// Prepare to select a new route after error
 						continue
 					}
 

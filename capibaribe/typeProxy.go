@@ -5,6 +5,7 @@ import (
 	"math/rand"
 	"net/http"
 	"regexp"
+	"time"
 )
 
 /*
@@ -89,7 +90,7 @@ func (el *proxy) VerifyHeaderMatchValueToRoute(w http.ResponseWriter, r *http.Re
 	return pass
 }
 
-func (el *proxy) WriteHealthCheckSignature(w http.ResponseWriter, r *http.Request) {
+func (el *proxy) WriteHealthCheckDataToOutputEndpoint(w http.ResponseWriter, r *http.Request) {
 	for _, headerData := range el.HealthCheck.Header {
 		w.Header().Add(headerData.Key, headerData.Value)
 	}
@@ -124,7 +125,7 @@ func (el *proxy) ModifyResponse(resp *http.Response) error {
 
 func (el *proxy) executionTimeAverage() (string, int) {
 
-	minTime := int64(math.MaxInt64)
+	minTime := time.Duration(math.MaxInt64)
 	keyToReturn := 0
 
 	for serverKey, serverData := range el.Servers {
@@ -141,7 +142,7 @@ func (el *proxy) executionTimeAverage() (string, int) {
 
 func (el *proxy) executionTime() (string, int) {
 
-	minTime := int64(math.MaxInt64)
+	minTime := time.Duration(math.MaxInt64)
 	keyToReturn := 0
 
 	for serverKey, serverData := range el.Servers {
