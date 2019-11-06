@@ -128,10 +128,10 @@ func (el *proxy) executionTimeAverage() (string, int) {
 	keyToReturn := 0
 
 	for serverKey, serverData := range el.Servers {
-		if minTime > serverData.executionTimeAverage {
+		if minTime > serverData.executionDurationAverage {
 
 			keyToReturn = serverKey
-			minTime = serverData.executionTimeAverage
+			minTime = serverData.executionDurationAverage
 
 		}
 	}
@@ -145,10 +145,10 @@ func (el *proxy) executionTime() (string, int) {
 	keyToReturn := 0
 
 	for serverKey, serverData := range el.Servers {
-		if minTime > serverData.executionTimeMin {
+		if minTime > serverData.executionDurationMin {
 
 			keyToReturn = serverKey
-			minTime = serverData.executionTimeMin
+			minTime = serverData.executionDurationMin
 
 		}
 	}

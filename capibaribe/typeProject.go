@@ -77,6 +77,7 @@ func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
 					}
 
 					hostServer, serverKey = proxyData.SelectLoadBalance()
+					selectedServerPointer := el.Proxy[proxyKey].Servers[serverKey]
 
 					// Prepare the reverse proxy
 					rpURL, err := url.Parse(hostServer)
@@ -87,16 +88,16 @@ func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
 					proxy := httputil.NewSingleHostReverseProxy(rpURL)
 					proxy.ErrorLog = log.New(DebugLogger{}, "", 0)
 					proxy.Transport = &transport{RoundTripper: http.DefaultTransport, Project: el}
-					// Prepare the statistics of the errors and successes of the route in the reverse proxy
+					// Prepare the statistics of the totalErrorsCounter and successes of the route in the reverse proxy
 					proxy.ErrorHandler = el.Proxy[proxyKey].ErrorHandler
 
 					el.Proxy[proxyKey].lastRoundError = false
-					el.Proxy[proxyKey].Servers[serverKey].lastRoundError = false
 
 					//todo: implementar
 					//proxy.ModifyResponse = proxyData.ModifyResponse
 
 					// Run the route and measure execution time
+					selectedServerPointer.OnExecutionStartEvent()
 					startTime := time.Now()
 					proxy.ServeHTTP(w, r)
 					elapsedTime := time.Since(startTime)
@@ -104,9 +105,7 @@ func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
 					// Verify error
 					if el.Proxy[proxyKey].lastRoundError == true {
 
-						el.Proxy[proxyKey].Servers[serverKey].lastRoundError = true
-						el.Proxy[proxyKey].Servers[serverKey].consecutiveErrors = 0
-						el.Proxy[proxyKey].Servers[serverKey].consecutiveSuccess += 1
+						selectedServerPointer.OnExecutionEndWithErrorEvent()
 
 						_ = seelog.Critical("todas as rotas deram erro. testando novamente")
 
@@ -116,8 +115,7 @@ func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
 
 					// Statistics of successes of the route
 					el.Proxy[proxyKey].SuccessHandler(w, r)
-
-					el.Proxy[proxyKey].Servers[serverKey].AddExecutionTime(int64(elapsedTime))
+					selectedServerPointer.OnExecutionEndWithSuccessEvent(elapsedTime)
 					_ = seelog.Critical("rota ok")
 					return
 

@@ -85,14 +85,14 @@ capibaribe:
         # ipv6Hash -                lista de ips
         # hash -                    request_uri
         loadBalancing: roundRobin # roundRobin | lowTimeResponse | lowTimeResponseAverage | random
-        path: /
-        header:
-          - key: "test"
-            value: "estou vivo"
-            type: string # string | regExp
-          - key: "reg"
-            value: "^est"
-            type: regExp
+        path:
+#        header:
+#          - key: "test"
+#            value: "estou vivo"
+#            type: string # string | regExp
+#          - key: "reg"
+#            value: "^est"
+#            type: regExp
         maxAttemptToRescueLoop: 10
         healthCheck:
           path: "/healthCheck"
