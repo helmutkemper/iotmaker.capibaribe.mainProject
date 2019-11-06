@@ -53,19 +53,19 @@ func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
 				host = re.ReplaceAllString(host, "$1")
 			}
 
-			if proxyData.Host == host || proxyData.Host == "" {
+			if proxyData.VerifyHostPathToValidateRoute(host) == true {
 
-				if proxyData.HealthCheck.Path == path {
+				if proxyData.VerifyHealthCheckPathToValidatePathIntoHost(path) == true {
 					proxyData.WriteHealthCheckDataToOutputEndpoint(w, r)
 					return
 				}
 
-				// fixme: verificar primeiro caso
-				if proxyData.Path != "" && proxyData.Path != path && len(proxyData.Header) > 0 && proxyData.VerifyHeaderMatchValueToRoute(w, r) == false {
+				// fixme: verify this logic
+				if proxyData.VerifyPathAndHeaderInformationToValidateRoute(path, w, r) != true {
 					continue
-				} else if proxyData.Path != "" && proxyData.Path != path {
+				} else if proxyData.VerifyPathWithoutVerifyHeaderInformationToValidateRoute(path) == false {
 					continue
-				} else if len(proxyData.Header) > 0 && proxyData.VerifyHeaderMatchValueToRoute(w, r) == false {
+				} else if proxyData.VerifyHeaderInformationWithoutVerifyPathToValidateRoute(w, r) == false {
 					continue
 				}
 

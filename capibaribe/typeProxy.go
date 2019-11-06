@@ -56,6 +56,14 @@ type proxy struct {
 	lastRoundError bool
 }
 
+func (el *proxy) VerifyHostPathToValidateRoute(host string) bool {
+	return el.Host == host || el.Host == ""
+}
+
+func (el *proxy) VerifyHealthCheckPathToValidatePathIntoHost(path string) bool {
+	return el.HealthCheck.Path == path
+}
+
 func (el *proxy) SelectLoadBalance() (string, int) {
 	if el.LoadBalancing == KLoadBalanceRandom {
 		return el.random()
@@ -70,24 +78,37 @@ func (el *proxy) SelectLoadBalance() (string, int) {
 
 }
 
+func (el *proxy) VerifyPathAndHeaderInformationToValidateRoute(path string, w http.ResponseWriter, r *http.Request) bool {
+	A := el.Path == ""
+	B := len(el.Header) == 0
+	C := el.Path == path
+	D := el.VerifyHeaderMatchValueToRoute(w, r)
+	return (A && B) || (B && D) || (!A && !B && C)
+}
+
+func (el *proxy) VerifyPathWithoutVerifyHeaderInformationToValidateRoute(path string) bool {
+	return el.Path != "" && el.Path == path
+}
+
+func (el *proxy) VerifyHeaderInformationWithoutVerifyPathToValidateRoute(w http.ResponseWriter, r *http.Request) bool {
+	return len(el.Header) > 0 && el.VerifyHeaderMatchValueToRoute(w, r)
+}
+
 func (el *proxy) VerifyHeaderMatchValueToRoute(w http.ResponseWriter, r *http.Request) bool {
-	pass := false
 	for _, headerData := range el.Header {
 
 		if headerData.Type == KHeaderTypeString && r.Header.Get(headerData.Key) == headerData.Value {
-			pass = true
-			break
+			return true
 		} else if headerData.Type == KHeaderTypeRegExp {
 			re := regexp.MustCompile(headerData.Value)
 			if re.MatchString(r.Header.Get(headerData.Key)) == true {
-				pass = true
-				break
+				return true
 			}
 		}
 
 	}
 
-	return pass
+	return false
 }
 
 func (el *proxy) WriteHealthCheckDataToOutputEndpoint(w http.ResponseWriter, r *http.Request) {

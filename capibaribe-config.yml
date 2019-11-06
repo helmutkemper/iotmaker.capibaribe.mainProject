@@ -85,7 +85,7 @@ capibaribe:
         # ipv6Hash -                lista de ips
         # hash -                    request_uri
         loadBalancing: roundRobin # roundRobin | lowTimeResponse | lowTimeResponseAverage | random
-        path:
+#        path:
 #        header:
 #          - key: "test"
 #            value: "estou vivo"
