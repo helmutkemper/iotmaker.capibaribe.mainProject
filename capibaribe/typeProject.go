@@ -80,15 +80,6 @@ func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
 					continue
 				}
 
-				// fixme: verify this logic
-				/*if proxyData.VerifyPathAndHeaderInformationToValidateRoute(path, w, r) != true {
-					continue
-				} else if proxyData.VerifyPathWithoutVerifyHeaderInformationToValidateRoute(path) != true {
-					continue
-				} else if proxyData.VerifyHeaderInformationWithoutVerifyPathToValidateRoute(w, r) != true {
-					continue
-				}*/
-
 				for {
 
 					// Check the maximum number of interactions of the route from the proxy to prevent an infinite loop
@@ -100,7 +91,6 @@ func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
 					}
 
 					hostServer, serverKey = proxyData.SelectLoadBalance()
-					selectedServerPointer := el.Proxy[proxyKey].Servers[serverKey]
 
 					// Prepare the reverse proxy
 					rpURL, err := url.Parse(hostServer)
@@ -120,21 +110,21 @@ func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
 					//proxy.ModifyResponse = proxyData.ModifyResponse
 
 					// Run the route and measure execution time
-					selectedServerPointer.OnExecutionStartEvent()
+					el.Proxy[proxyKey].Servers[serverKey].OnExecutionStartEvent()
 					startTime := time.Now()
 					proxy.ServeHTTP(w, r)
 					elapsedTime := time.Since(startTime)
 
 					// Verify error and continue to select a new route in case of error
 					if el.Proxy[proxyKey].lastRoundError == true {
-						selectedServerPointer.OnExecutionEndWithErrorEvent(elapsedTime)
+						el.Proxy[proxyKey].Servers[serverKey].OnExecutionEndWithErrorEvent(elapsedTime)
 						_ = seelog.Critical("todas as rotas deram erro. testando novamente")
 						continue
 					}
 
 					// Statistics of successes of the route
 					el.Proxy[proxyKey].SuccessHandler(w, r)
-					selectedServerPointer.OnExecutionEndWithSuccessEvent(elapsedTime)
+					el.Proxy[proxyKey].Servers[serverKey].OnExecutionEndWithSuccessEvent(elapsedTime)
 					_ = seelog.Critical("rota ok")
 					return
 
