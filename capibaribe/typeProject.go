@@ -60,12 +60,17 @@ func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 
+				if proxyData.VerifyRouteDataPathToValidatePathIntoHost(path) == true {
+					proxyData.WriteProxyDataToOutputJSonEndpoint(w, r)
+					return
+				}
+
 				// fixme: verify this logic
 				if proxyData.VerifyPathAndHeaderInformationToValidateRoute(path, w, r) != true {
 					continue
-				} else if proxyData.VerifyPathWithoutVerifyHeaderInformationToValidateRoute(path) == false {
+				} else if proxyData.VerifyPathWithoutVerifyHeaderInformationToValidateRoute(path) != true {
 					continue
-				} else if proxyData.VerifyHeaderInformationWithoutVerifyPathToValidateRoute(w, r) == false {
+				} else if proxyData.VerifyHeaderInformationWithoutVerifyPathToValidateRoute(w, r) != true {
 					continue
 				}
 
@@ -91,7 +96,7 @@ func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
 					proxy := httputil.NewSingleHostReverseProxy(rpURL)
 					proxy.ErrorLog = log.New(DebugLogger{}, "", 0)
 					proxy.Transport = &transport{RoundTripper: http.DefaultTransport, Project: el}
-					// Prepare the statistics of the totalErrorsCounter and successes of the route in the reverse proxy
+					// Prepare the statistics of the TotalErrorsCounter and successes of the route in the reverse proxy
 					proxy.ErrorHandler = el.Proxy[proxyKey].ErrorHandler
 
 					el.Proxy[proxyKey].lastRoundError = false

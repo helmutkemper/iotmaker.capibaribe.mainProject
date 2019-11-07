@@ -1,6 +1,7 @@
 package capibaribe
 
 import (
+	"encoding/json"
 	"math"
 	"math/rand"
 	"net/http"
@@ -60,6 +61,10 @@ func (el *proxy) VerifyHostPathToValidateRoute(host string) bool {
 	return el.Host == host || el.Host == ""
 }
 
+func (el *proxy) VerifyRouteDataPathToValidatePathIntoHost(path string) bool {
+	return "/test" == path
+}
+
 func (el *proxy) VerifyHealthCheckPathToValidatePathIntoHost(path string) bool {
 	return el.HealthCheck.Path == path
 }
@@ -83,15 +88,20 @@ func (el *proxy) VerifyPathAndHeaderInformationToValidateRoute(path string, w ht
 	B := len(el.Header) == 0
 	C := el.Path == path
 	D := el.VerifyHeaderMatchValueToRoute(w, r)
+	return D || C || (A && B)
 	return (A && B) || (B && D) || (!A && !B && C)
 }
 
 func (el *proxy) VerifyPathWithoutVerifyHeaderInformationToValidateRoute(path string) bool {
-	return el.Path != "" && el.Path == path
+	A := el.Path == ""
+	B := el.Path == path
+	return A || B
 }
 
 func (el *proxy) VerifyHeaderInformationWithoutVerifyPathToValidateRoute(w http.ResponseWriter, r *http.Request) bool {
-	return len(el.Header) > 0 && el.VerifyHeaderMatchValueToRoute(w, r)
+	A := len(el.Header) == 0
+	B := el.VerifyHeaderMatchValueToRoute(w, r)
+	return A || B
 }
 
 func (el *proxy) VerifyHeaderMatchValueToRoute(w http.ResponseWriter, r *http.Request) bool {
@@ -109,6 +119,14 @@ func (el *proxy) VerifyHeaderMatchValueToRoute(w http.ResponseWriter, r *http.Re
 	}
 
 	return false
+}
+
+func (el *proxy) WriteProxyDataToOutputJSonEndpoint(w http.ResponseWriter, r *http.Request) {
+	w.Header().Add("Content-Type", "application/json")
+
+	out, _ := json.Marshal(el.Servers)
+
+	w.Write(out)
 }
 
 func (el *proxy) WriteHealthCheckDataToOutputEndpoint(w http.ResponseWriter, r *http.Request) {
@@ -150,10 +168,10 @@ func (el *proxy) executionTimeAverage() (string, int) {
 	keyToReturn := 0
 
 	for serverKey, serverData := range el.Servers {
-		if minTime > serverData.executionDurationAverage {
+		if minTime > serverData.ExecutionDurationAverage {
 
 			keyToReturn = serverKey
-			minTime = serverData.executionDurationAverage
+			minTime = serverData.ExecutionDurationAverage
 
 		}
 	}
@@ -167,10 +185,10 @@ func (el *proxy) executionTime() (string, int) {
 	keyToReturn := 0
 
 	for serverKey, serverData := range el.Servers {
-		if minTime > serverData.executionDurationMin {
+		if minTime > serverData.ExecutionDurationMin {
 
 			keyToReturn = serverKey
-			minTime = serverData.executionDurationMin
+			minTime = serverData.ExecutionDurationMin
 
 		}
 	}

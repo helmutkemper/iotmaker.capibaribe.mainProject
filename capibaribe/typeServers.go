@@ -22,20 +22,20 @@ func (el *durationList) ErrorEvent(duration time.Duration) {
 }
 
 type servers struct {
-	numberCurrentExecutions      int64
-	executionDurationMax         time.Duration
-	executionDurationMin         time.Duration
-	executionDurationList        []durationList
-	executionDurationSuccessList []durationList
-	executionDurationErrorList   []durationList
-	executionDurationAverage     time.Duration
-	executionDateList            []time.Time
-	executionDateSuccessList     []time.Time
-	executionDateErrorList       []time.Time
-	consecutiveErrors            int
-	consecutiveSuccess           int
-	totalErrorsCounter           int
-	totalSuccessCounter          int
+	NumberCurrentExecutions      int64
+	ExecutionDurationMax         time.Duration
+	ExecutionDurationMin         time.Duration
+	ExecutionDurationList        []durationList
+	ExecutionDurationSuccessList []durationList
+	ExecutionDurationErrorList   []durationList
+	ExecutionDurationAverage     time.Duration
+	ExecutionDateList            []time.Time
+	ExecutionDateSuccessList     []time.Time
+	ExecutionDateErrorList       []time.Time
+	ConsecutiveErrors            int
+	ConsecutiveSuccess           int
+	TotalErrorsCounter           int
+	TotalSuccessCounter          int
 	lastRoundError               bool
 	Host                         string  `yaml:"host"       json:"host"`
 	Weight                       float64 `yaml:"weight"     json:"weight"`
@@ -68,21 +68,21 @@ func (el *servers) OnExecutionEndWithSuccessEvent(elapsedTime time.Duration) {
 }
 
 func (el *servers) ResetConsecutiveErrosCounter() {
-	el.consecutiveErrors = 0
+	el.ConsecutiveErrors = 0
 }
 
 func (el *servers) IncrementErrosCounters() {
-	el.consecutiveErrors += 1
-	el.totalErrorsCounter += 1
+	el.ConsecutiveErrors += 1
+	el.TotalErrorsCounter += 1
 }
 
 func (el *servers) ResetConsecutiveSuccessCounter() {
-	el.consecutiveSuccess = 0
+	el.ConsecutiveSuccess = 0
 }
 
 func (el *servers) IncrementSuccessCounters() {
-	el.consecutiveSuccess += 1
-	el.totalSuccessCounter += 1
+	el.ConsecutiveSuccess += 1
+	el.TotalSuccessCounter += 1
 }
 
 func (el *servers) ResetRouteHasErrorOnLastRoundFlag() {
@@ -94,31 +94,31 @@ func (el *servers) SetRouteHasErrorOnLastRoundFlag() {
 }
 
 func (el *servers) OnExecutionStartCurrentExecutionsConterIncrementOne() {
-	el.numberCurrentExecutions += 1
+	el.NumberCurrentExecutions += 1
 }
 
 func (el *servers) OnExecutionEndCurrentExecutionsConterDecrementOne() {
-	el.numberCurrentExecutions -= 1
+	el.NumberCurrentExecutions -= 1
 }
 
 func (el *servers) AddExecutionDateToEntireExecutionDateList() {
-	el.executionDateList = append(el.executionDateList, time.Now())
-	if len(el.executionDateList) > KListMaxLength {
-		el.executionDateList = el.executionDateList[1:]
+	el.ExecutionDateList = append(el.ExecutionDateList, time.Now())
+	if len(el.ExecutionDateList) > KListMaxLength {
+		el.ExecutionDateList = el.ExecutionDateList[1:]
 	}
 }
 
 func (el *servers) AddExecutionDateToSuccessExecutionDateList() {
-	el.executionDateSuccessList = append(el.executionDateSuccessList, time.Now())
-	if len(el.executionDateSuccessList) > KListMaxLength {
-		el.executionDateSuccessList = el.executionDateSuccessList[1:]
+	el.ExecutionDateSuccessList = append(el.ExecutionDateSuccessList, time.Now())
+	if len(el.ExecutionDateSuccessList) > KListMaxLength {
+		el.ExecutionDateSuccessList = el.ExecutionDateSuccessList[1:]
 	}
 }
 
 func (el *servers) AddExecutionDateToErrorExecutionDateList() {
-	el.executionDateErrorList = append(el.executionDateErrorList, time.Now())
-	if len(el.executionDateErrorList) > KListMaxLength {
-		el.executionDateErrorList = el.executionDateErrorList[1:]
+	el.ExecutionDateErrorList = append(el.ExecutionDateErrorList, time.Now())
+	if len(el.ExecutionDateErrorList) > KListMaxLength {
+		el.ExecutionDateErrorList = el.ExecutionDateErrorList[1:]
 	}
 }
 
@@ -132,38 +132,38 @@ func (el *servers) AddExecutionTimeWithError(duration time.Duration) {
 
 func (el *servers) addExecutionTime(duration time.Duration, error bool) {
 
-	if duration > el.executionDurationMax {
-		el.executionDurationMax = duration
+	if duration > el.ExecutionDurationMax {
+		el.ExecutionDurationMax = duration
 	}
 
-	if el.executionDurationMin == 0 {
-		el.executionDurationMin = duration
-	} else if el.executionDurationMin > duration {
-		el.executionDurationMin = duration
+	if el.ExecutionDurationMin == 0 {
+		el.ExecutionDurationMin = duration
+	} else if el.ExecutionDurationMin > duration {
+		el.ExecutionDurationMin = duration
 	}
 
-	el.executionDurationList = append(el.executionDurationList, durationList{Duration: duration, Error: error})
-	if len(el.executionDurationList) > KListMaxLength {
-		el.executionDurationList = el.executionDurationList[1:]
+	el.ExecutionDurationList = append(el.ExecutionDurationList, durationList{Duration: duration, Error: error})
+	if len(el.ExecutionDurationList) > KListMaxLength {
+		el.ExecutionDurationList = el.ExecutionDurationList[1:]
 	}
 
-	el.executionDurationAverage = 0
-	for _, durationEvent := range el.executionDurationList {
-		el.executionDurationAverage += durationEvent.Duration
+	el.ExecutionDurationAverage = 0
+	for _, durationEvent := range el.ExecutionDurationList {
+		el.ExecutionDurationAverage += durationEvent.Duration
 	}
 
-	el.executionDurationAverage = time.Duration(int64(el.executionDurationAverage) / int64(len(el.executionDurationList)))
+	el.ExecutionDurationAverage = time.Duration(int64(el.ExecutionDurationAverage) / int64(len(el.ExecutionDurationList)))
 }
 
 func NewServerStruct() servers {
 	ret := servers{}
-	ret.executionDurationList = make([]durationList, 0)
-	ret.executionDurationSuccessList = make([]durationList, 0)
-	ret.executionDurationErrorList = make([]durationList, 0)
+	ret.ExecutionDurationList = make([]durationList, 0)
+	ret.ExecutionDurationSuccessList = make([]durationList, 0)
+	ret.ExecutionDurationErrorList = make([]durationList, 0)
 
-	ret.executionDateList = make([]time.Time, 0)
-	ret.executionDateSuccessList = make([]time.Time, 0)
-	ret.executionDateErrorList = make([]time.Time, 0)
+	ret.ExecutionDateList = make([]time.Time, 0)
+	ret.ExecutionDateSuccessList = make([]time.Time, 0)
+	ret.ExecutionDateErrorList = make([]time.Time, 0)
 
 	return ret
 }
