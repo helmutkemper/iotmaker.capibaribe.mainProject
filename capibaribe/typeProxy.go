@@ -88,8 +88,13 @@ func (el *proxy) VerifyPathAndHeaderInformationToValidateRoute(path string, w ht
 	B := len(el.Header) == 0
 	C := el.Path == path
 	D := el.VerifyHeaderMatchValueToRoute(w, r)
-	return D || C || (A && B)
-	return (A && B) || (B && D) || (!A && !B && C)
+	// true table
+	// | A | B | C | D | S |
+	// |---|---|---|---|---|
+	// | 0 | 0 | 1 | 1 | 1 |
+	// | X | X | X | X | 0 |
+	return !A && !B && C && D
+
 }
 
 func (el *proxy) VerifyPathWithoutVerifyHeaderInformationToValidateRoute(path string) bool {

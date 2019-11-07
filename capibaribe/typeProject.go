@@ -65,14 +65,22 @@ func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 
+				A := proxyData.VerifyPathAndHeaderInformationToValidateRoute(path, w, r)
+				B := proxyData.VerifyPathWithoutVerifyHeaderInformationToValidateRoute(path)
+				C := proxyData.VerifyHeaderInformationWithoutVerifyPathToValidateRoute(w, r)
+
+				if !(A || B || C) {
+					continue
+				}
+
 				// fixme: verify this logic
-				if proxyData.VerifyPathAndHeaderInformationToValidateRoute(path, w, r) != true {
+				/*if proxyData.VerifyPathAndHeaderInformationToValidateRoute(path, w, r) != true {
 					continue
 				} else if proxyData.VerifyPathWithoutVerifyHeaderInformationToValidateRoute(path) != true {
 					continue
 				} else if proxyData.VerifyHeaderInformationWithoutVerifyPathToValidateRoute(w, r) != true {
 					continue
-				}
+				}*/
 
 				for {
 
