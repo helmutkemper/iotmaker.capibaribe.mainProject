@@ -69,6 +69,17 @@ func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
 				B := proxyData.VerifyPathWithoutVerifyHeaderInformationToValidateRoute(path)
 				C := proxyData.VerifyHeaderInformationWithoutVerifyPathToValidateRoute(w, r)
 
+				// simplified true table
+				// | A | B | C | S |
+				// |---|---|---|---|
+				// | X | X | 1 | 1 |
+				// | X | 1 | X | 1 |
+				// | 1 | X | X | 1 |
+				// | X | 1 | 1 | 1 |
+				// | 1 | X | 1 | 1 |
+				// | 1 | 1 | X | 1 |
+				// | 1 | 1 | 1 | 1 |
+				// | X | X | X | 0 |
 				if !(A || B || C) {
 					continue
 				}
