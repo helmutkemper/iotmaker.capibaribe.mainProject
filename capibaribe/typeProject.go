@@ -75,11 +75,7 @@ func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
 				// | X | X | 1 | 1 |
 				// | X | 1 | X | 1 |
 				// | 1 | X | X | 1 |
-				// | X | 1 | 1 | 1 |
-				// | 1 | X | 1 | 1 |
-				// | 1 | 1 | X | 1 |
-				// | 1 | 1 | 1 | 1 |
-				// | X | X | X | 0 |
+				// | 0 | 0 | 0 | 0 |
 				if !(A || B || C) {
 					continue
 				}

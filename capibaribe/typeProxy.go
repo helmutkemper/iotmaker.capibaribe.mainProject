@@ -39,17 +39,17 @@ type proxy struct {
 
 	// quantidade de erros consecutivos
 	// zerado quando há um sucesso
-	consecutiveErrors int
+	ConsecutiveErrors int
 
 	// quantidade de sucessos consecutivos
 	// zerado quando há um erro
-	consecutiveSuccess int
+	ConsecutiveSuccess int
 
 	// total de erros
-	errors int
+	Errors int
 
 	// total de sucessos
-	success int
+	Success int
 
 	keyProxy       int
 	keyServer      int
@@ -129,7 +129,7 @@ func (el *proxy) VerifyHeaderMatchValueToRoute(w http.ResponseWriter, r *http.Re
 func (el *proxy) WriteProxyDataToOutputJSonEndpoint(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 
-	out, _ := json.Marshal(el.Servers)
+	out, _ := json.Marshal(el)
 
 	w.Write(out)
 }
@@ -143,17 +143,17 @@ func (el *proxy) WriteHealthCheckDataToOutputEndpoint(w http.ResponseWriter, r *
 }
 
 func (el *proxy) ErrorHandler(w http.ResponseWriter, r *http.Request, err error) {
-	el.consecutiveErrors += 1
-	el.consecutiveSuccess = 0
-	el.errors += 1
+	el.ConsecutiveErrors += 1
+	el.ConsecutiveSuccess = 0
+	el.Errors += 1
 	el.lastRoundError = true
 	el.lastError = err
 }
 
 func (el *proxy) SuccessHandler(w http.ResponseWriter, r *http.Request) {
-	el.consecutiveErrors = 0
-	el.consecutiveSuccess += 1
-	el.success += 1
+	el.ConsecutiveErrors = 0
+	el.ConsecutiveSuccess += 1
+	el.Success += 1
 	el.lastRoundError = false
 	el.lastError = nil
 }
