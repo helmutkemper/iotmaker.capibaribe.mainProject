@@ -22,9 +22,9 @@ func ExampleNewServerStruct() {
 	server.AddExecutionTime(140)
 	server.AddExecutionTime(150)
 
-	fmt.Printf("Minimal execution time: %v\n", server.ExecutionDurationMin)
-	fmt.Printf("Maximal execution time: %v\n", server.ExecutionDurationMax)
-	fmt.Printf("List of execution time: %v\n", server.ExecutionDurationList)
+	fmt.Printf("Minimal execution time: %v\n", server.ExecutionSuccessDurationMin)
+	fmt.Printf("Maximal execution time: %v\n", server.ExecutionSuccessDurationMax)
+	fmt.Printf("List of execution time: %v\n", server.ExecutionDurationEntireList)
 
 	// Output:
 	// Minimal execution time: 20

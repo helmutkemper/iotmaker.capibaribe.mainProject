@@ -113,43 +113,44 @@ func (el *MainConfig) prepare() error {
 
 	for affluentKey := range el.AffluentRiver {
 
-		for proxyKey, proxyData := range el.AffluentRiver[affluentKey].Proxy {
+		for proxyKey := range el.AffluentRiver[affluentKey].Proxy {
 
 			if el.AffluentRiver[affluentKey].Proxy[proxyKey].MaxAttemptToRescueLoop == 0 {
 				el.AffluentRiver[affluentKey].Proxy[proxyKey].MaxAttemptToRescueLoop = 10
 			}
 
-			// fixme: por que o tipo de loadbalance está sendo levado em conta aqui?
-			if proxyData.LoadBalancing == KLoadBalanceRoundRobin || proxyData.LoadBalancing == "" {
+			pass := false
+			for serverKey := range el.AffluentRiver[affluentKey].Proxy[proxyKey].Servers {
 
-				pass := false
+				host := el.AffluentRiver[affluentKey].Proxy[proxyKey].Servers[serverKey].Host
+				weight := el.AffluentRiver[affluentKey].Proxy[proxyKey].Servers[serverKey].Weight
+				overLoad := el.AffluentRiver[affluentKey].Proxy[proxyKey].Servers[serverKey].OverLoad
+
+				el.AffluentRiver[affluentKey].Proxy[proxyKey].Servers[serverKey] = NewServerStruct(host, weight, overLoad)
+
+				if el.AffluentRiver[affluentKey].Proxy[proxyKey].Servers[serverKey].Weight != 0 {
+					pass = true
+				}
+
+			}
+
+			if pass == false {
+
 				for serverKey := range el.AffluentRiver[affluentKey].Proxy[proxyKey].Servers {
-
-					if el.AffluentRiver[affluentKey].Proxy[proxyKey].Servers[serverKey].Weight != 0 {
-						pass = true
-					}
-
+					el.AffluentRiver[affluentKey].Proxy[proxyKey].Servers[serverKey].Weight = 1
 				}
 
-				if pass == false {
+			}
 
-					for serverKey := range el.AffluentRiver[affluentKey].Proxy[proxyKey].Servers {
-						el.AffluentRiver[affluentKey].Proxy[proxyKey].Servers[serverKey].Weight = 1
-					}
+			for _, serversData := range el.AffluentRiver[affluentKey].Proxy[proxyKey].Servers {
+				WeightsSum += serversData.Weight
+			}
 
-				}
-
-				for _, serversData := range el.AffluentRiver[affluentKey].Proxy[proxyKey].Servers {
-					WeightsSum += serversData.Weight
-				}
-
-				for serversKey, serversData := range el.AffluentRiver[affluentKey].Proxy[proxyKey].Servers {
-					if serversKey == 0 {
-						el.AffluentRiver[affluentKey].Proxy[proxyKey].Servers[serversKey].Weight = serversData.Weight / WeightsSum
-					} else {
-						el.AffluentRiver[affluentKey].Proxy[proxyKey].Servers[serversKey].Weight = (serversData.Weight / WeightsSum) + el.AffluentRiver[affluentKey].Proxy[proxyKey].Servers[serversKey-1].Weight
-					}
-
+			for serversKey, serversData := range el.AffluentRiver[affluentKey].Proxy[proxyKey].Servers {
+				if serversKey == 0 {
+					el.AffluentRiver[affluentKey].Proxy[proxyKey].Servers[serversKey].Weight = serversData.Weight / WeightsSum
+				} else {
+					el.AffluentRiver[affluentKey].Proxy[proxyKey].Servers[serversKey].Weight = (serversData.Weight / WeightsSum) + el.AffluentRiver[affluentKey].Proxy[proxyKey].Servers[serversKey-1].Weight
 				}
 
 			}
