@@ -37,24 +37,12 @@ type proxy struct {
 	// pt_br: lista de servidores secundários
 	Servers []servers `yaml:"servers" json:"servers"`
 
-	// quantidade de erros consecutivos
-	// zerado quando há um sucesso
-	ConsecutiveErrors int
-
-	// quantidade de sucessos consecutivos
-	// zerado quando há um erro
-	ConsecutiveSuccess int
-
-	// total de erros
-	Errors int
-
-	// total de sucessos
-	Success int
-
 	keyProxy       int
 	keyServer      int
 	lastError      error
 	lastRoundError bool
+
+	analytics
 }
 
 func (el *proxy) VerifyHostPathToValidateRoute(host string) bool {
@@ -142,20 +130,16 @@ func (el *proxy) WriteHealthCheckDataToOutputEndpoint(w http.ResponseWriter, r *
 	w.Write([]byte(el.HealthCheck.Body))
 }
 
-func (el *proxy) ErrorHandler(w http.ResponseWriter, r *http.Request, err error) {
-	el.ConsecutiveErrors += 1
-	el.ConsecutiveSuccess = 0
-	el.Errors += 1
-	el.lastRoundError = true
-	el.lastError = err
+func (el *proxy) OnExecutionStartEvent() {
+	el.StartTimeCounter()
 }
 
-func (el *proxy) SuccessHandler(w http.ResponseWriter, r *http.Request) {
-	el.ConsecutiveErrors = 0
-	el.ConsecutiveSuccess += 1
-	el.Success += 1
-	el.lastRoundError = false
-	el.lastError = nil
+func (el *proxy) OnErrorHandlerEvent(w http.ResponseWriter, r *http.Request, err error) {
+	el.AddExecutionTimeWithError()
+}
+
+func (el *proxy) OnSuccessHandlerEvent() {
+	el.AddExecutionTimeWithSuccess()
 }
 
 func (el *proxy) ModifyResponse(resp *http.Response) error {

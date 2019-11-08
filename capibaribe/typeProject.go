@@ -7,7 +7,6 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"regexp"
-	"time"
 )
 
 type Project struct {
@@ -102,7 +101,7 @@ func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
 					proxy.ErrorLog = log.New(DebugLogger{}, "", 0)
 					proxy.Transport = &transport{RoundTripper: http.DefaultTransport, Project: el}
 					// Prepare the statistics of the TotalErrorsCounter and successes of the route in the reverse proxy
-					proxy.ErrorHandler = el.Proxy[proxyKey].ErrorHandler
+					proxy.ErrorHandler = el.Proxy[proxyKey].OnErrorHandlerEvent
 
 					el.Proxy[proxyKey].lastRoundError = false
 
@@ -111,20 +110,19 @@ func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
 
 					// Run the route and measure execution time
 					el.Proxy[proxyKey].Servers[serverKey].OnExecutionStartEvent()
-					startTime := time.Now()
+					el.Proxy[proxyKey].OnExecutionStartEvent()
 					proxy.ServeHTTP(w, r)
-					elapsedTime := time.Since(startTime)
 
 					// Verify error and continue to select a new route in case of error
 					if el.Proxy[proxyKey].lastRoundError == true {
-						el.Proxy[proxyKey].Servers[serverKey].OnExecutionEndWithErrorEvent(elapsedTime)
+						el.Proxy[proxyKey].Servers[serverKey].OnExecutionEndWithErrorEvent()
 						_ = seelog.Critical("todas as rotas deram erro. testando novamente")
 						continue
 					}
 
 					// Statistics of successes of the route
-					el.Proxy[proxyKey].SuccessHandler(w, r)
-					el.Proxy[proxyKey].Servers[serverKey].OnExecutionEndWithSuccessEvent(elapsedTime)
+					el.Proxy[proxyKey].OnSuccessHandlerEvent()
+					el.Proxy[proxyKey].Servers[serverKey].OnExecutionEndWithSuccessEvent()
 					_ = seelog.Critical("rota ok")
 					return
 
