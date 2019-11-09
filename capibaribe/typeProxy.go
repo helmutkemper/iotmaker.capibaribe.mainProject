@@ -37,12 +37,7 @@ type proxy struct {
 	// pt_br: lista de servidores secundários
 	Servers []servers `yaml:"servers" json:"servers"`
 
-	keyProxy       int
-	keyServer      int
-	lastError      error
-	lastRoundError bool
-
-	analytics
+	Analytics
 }
 
 func (el *proxy) VerifyHostPathToValidateRoute(host string) bool {
@@ -72,16 +67,16 @@ func (el *proxy) SelectLoadBalance() (string, int) {
 }
 
 func (el *proxy) VerifyPathAndHeaderInformationToValidateRoute(path string, w http.ResponseWriter, r *http.Request) bool {
-	A := el.Path == ""
-	B := len(el.Header) == 0
-	C := el.Path == path
-	D := el.VerifyHeaderMatchValueToRoute(w, r)
-	// true table
+	// simplified true table
 	// | A | B | C | D | S |
 	// |---|---|---|---|---|
-	// | 0 | 0 | 1 | 1 | 1 |
+	// | 1 | 1 | 1 | 1 | 1 |
 	// | X | X | X | X | 0 |
-	return !A && !B && C && D
+	A := el.Path != ""
+	B := len(el.Header) != 0
+	C := el.Path == path
+	D := el.VerifyHeaderMatchValueToRoute(w, r)
+	return A && B && C && D
 
 }
 
@@ -130,16 +125,8 @@ func (el *proxy) WriteHealthCheckDataToOutputEndpoint(w http.ResponseWriter, r *
 	w.Write([]byte(el.HealthCheck.Body))
 }
 
-func (el *proxy) OnExecutionStartEvent() {
-	el.StartTimeCounter()
-}
-
-func (el *proxy) OnErrorHandlerEvent(w http.ResponseWriter, r *http.Request, err error) {
-	el.AddExecutionTimeWithError()
-}
-
-func (el *proxy) OnSuccessHandlerEvent() {
-	el.AddExecutionTimeWithSuccess()
+func (el *proxy) OnExecutionEndWithError(w http.ResponseWriter, r *http.Request, err error) {
+	el.Analytics.OnExecutionEndWithError()
 }
 
 func (el *proxy) ModifyResponse(resp *http.Response) error {

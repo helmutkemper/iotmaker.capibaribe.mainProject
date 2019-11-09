@@ -64,10 +64,6 @@ func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 
-				A := proxyData.VerifyPathAndHeaderInformationToValidateRoute(path, w, r)
-				B := proxyData.VerifyPathWithoutVerifyHeaderInformationToValidateRoute(path)
-				C := proxyData.VerifyHeaderInformationWithoutVerifyPathToValidateRoute(w, r)
-
 				// simplified true table
 				// | A | B | C | S |
 				// |---|---|---|---|
@@ -75,12 +71,14 @@ func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
 				// | X | 1 | X | 1 |
 				// | 1 | X | X | 1 |
 				// | 0 | 0 | 0 | 0 |
+				A := proxyData.VerifyPathAndHeaderInformationToValidateRoute(path, w, r)
+				B := proxyData.VerifyPathWithoutVerifyHeaderInformationToValidateRoute(path)
+				C := proxyData.VerifyHeaderInformationWithoutVerifyPathToValidateRoute(w, r)
 				if !(A || B || C) {
 					continue
 				}
 
 				for {
-
 					// Check the maximum number of interactions of the route from the proxy to prevent an infinite loop
 					loopCounter += 1
 					if loopCounter > el.Proxy[proxyKey].MaxAttemptToRescueLoop {
@@ -101,28 +99,26 @@ func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
 					proxy.ErrorLog = log.New(DebugLogger{}, "", 0)
 					proxy.Transport = &transport{RoundTripper: http.DefaultTransport, Project: el}
 					// Prepare the statistics of the TotalErrorsCounter and successes of the route in the reverse proxy
-					proxy.ErrorHandler = el.Proxy[proxyKey].OnErrorHandlerEvent
-
-					el.Proxy[proxyKey].lastRoundError = false
+					proxy.ErrorHandler = el.Proxy[proxyKey].OnExecutionEndWithError
 
 					//todo: implementar
 					//proxy.ModifyResponse = proxyData.ModifyResponse
 
 					// Run the route and measure execution time
-					el.Proxy[proxyKey].Servers[serverKey].OnExecutionStartEvent()
-					el.Proxy[proxyKey].OnExecutionStartEvent()
+					el.Proxy[proxyKey].Servers[serverKey].OnExecutionStart()
+					el.Proxy[proxyKey].OnExecutionStart()
 					proxy.ServeHTTP(w, r)
 
 					// Verify error and continue to select a new route in case of error
-					if el.Proxy[proxyKey].lastRoundError == true {
-						el.Proxy[proxyKey].Servers[serverKey].OnExecutionEndWithErrorEvent()
+					if el.Proxy[proxyKey].GetLastRoundError() == true {
+						el.Proxy[proxyKey].Servers[serverKey].OnExecutionEndWithError()
 						_ = seelog.Critical("todas as rotas deram erro. testando novamente")
 						continue
 					}
 
 					// Statistics of successes of the route
-					el.Proxy[proxyKey].OnSuccessHandlerEvent()
-					el.Proxy[proxyKey].Servers[serverKey].OnExecutionEndWithSuccessEvent()
+					el.Proxy[proxyKey].OnExecutionEndWithSuccess()
+					el.Proxy[proxyKey].Servers[serverKey].OnExecutionEndWithSuccess()
 					_ = seelog.Critical("rota ok")
 					return
 
