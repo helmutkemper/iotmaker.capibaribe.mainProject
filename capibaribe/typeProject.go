@@ -15,6 +15,7 @@ type Project struct {
 	Proxy             []proxy         `yaml:"proxy"             json:"proxy"`
 	DebugServerEnable bool            `yaml:"debugServerEnable" json:"debugServerEnable"`
 	HealthCheck       healthCheck     `yaml:"healthCheck"       json:"healthCheck"`
+	AnalyticsCheck    analyticsCheck  `yaml:"analyticsCheck"    json:"analyticsCheck"`
 	Listen            Listen          `yaml:"-"                 json:"-"`
 	waitGroup         int             `yaml:"-"                 json:"-"`
 }
@@ -25,18 +26,6 @@ func (el *Project) WaitAddDelta() {
 
 func (el *Project) WaitDone() {
 	el.waitGroup -= 1
-}
-
-func (el *Project) VerifyHealthCheckPathToValidatePathIntoHost(path string) bool {
-	return el.HealthCheck.Path == path
-}
-
-func (el *Project) WriteHealthCheckDataToOutputEndpoint(w http.ResponseWriter, r *http.Request) {
-	for _, headerData := range el.HealthCheck.Header {
-		w.Header().Add(headerData.Key, headerData.Value)
-	}
-
-	w.Write([]byte(el.HealthCheck.Body))
 }
 
 func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
@@ -67,13 +56,13 @@ func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
 
 			if proxyData.VerifyHostPathToValidateRoute(host) == true {
 
-				if el.VerifyHealthCheckPathToValidatePathIntoHost(path) == true {
-					el.WriteHealthCheckDataToOutputEndpoint(w, r)
+				if el.HealthCheck.VerifyPathToValidatePathIntoHost(path) == true {
+					el.HealthCheck.WriteDataToOutputEndpoint(w, r)
 					return
 				}
 
-				if proxyData.VerifyRouteDataPathToValidatePathIntoHost(path) == true {
-					proxyData.WriteProxyDataToOutputJSonEndpoint(w, r)
+				if el.AnalyticsCheck.VerifyPathToValidatePathIntoHost(path) == true {
+					el.AnalyticsCheck.WriteDataToOutputEndpoint(w, &proxyData)
 					return
 				}
 

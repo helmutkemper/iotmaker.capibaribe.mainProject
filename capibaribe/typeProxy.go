@@ -1,7 +1,6 @@
 package capibaribe
 
 import (
-	"encoding/json"
 	"math"
 	"math/rand"
 	"net/http"
@@ -39,10 +38,6 @@ type proxy struct {
 
 func (el *proxy) VerifyHostPathToValidateRoute(host string) bool {
 	return el.Host == host || el.Host == ""
-}
-
-func (el *proxy) VerifyRouteDataPathToValidatePathIntoHost(path string) bool {
-	return "/test" == path
 }
 
 func (el *proxy) SelectLoadBalance() (string, int) {
@@ -100,14 +95,6 @@ func (el *proxy) VerifyHeaderMatchValueToRoute(w http.ResponseWriter, r *http.Re
 	}
 
 	return false
-}
-
-func (el *proxy) WriteProxyDataToOutputJSonEndpoint(w http.ResponseWriter, r *http.Request) {
-	w.Header().Add("Content-Type", "application/json")
-
-	out, _ := json.Marshal(el)
-
-	w.Write(out)
 }
 
 func (el *proxy) OnExecutionEndWithError(w http.ResponseWriter, r *http.Request, err error) {

@@ -1,17 +1,8 @@
 # Capibaribe
 
-> This project is under test and have bugs
+Fast and simple reverse proxy
 
-The initial idea is to enable the micro-service developer to simulate network / transport errors in their own software 
-development environment and understand how services will behave in error conditions.
-
-> Portuguese:
->
-> A ideia inicial é permitir ao desenvolvedor de microsserviços a possibilidade de simular erros de rede/transporte no 
-> seu próprio ambiente de desenvolvimento de software e entender como os serviços vão se comportar em condições de erro.
-> 
-> 
-
+> MVP 1.0 ok
 
 To run this project:
 
@@ -141,63 +132,6 @@ certificate file may contain intermediate certificates following the leaf certif
       x509:
         certificate: ./company.com.crt
         certificateKey: ./company.com.key
-
-```
-
-The static server functionality was made to allow a static file service contained on the primary server
-
-```yaml
-
-    static:
-      - filePath: /disk_path/static
-        serverPath: static
-
-```
-
-Pygocentrus is the scientific name of a family of red piranhas common in the rivers of NE Brazil, and in our case, it is 
-the configuration of the system of random failures. Use 'rate' 0.0 to disable functionality or 'rate' values x/100 for 
-select percentage of attacks.
-
-| Version        | Value                                                                                               |
-|----------------|-----------------------------------------------------------------------------------------------------|
-| delay          | The information is delayed for a random period of time chosen between the maximum and minimum values|
-|                | determined in microseconds                                                                          |
-| dontRespond    | The information is deleted after a random period of time chosen between the maximum and minimum     |
-|                | values determined in microseconds                                                                   |
-| changeLength   | The size of the transmitted information is randomly adulterated                                     |
-| changeContent  | Some bytes of the information carried are randomly changed by a random bytes ( changeRate precedes  |
-|                | changeBytes )                                                                                       |
-| deleteContent  | All bytes of the information carried are changed by 0x00                                            |
-| changeHeaders  | **not yet implemented**                                                                             |
-
-```yaml
-
-    pygocentrus:
-      enabled: true
-      delay:
-        rate: 0.1
-        # time em uS
-        min: 2000000
-        max: 5000000
-      dontRespond:
-        rate: 0.1
-        # time em uS
-        min: 2000000
-        max: 5000000
-      changeLength: 0.0
-      changeContent:
-        changeRateMin: 0.0
-        changeRateMax: 0.0
-        changeBytesMin: 1
-        changeBytesMax: 10
-        rate: 0.1
-      deleteContent: 0.1
-      changeHeaders:
-        - number: 500
-          header:
-            - key: Content-Type
-              value: application/json
-          rate: 0.0
 
 ```
 

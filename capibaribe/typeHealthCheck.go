@@ -1,19 +1,21 @@
 package capibaribe
 
+import "net/http"
+
 type healthCheck struct {
 	Path   string   `yaml:"path"   json:"path"`
 	Header []header `yaml:"header" json:"header"`
 	Body   string   `yaml:"body"   json:"body"`
 }
 
-/*
-type healthCheck struct {
-	Enabled         bool  `yaml:"enabled"         json:"enabled"`
-	Interval        int   `yaml:"interval"        json:"interval"`
-	Fails           int   `yaml:"fails"           json:"fails"`
-	Passes          int   `yaml:"passes"          json:"passes"`
-	Uri             int   `yaml:"rui"             json:"rui"`
-	SuspendInterval int   `yaml:"suspendInterval" json:"suspendInterval"`
-	Match           match `yaml:"match"           json:"match"`
+func (el *healthCheck) VerifyPathToValidatePathIntoHost(path string) bool {
+	return el.Path == path
 }
-*/
+
+func (el *healthCheck) WriteDataToOutputEndpoint(w http.ResponseWriter, r *http.Request) {
+	for _, headerData := range el.Header {
+		w.Header().Add(headerData.Key, headerData.Value)
+	}
+
+	w.Write([]byte(el.Body))
+}
