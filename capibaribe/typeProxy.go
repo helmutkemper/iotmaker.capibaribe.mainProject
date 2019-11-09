@@ -31,9 +31,6 @@ type proxy struct {
 
 	Header []headerMonitor `yaml:"header" json:"header"`
 
-	// healthCheck //todo: fazer
-	HealthCheck healthCheck `yaml:"healthCheck" json:"healthCheck"`
-
 	// pt_br: lista de servidores secundários
 	Servers []servers `yaml:"servers" json:"servers"`
 
@@ -46,10 +43,6 @@ func (el *proxy) VerifyHostPathToValidateRoute(host string) bool {
 
 func (el *proxy) VerifyRouteDataPathToValidatePathIntoHost(path string) bool {
 	return "/test" == path
-}
-
-func (el *proxy) VerifyHealthCheckPathToValidatePathIntoHost(path string) bool {
-	return el.HealthCheck.Path == path
 }
 
 func (el *proxy) SelectLoadBalance() (string, int) {
@@ -115,14 +108,6 @@ func (el *proxy) WriteProxyDataToOutputJSonEndpoint(w http.ResponseWriter, r *ht
 	out, _ := json.Marshal(el)
 
 	w.Write(out)
-}
-
-func (el *proxy) WriteHealthCheckDataToOutputEndpoint(w http.ResponseWriter, r *http.Request) {
-	for _, headerData := range el.HealthCheck.Header {
-		w.Header().Add(headerData.Key, headerData.Value)
-	}
-
-	w.Write([]byte(el.HealthCheck.Body))
 }
 
 func (el *proxy) OnExecutionEndWithError(w http.ResponseWriter, r *http.Request, err error) {

@@ -14,6 +14,7 @@ type Project struct {
 	Sll               ssl             `yaml:"ssl"               json:"ssl"`
 	Proxy             []proxy         `yaml:"proxy"             json:"proxy"`
 	DebugServerEnable bool            `yaml:"debugServerEnable" json:"debugServerEnable"`
+	HealthCheck       healthCheck     `yaml:"healthCheck"       json:"healthCheck"`
 	Listen            Listen          `yaml:"-"                 json:"-"`
 	waitGroup         int             `yaml:"-"                 json:"-"`
 }
@@ -24,6 +25,18 @@ func (el *Project) WaitAddDelta() {
 
 func (el *Project) WaitDone() {
 	el.waitGroup -= 1
+}
+
+func (el *Project) VerifyHealthCheckPathToValidatePathIntoHost(path string) bool {
+	return el.HealthCheck.Path == path
+}
+
+func (el *Project) WriteHealthCheckDataToOutputEndpoint(w http.ResponseWriter, r *http.Request) {
+	for _, headerData := range el.HealthCheck.Header {
+		w.Header().Add(headerData.Key, headerData.Value)
+	}
+
+	w.Write([]byte(el.HealthCheck.Body))
 }
 
 func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
@@ -54,8 +67,8 @@ func (el *Project) HandleFunc(w http.ResponseWriter, r *http.Request) {
 
 			if proxyData.VerifyHostPathToValidateRoute(host) == true {
 
-				if proxyData.VerifyHealthCheckPathToValidatePathIntoHost(path) == true {
-					proxyData.WriteHealthCheckDataToOutputEndpoint(w, r)
+				if el.VerifyHealthCheckPathToValidatePathIntoHost(path) == true {
+					el.WriteHealthCheckDataToOutputEndpoint(w, r)
 					return
 				}
 

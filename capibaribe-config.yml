@@ -72,6 +72,13 @@ capibaribe:
         certificate: /etc/nginx/company.com.crt
         certificateKey: /etc/nginx/company.com.key
 
+    healthCheck:
+      path: "/healthCheck"
+      header:
+        - key: "Content-Type"
+          value: "application/json"
+      body: "{\"code\": 200, \"status\":\"ok\"}"
+
     proxy:
         # ignore port faz com que apenas o host seja usado como referencia
       - ignorePort: true
@@ -94,12 +101,6 @@ capibaribe:
 #            value: "^est"
 #            type: regExp
         maxAttemptToRescueLoop: 10
-        healthCheck:
-          path: "/healthCheck"
-          header:
-            - key: "Content-Type"
-              value: "application/json"
-          body: "{\"code\": 200, \"status\":\"ok\"}"
 #          enabled: true
 #          # padrão: 5 segundos
 #          interval: 5000
