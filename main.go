@@ -3,7 +3,7 @@
 package main
 
 import (
-	capib "./capibaribe"
+	"github.com/helmutkemper/iotmaker.capibaribe.module"
 
 	"flag"
 
@@ -12,7 +12,7 @@ import (
 
 func main() {
 	var wg sync.WaitGroup
-	var capibaribe capib.MainConfig
+	var capibaribe iotmaker_capibaribe_module.MainConfig
 
 	wg.Add(1)
 
